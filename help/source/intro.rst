@@ -14,13 +14,15 @@ First steps you need to work trough
 ***********************************
 
 Please start with working trough these documents.
-They will give you a basic understanding what the aims of erp-workbench are.
+They will give you a basic understanding what are the aims of erp-workbench.
 
     - Install.txt_
+    - `What is a site description file`_
     - `Quick Walk Trough`_
     - `some more`_
     
     .. _Install.txt: INSTALL.txt.html
+    .. _What is a site description file: sitedescription.txt.html
     .. _Quick Walk Trough: walktrough/index.html
     .. _some more: https://www.redo2oo.ch
 
