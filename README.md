@@ -43,12 +43,19 @@ make sure you are in the folder into which you git cloned erp-workbench!
 
 ececute the following commands:
 ```
+    # create virtualenv for erp-workbench
     mkvirtualenv -a . -p python3 workbench
+    # for convinience crete the following two links
     (cd bin; ln -s $(which python))
     (cd bin; ln -s $(which pip))
+    # install all required python libraries
     bin/pip install -r install/requirements.txt
+    # generate the help files
     (cd help; make html)
+    # generate an alias to easily start the workbench
     (echo $'\n''alias  wb="workon workbench"' >> ~/.bash_aliases)
+    # open the help files
+    bin/help
 ```
 After having executed the above commands and opened a new bash terminal
 (you created a new alias, that is only active when freshly loaded)
@@ -57,4 +64,4 @@ the command:
 
 `   wb`
 
-will activate the workbench environment and cd into its installation folder!
+will activate the workbench environment and cd into its main folder!
