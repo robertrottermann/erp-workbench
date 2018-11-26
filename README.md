@@ -1,9 +1,9 @@
 # erp-workbench
-environment to create odoo sites
-
+an environment to create odoo sites
+```
 git clone https://github.com/robertrottermann/erp-workbench.git
 cd erp-workbench/
-
+```
 
 install virtualenv:
 -------------------
@@ -58,7 +58,7 @@ ececute the following commands:
     bin/help
 ```
 After having executed the above commands and opened a new bash terminal
-(you created a new alias, that is only active when freshly loaded)
+(you created a new alias, that is only active when loaded while opening a terminal)
 
 the command:
 
