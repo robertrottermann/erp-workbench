@@ -1,9 +1,10 @@
 Preparation:
 ------------
-install the virtualenv wrapper according to the following instructions:
-    http://virtualenvwrapper.readthedocs.io/en/latest/install.html
+install the virtualenv wrapper (see http://virtualenvwrapper.readthedocs.io/en/latest/install.html):
+    pip install virtualenvwrapper
 
-add instructions to .bashrc to add virtualenvwrapper when a shell is opened:
+add instructions the following instruction to .bashrc
+then to add virtualenvwrapper when a shell is opened:
 
     # ------------------ start workon stuff -------------------
     export WORKON_HOME=$HOME/.virtualenvs
