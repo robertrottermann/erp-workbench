@@ -7,6 +7,7 @@ websocket
 requests
 six
 docutils
+doc8
 babel
 imagesize
 jinja2
@@ -22,6 +23,7 @@ psutil
 sphinx
 sphinx_bootstrap_theme
 sphinx-intl
+sphinx-autobuild
 odoo-sphinx-autodoc
 sphinxcontrib-napoleon
 xlrd

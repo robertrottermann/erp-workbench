@@ -19,21 +19,20 @@ They will give you a basic understanding what are the aims of erp-workbench.
     - Install.txt_
     - `What is a site description file`_
     - `Quick Walk Trough`_
-    - `some more`_
     
     .. _Install.txt: INSTALL.txt.html
     .. _What is a site description file: sitedescription.txt.html
     .. _Quick Walk Trough: walktrough/index.html
-    .. _some more: https://www.redo2oo.ch
+
 
 
 Do base configurations
 **********************
 
 Before erp-workspace can do anything sensible for you, you have to go trough
-its base `configuration.`_
+its base configuration_
 
-.. _configuration: configuration/index.html
+    .. _configuration: config.html
 
 
 
