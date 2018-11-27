@@ -78,24 +78,25 @@ The following message will be displayed::
     The structure of the config files have changed.
     please check /home/robert/erp-workbench/config/project.yaml if everything ist correct.
     --------------------------------------------------
-
+and the command will terminate.
 this is because no configuration files have yet existed but have
 now been construced for you.
-
-You have to restart your connand, that will used the freshly created default environment.
+You have to restart your commandand, which then  will used the freshly created default environment.
 
 As a side effect, two new site descriptions have been created, and can be listing 
 by repeating the above command:
-
 ```
 bin/c -ls   # list exising site descriptions
 ```
-
 now the two new sites are listed::
-
     demo_global
     demo_local (local)
 
-You can load it in the default editor, which is "code".
+To inspect them you can load any of them in the default editor, which is "code", by executing:
+```
+bin/e demo_global
+```
 
+If code is not installed, you can adapt what editor to use in::
 
+config/config.yaml
