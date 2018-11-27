@@ -66,8 +66,8 @@ the command:
 
 will activate the workbench environment and cd into its main folder!
 
-list existing site descriptions
--------------------------------
+list existing site descriptions to force creation of config files
+-----------------------------------------------------------------
 ```
 wb # to start/set  erp-workbench
 bin/c -ls   # list exising site descriptions
