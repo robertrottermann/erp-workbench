@@ -97,5 +97,4 @@ bin/e demo_global
 ```
 
 If code is not installed, you can adapt what editor to use in::
-
-config/config.yaml
+    config/config.yaml
