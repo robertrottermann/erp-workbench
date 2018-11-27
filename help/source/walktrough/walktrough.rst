@@ -14,7 +14,7 @@ I this walktrough you learn:
 - Add existing modules to this new site
 - Create a local erp project running this site
 - Create a docker container running this site
-- Backing up data from to the container from to the lacal site
+- Backing up data from to the container from to the local site
 
 Explanation of terms used
 -------------------------

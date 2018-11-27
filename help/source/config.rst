@@ -3,7 +3,7 @@ Erp-Workbench configuration
 
 erp-workbench is configured by adapting yaml files that are found in the config folder.
 When ever erp-workbench is started this files are checked for changes.
-From the values found python data files in config/config_data/ are constructed.
+From the values found python data files in config/config_data/ are  thenconstructed.
 
 These yaml files exist:
 

@@ -1,5 +1,5 @@
 ======
-docker
+Docker
 ======
 
 .. toctree::
@@ -7,3 +7,4 @@ docker
     :caption: Contents:
 
     docker
+    dumper

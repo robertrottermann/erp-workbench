@@ -1,5 +1,5 @@
 =================
-some handy howtos
+Some handy howtos
 =================
 
 .. toctree::

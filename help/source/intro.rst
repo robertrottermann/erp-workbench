@@ -2,7 +2,7 @@
 Introduction and first steps
 ============================
 
-ERP Workbench is a set of tools that are used to create and maintain local and remote
+ERP Workbench (WB) is a set of tools that are used to create and maintain local and remote
 erp (odoo, flectra, ..) sites.
 
 erp-workbench's goal is to support you trough all steps in the lifecicle of an erp-site.
@@ -24,8 +24,6 @@ They will give you a basic understanding what are the aims of erp-workbench.
     .. _What is a site description file: sitedescription.txt.html
     .. _Quick Walk Trough: walktrough/index.html
 
-
-
 Do base configurations
 **********************
 
@@ -34,10 +32,8 @@ its base configuration_
 
     .. _configuration: config.html
 
-
-
-Locations where we maintain objects
-***********************************
+Locations where WB maintains objects
+************************************
 
 Objects that are maintained by erp-workbench are at three different locations:
 
