@@ -79,16 +79,15 @@ The following message will be displayed::
     please check /home/robert/erp-workbench/config/project.yaml if everything ist correct.
     --------------------------------------------------
 and the command will terminate.
-this is because no configuration files have yet existed but have
-now been construced for you.
-You have to restart your commandand, which then  will used the freshly created default environment.
+This is because no configuration files have existed yet, but have
+been construced for you.
+You have to restart your command, which then  will used the freshly created environment.
 
-As a side effect, two new site descriptions have been created, and can be listing 
-by repeating the above command:
+As a side effect, two new site descriptions have been created, and can be listed by repeating the above command:
 ```
 bin/c -ls   # list exising site descriptions
 ```
-now the two new sites are listed::
+now the two new site-descriptions are listed::
     demo_global
     demo_local (local)
 
