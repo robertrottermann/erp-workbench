@@ -51,65 +51,101 @@ class SitesHandler(object):
         self.template_name = template_name
         self.preset_values = preset_values
 
+    def _create_sites_rep(self, sites_list_path):
+        """
+        create sites_list struchture
+        @p1 : base path 
+        return:
+        must_exit  : flag whether calling process should exit
+        """
+        bp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
+        if not os.path.exists(bp):
+            print(LOCALSITESLIST_BASEPATH_MISSING % bp)
+        p1 = sites_list_path
+        # there could be a siteslist folder existing but without
+        # the its inner structure (how??, but it happens!)
+        must_create = False
+        did_change = False
+        for n in ['__init__.py', 'sites_global', 'sites_local']:
+            if not os.path.exists(os.path.normpath('%s/%s' % (p1, n))):
+                must_create = True
+                break
+        if not os.path.exists(p1) or must_create:
+            os.makedirs(p1, exist_ok=True)
+            # add __init__.py
+            ini_p = '%s/__init__.py' % p1
+            if not os.path.exists(ini_p):
+                open(ini_p, 'w').write(SITES_LIST_INI)
+            template = open('%s/templates/newsite.py' % self.base_path, 'r').read()
+            template = template.replace('xx.xx.xx.xx', 'localhost')
+            # default values for the demo sites
+            defaults = {
+                'site_name' : 'demo_global', 
+                'marker' : self.marker,
+                'base_sites_home' : '/home/%s/erp_workbench' % ACT_USER,
+                'erp_provider' : PROJECT_DEFAULTS.get('erp_provider', 'odoo'),
+                'erp_version' : PROJECT_DEFAULTS.get('erp_version', '12'),
+                'erp_minor' : PROJECT_DEFAULTS.get('erp_minor', '12'),
+                'erp_nightly' : PROJECT_DEFAULTS.get('erp_nightly', '12'),
+                'base_url' : 'demo_global',
+                'local_user_mail' : 'mail@localhost.com',
+                'remote_server' : 'localhost',
+                'docker_port' : 8800,
+                'docker_long_poll_port' : 18800,
+                'docker_hub_name' : DOCKER_DEFAULTS.get('docker_hub_name', ''),
+                'erp_image_version' : DOCKER_DEFAULTS.get('erp_image_version', ''),
+            }                
+            # create global sites
+            global_dir = '%s/sites_global' % p1
+            __ini__data = open('%s/templates/sites_list__init__.py' % self.base_path).read()
+            print_message = True
+            if not os.path.exists(global_dir):
+                did_change = True
+                os.mkdir(global_dir)
+                open('%s/sites_global/__init__.py' % p1, 'w').write(__ini__data)
+                open('%s/sites_global/demo_global.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
+                    'demo_global', template % defaults))
+            else:
+                print_message = False
+                # maybe we cloned sites_list without ini files
+                ini_p = '%s/sites_global/__init__.py' % p1
+                if not os.path.exists(ini_p):
+                    did_change = True
+                    open('%s/sites_global/__init__.py' % p1, 'w').write(__ini__data)
+            # create local sites
+            local_dir = '%s/sites_local' % p1
+            __ini__data = __ini__data.replace('SITES_G', 'SITES_L')
+            if not os.path.exists(local_dir):
+                did_change = True
+                os.mkdir(global_dir)
+                open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
+                defaults['site_name'] = 'demo_local'
+                open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
+                    'demo_local', template % defaults))
+            else:
+                print_message = False
+                # maybe we cloned sites_list without ini files
+                ini_p = '%s/sites_local/__init__.py' % p1
+                if not os.path.exists(ini_p):
+                    did_change = True
+                    open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
+            if print_message:
+                print(LOCALSITESLIST_CREATED % (
+                    os.path.normpath('%s/sites_global/demo_global.py' % p1), 
+                    os.path.normpath('%s/sites_local/demo_local.py' % p1)))
+        return did_change
+    
+
     def check_and_create_sites_repo(self, force = False):
         # check whether sites repo defined in BASEINFO exists
         # if not download and install it
+        must_exit = False
         sites_list_path = BASE_INFO.get('sitesinfo_path')
         if not sites_list_path:
             return '' # not yet configured
         sites_list_url = BASE_INFO.get('sitesinfo_url')
         if sites_list_url == 'localhost':
-            bp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
-            if not os.path.exists(bp):
-                print(LOCALSITESLIST_BASEPATH_MISSING % bp)
-            p1 = sites_list_path
-            # there could be a siteslist folder existing but without
-            # the its inner structure (how??, but it happens!)
-            must_create = False
-            for n in ['__init__.py', 'sites_global', 'sites_local']:
-                if not os.path.exists(os.path.normpath('%s/%s' % (p1, n))):
-                    must_create = True
-                    break
-            if not os.path.exists(p1) or must_create:
-                os.makedirs(p1, exist_ok=True)
-                # add __init__.py
-                open('%s/__init__.py' % p1, 'w').write(SITES_LIST_INI)
-                template = open('%s/templates/newsite.py' % self.base_path, 'r').read()
-                template = template.replace('xx.xx.xx.xx', 'localhost')
-                # default values for the demo sites
-                defaults = {
-                    'site_name' : 'demo_global', 
-                    'marker' : self.marker,
-                    'base_sites_home' : '/home/%s/erp_workbench' % ACT_USER,
-                    'erp_provider' : PROJECT_DEFAULTS.get('erp_provider', 'odoo'),
-                    'erp_version' : PROJECT_DEFAULTS.get('erp_version', '12'),
-                    'erp_minor' : PROJECT_DEFAULTS.get('erp_minor', '12'),
-                    'erp_nightly' : PROJECT_DEFAULTS.get('erp_nightly', '12'),
-                    'base_url' : 'demo_global',
-                    'local_user_mail' : 'mail@localhost.com',
-                    'remote_server' : 'localhost',
-                    'docker_port' : 8800,
-                    'docker_long_poll_port' : 18800,
-                    'docker_hub_name' : DOCKER_DEFAULTS.get('docker_hub_name', ''),
-                    'erp_image_version' : DOCKER_DEFAULTS.get('erp_image_version', ''),
-                }                
-                # create global sites
-                os.mkdir('%s/sites_global' % p1)
-                __ini__data = open('%s/templates/sites_list__init__.py' % self.base_path).read()
-                open('%s/sites_global/__init__.py' % p1, 'w').write(__ini__data)
-                open('%s/sites_global/demo_global.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
-                    'demo_global', template % defaults))
-                # create local sites
-                os.mkdir('%s/sites_local' % p1)
-                __ini__data = __ini__data.replace('SITES_G', 'SITES_L')
-                open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
-                defaults['site_name'] = 'demo_local'
-                open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
-                    'demo_local', template % defaults))
-                print(LOCALSITESLIST_CREATED % (
-                    os.path.normpath('%s/sites_global/demo_global.py' % p1), 
-                    os.path.normpath('%s/sites_local/demo_local.py' % p1)))
-                sys.exit()
+            must_exit = self._create_sites_rep(p1)
         elif not os.path.exists(sites_list_path):
             # try to git clone sites_list_url
             act = os.getcwd()
@@ -125,6 +161,10 @@ class SitesHandler(object):
                 p.communicate()
             print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
             os.chdir(act)
+            # now create missing elements
+            must_exit = self._create_sites_rep(sites_list_path)
+        if must_exit:
+            sys.exit()
         return sites_list_path
 
     @property
