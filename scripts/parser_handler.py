@@ -27,11 +27,11 @@ class ParserHandler(argparse.ArgumentParser):
     def add_argument(self, *args, **kwargs):
         # collect the extra flags and remove them from 
         # key words
-        for kwarg in list(kwargs.keys()):
+        for kwarg, val in list(kwargs.items()):
             if kwarg in self.keys:
                 k_vals = self.info_dic.get(kwarg, [])
                 dest = kwargs.get('dest')
-                if dest:
+                if dest and val:
                     k_vals.append(dest)
                 kwargs.pop(kwarg)
         #super().add_argument(*args, **kwargs)

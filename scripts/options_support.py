@@ -65,8 +65,8 @@ def add_options_support(parser, result_dic):
         "--edit-server",
         action="store_true", dest="edit_server", default=False,
         help='edit local data with server info',
-        need_name=True,
-        name_valid=True,
+        need_name=False,
+        name_valid=False,
     )
     parser_support.add_argument(
         "-a", "--alias",

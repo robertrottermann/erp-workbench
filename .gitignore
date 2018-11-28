@@ -9,7 +9,8 @@ tests/test_data/*
 config/*.yaml
 config/config_data/*_info.py
 docker/docker-odoo-project/
-
+help/source/_build/
+*.wp*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

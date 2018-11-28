@@ -7,10 +7,10 @@ erp-workbench lets you create erp-sites locally and remotely with ease. It tries
 I this walktrough you learn: 
 
 - Explanation of terms used
-- to define what type of erp you handle
-- change editor to use
+- Define what type of erp you handle
+- Change editor to use
 - How to define a remote server
-- How to define a new erp site
+- Create a new erp site
 - Add existing modules to this new site
 - Create a local erp project running this site
 - Create a docker container running this site
@@ -63,4 +63,8 @@ By default odoo sites will be generated. To change this, do as follows:
 
 in $WB/config/config.yaml change the line::
 
+  # site_editor:
+  # define what editor to use when editing site description
+  site_editor: 'code' # <----- name the editor here. 
+                      # It must be callable in a bash shell
 

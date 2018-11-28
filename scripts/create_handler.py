@@ -797,7 +797,7 @@ class InitHandler(RPC_Mixin):
             return
         done = False
         cmpl = SimpleCompleter('', 
-            options=list(SITES.keys()), default=name or '', prompt='please provide valid site name:')
+            options=list(SITES.keys()), default=name or '', prompt='please provide a valid site name:')
         while not done:
             _name = cmpl.input_loop()
             if _name is None:
@@ -807,14 +807,14 @@ class InitHandler(RPC_Mixin):
             if opts.subparser_name == 'support':
                 if _name and (opts.add_site or opts.add_site_local):
                     if SITES.get(_name):
-                        print("site %s allready exists in sites.py" % _name)
+                        print("the site %s allready exists in sites.py" % _name)
                     else:
                         done = True
             if _name and SITES.get(_name):
                 done = True
             else:
                 print(
-                    '%s is not defined in sites.py. you can add it with option --add-site' % _name)
+                    '%s is not defined in sites.py. You can add it with option --add-site' % _name)
             if done:
                 opts.name = _name
                 self.site_names = [_name]

@@ -310,7 +310,7 @@ class SupportHandler(InitHandler):
         editor = self.editor
         if self.opts.edit_server:
             # we are editing config/localdata.py
-            fname = '%s/config/localdata.py' % self.sites_home
+            fname = '%s/config/config_data/servers_info.py' % self.sites_home
         elif self.opts.edit_site:
             site_name = self.site_name
             if self.site.get('is_local'):
@@ -319,8 +319,29 @@ class SupportHandler(InitHandler):
             else:
                 fname = '%s/sites_global/%s.py' % (
                     BASE_INFO['sitesinfo_path'], site_name)
-        command = editor + " " + fname
-        status = os.system(command)
+        # command = editor + " " + fname
+        # status = os.system(command)
+        try:
+            subprocess.check_call([editor, fname])
+        except subprocess.CalledProcessError as e:
+            print(bcolors.FAIL)
+            print(str(e))
+            print(bcolors.ENDC)
+        except OSError as e:
+            print(bcolors.FAIL)
+            print('trying to edit the list of server using %s produced the following error' % editor)
+            print('falling back to use pico')
+            print(str(e))
+            print(bcolors.WARNING)
+            input('hit Enter to continue')
+            print(bcolors.ENDC)
+            try:
+                subprocess.check_call(['pico', fname])
+            except Exception as e:
+                print(bcolors.FAIL)
+                print(str(e))
+                print(bcolors.ENDC)
+                
 
     # list_ports
     # ----------
