@@ -610,7 +610,7 @@ class InitHandler(RPC_Mixin):
         """
 
         if self.site:
-            return self.site.get('erp_version', self.default_values['erp_version'])
+            return self.site.get('erp_version', self.site.get('odoo_version', self.default_values['erp_version']))
 
     @property
     def minor(self):
