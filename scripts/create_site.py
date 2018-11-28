@@ -323,6 +323,17 @@ def main(opts, parsername, need_names_dic):
             did_run_a_command = True
             return
 
+        # add_server
+        # ----------
+        # add_server_to_server_list
+        # add new server info to localdat
+        # ----------------------------------
+        if opts.add_server:
+            handler.add_server_to_server_list()
+            did_run_a_command = True
+            return
+        
+
     
 def parse_args():
     argparse.ArgumentParser.set_default_subparser = set_default_subparser
