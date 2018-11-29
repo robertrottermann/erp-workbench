@@ -34,6 +34,21 @@ BASE_DEFAULTS:
   # By default it points to a folder within the erp-workbench folder.
   sitesinfo_path: '%(BASE_PATH)s/sites_list/'
 
+
+  # repo_mapper:
+  # repo_mapper allows to use locical names in a site description
+  # like:
+  # {
+  #     'type' : 'git',
+  #     'url' : '%(gitlab.redcor.ch)s/afbs/afbs_cms.git',
+  # }
+  # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
+
+  # sitesinfo_url:
+  # sitesinfo_url is the url where the git repository can be found
+  # with which the sites are maintained 
+  sitesinfo_url: 'localhost'
+
   # sitesinfo_url:
   # sitesinfo_url is the url where the git repository can be found
   # where the sites are maintained
