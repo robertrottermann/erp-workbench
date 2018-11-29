@@ -242,6 +242,74 @@ def main(opts, parsername, need_names_dic):
             handler.install_own_modules()
             did_run_a_command = True
 
+        # dataupdate 
+        # ----------
+        # these options are used to copy a running remote server to a lokal
+        # odoo instance
+        #
+        # dataupdate:
+        # -----------
+        # this copies both an odoo db and the related file data structure from
+        # a remote server to a locally existing (buildout created) server.
+        # the needed info is gathered from diverse sources:
+        # local_data.py
+        # -------------
+        # - DB_USER: the user name with which to access the local database
+        #   default: the logged in user.
+        # - DB_PASSWORD: the password to access the local database server
+        #   default: odoo
+        #   If the option -p --password is used, the password in local_data is
+        #   overruled.
+        # remote data:
+        # ------------
+        # to collect data on the remote server the key remote_server is used
+        #   to get info from sites.py for $SITENAME
+        # - remote_url : the servers url
+        # - remote_data_path : COLLECT it from ODOO_SERVER_DATA ??
+        # local_data.REMOTE_SERVERS:
+        # ---------------------------
+        # from this dictonary information on the remote server is collected
+        # this is done looking up 'remote_url' in local_data.REMOTE_SERVERS.
+        # - remote_user: user to acces the remote server with
+        # - remote_pw : password to access the remote user with. should normaly the empty
+        #   as it is best only to use a public key.
+        # - remote_data_path: how the odoo erverdata can be access on the remote server
+        #   ??? should be created automatically
+        # sites_pw.py:
+        # ------------
+        # the several password used for the services to be acces on the odoo instance,
+        # the remote server or on the mail server can be mixed in from
+        # sites_pw.py.
+        # !!!! sites_pw.py should be kept separate, and should not be version controlled with the rest !!!
+        #
+        # it executes these steps:
+        # - it executes a a command in a remote remote server in a remote shell
+        #   this command starts a temporary docker container and dumps the
+        #   database of the source server to its dump folder which is:
+        #       $REMOTE_URL:$ODOO_SERVER_DATA/$SITENAME/dump/$SITENAME.dmp
+        # - rsync this file to:
+        #       localhost:$ODOO_SERVER_DATA/$SITENAME/dump/$SITENAME.dmp
+        # - drop the local database $SITENAME
+        # - create the local database $SITENAME
+        # - restore the local datbase $SITENAME from localhost:$ODOO_SERVER_DATA/$SITENAME/dump/$SITENAME.dmp
+        # - rsync the remote filestore to the local filestore:
+        #   which is done with a command similar to:
+        #   rsync -av $REMOTEUSER@$REMOTE_URL:$ODOO_SERVER_DATA/$SITENAME/filestore/ localhost:$ODOO_SERVER_DATA/$SITENAME/filestore/
+        #
+        # run_local_docker
+        # ----------------
+        # when the option -L --local_docker is used, data is copied from a docker container
+        # running on localhost
+        if opts.dataupdate  or opts.dataupdate_close_connections or opts.dataupdate_no_set_localdata:
+            # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
+            set_local = True
+            handler.doUpdate(db_update = not opts.noupdatedb, norefresh=opts.norefresh, set_local = set_local)
+            did_run_a_command = True
+        if opts.dump_local:
+            # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
+            handler.dump_instance()
+            did_run_a_command = True
+
     # ----------------------
     # docker commands
     # ----------------------
@@ -291,6 +359,27 @@ def main(opts, parsername, need_names_dic):
             #handler = dockerHandler(opts, default_values, site_name)
             handler.docker_install_own_modules()
             did_run_a_command = True
+
+        # dataupdate_docker
+        # -------------------------------
+        # these options are used to copy a running remote server to a lokal
+        # odoo instance
+        #
+        # see explanation create->dataupdate
+        # run_local_docker
+        # ----------------
+        # when the option -L --local_docker is used, data is copied from a docker container
+        # running on localhost
+        if opts.dataupdate_docker:
+            # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
+            set_local = True
+            handler.doUpdate(db_update = not opts.noupdatedb, norefresh=opts.norefresh, set_local = set_local)
+            did_run_a_command = True
+        if opts.dump_local_docker:
+            # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
+            handler.dump_instance()
+            did_run_a_command = True
+
     # ----------------------
     # support commands
     # ----------------------

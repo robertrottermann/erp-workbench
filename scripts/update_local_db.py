@@ -667,6 +667,13 @@ class DBUpdater(object):
         for site_name in names:
             # we have to get info about the remote server indirectly
             # as it could be overridden by overrideremote
+            if not site_name in list(self.sites.keys()):
+                print(bcolors.WARNING)
+                print('*' * 80)
+                print('%s is not a valid site name' % site_name)
+                print(bcolors.ENDC)
+                continue
+
             server_dic = get_remote_server_info(opts)
             # do we need to close all connections first?
             if opts.dataupdate_close_connections:

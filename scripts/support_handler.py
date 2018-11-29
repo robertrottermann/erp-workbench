@@ -2,6 +2,7 @@
 # -*- encoding: utf-8 -*-
 import os
 import re
+import sys
 from config import SITES, BASE_INFO, MARKER, ODOO_VERSIONS, MIGRATE_FOLDER, sites_handler, DOCKER_DEFAULTS, PROJECT_DEFAULTS
 from scripts.sites_handler import UpdateError
 from scripts.create_handler import InitHandler, bcolors
@@ -76,6 +77,14 @@ class SupportHandler(InitHandler):
         """
         from config import sites_handler
         opts = self.opts
+        has_forbidden_chars=re.compile(r'[^A-Za-z0-9_]').search
+        if has_forbidden_chars(opts.name):
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('Tha name %s contains forbidden charaters' % opts.name)
+            print('only [A-Za-z0-9_] allowed')
+            print(bcolors.ENDC)
+            sys.exit()
         self.default_values['marker'] = MARKER
         # was a version option used
         if opts.erp_version:

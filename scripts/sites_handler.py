@@ -145,7 +145,7 @@ class SitesHandler(object):
             return '' # not yet configured
         sites_list_url = BASE_INFO.get('sitesinfo_url')
         if sites_list_url == 'localhost':
-            must_exit = self._create_sites_rep(p1)
+            must_exit = self._create_sites_rep(sites_list_path)
         elif not os.path.exists(sites_list_path):
             # try to git clone sites_list_url
             act = os.getcwd()

@@ -1042,6 +1042,7 @@ class InitHandler(RPC_Mixin):
             return
         if opts.name == 'db' and opts.docker_show:
             return False
+        # do not accept names with forbidden chars in it
         if not option:
             # only return False if all options need no name
             result = False
