@@ -230,6 +230,7 @@ class RPC_Mixin(object):
     def rpc_user(self):
         if self.parsername == 'docker':
             return self.docker_rpc_user
+        print( self.login_info)
         return self.login_info['rpc_user']
 
     @property

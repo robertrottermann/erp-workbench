@@ -313,7 +313,7 @@ ABLOCK = """%(aliasmarker_start)s
 ALIAS_LENGTH = 4
 
 ALIAS_HEADER = """
-cd_function()_w {
+cd_function_w() {
     if [ $2 ]; then
         if [ $3 ]; then
             if [[ -d %(pp)s/$2/addons/$3 ]]; then

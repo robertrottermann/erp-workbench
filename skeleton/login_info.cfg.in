@@ -20,7 +20,7 @@ erp_nightly = %(erp_nightly)s
 # this is of interest only when the database is created for the first time
 without_demo = all
 ##---------------------------------
-# as what user are we runnin odoo locally (not on the remote server!)
+# as what user are we running odoo locally (not on the remote server!)
 current_user = %(username)s
 ##---------------------------------
 # what is the name of the local database (can be different from the remote database name)
