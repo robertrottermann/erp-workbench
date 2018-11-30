@@ -150,7 +150,7 @@ def main(opts, parsername, need_names_dic):
         if opts.create or opts.modules_update or opts.module_update:
             info_dic = {
                 'project_path' : handler.default_values['inner'],
-                'erp_version' : BASE_INFO.get('erp_version'),
+                'erp_version': BASE_INFO.get('erp_version', BASE_INFO.get('odoo_version')),
                 'site_name' : handler.site_name
             }
             if opts.create:
@@ -300,7 +300,7 @@ def main(opts, parsername, need_names_dic):
         # ----------------
         # when the option -L --local_docker is used, data is copied from a docker container
         # running on localhost
-        if opts.dataupdate  or opts.dataupdate_close_connections or opts.dataupdate_no_set_localdata:
+        if opts.dataupdate  or opts.dataupdate_close_connections:
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
             set_local = True
             handler.doUpdate(db_update = not opts.noupdatedb, norefresh=opts.norefresh, set_local = set_local)

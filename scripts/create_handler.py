@@ -2370,7 +2370,7 @@ class SiteCreator(InitHandler, DBUpdater):
         default_values = self.default_values
         default_values['projectname'] = self.projectname
         # only set when creating or editing the site
-        default_values['erp_version'] = self.site.get('erp_version', '')
+        default_values['erp_version'] = self.site.get('erp_version', self.site.get('odoo_version', ''))
         # read the login_info.py.in
         # in this file, all variables are of the form $(VARIABLENAME)$
         # replace_dic is constructed in get_user_info_base->build_replace_info

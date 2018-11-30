@@ -61,9 +61,9 @@ def main(opts):  # nosetup=False, onlysetup=False):
     # https://nightly.odoo.com/ODOO_VERSION+ODO_MINOR/nightly/src/odoo_ODOO_VERSIONODOO_MINOR.latest.zip
     # https://nightly.odoo.com/11.0/nightly/src/odoo_11.0.latest.zip
     # erp_version : '12' 
-    # erp_minor: .0alpha1' 
+    # erp_minor: .0' 
     # erp_nightly : 'master', 
-    # https://nightly.odoo.com/master/nightly/src/odoo_12.0alpha1.latest.zip
+    # https://nightly.odoo.com/master/nightly/src/odoo_12.0.latest.zip
     
     # first calculate the elements
     if VERSION.find('.') > 0:
