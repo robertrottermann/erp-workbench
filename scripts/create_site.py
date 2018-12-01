@@ -101,6 +101,9 @@ def main(opts, parsername, need_names_dic):
         import wingdbstub
     except:
         pass
+    # if the name ends with /, cut it off
+    if opts.name.endswith('/'):
+        opts.name = opts.name[:-1]
     opts.subparser_name = parsername
     if parsername == 'create':
         handler = SiteCreator(opts, SITES)

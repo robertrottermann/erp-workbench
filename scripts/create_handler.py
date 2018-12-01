@@ -200,6 +200,12 @@ class RPC_Mixin(object):
     def get_erp_modules(self):
         from odoorpc.error import RPCError
         modules = self.get_module_obj()
+        if not modules:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('could not load modules. Is the erp server running?')
+            print(bcolors.ENDC)
+            sys.exit()
         mlist = modules.search([('application', '=', True)])
         result = {}
         for mid in mlist:
@@ -230,7 +236,6 @@ class RPC_Mixin(object):
     def rpc_user(self):
         if self.parsername == 'docker':
             return self.docker_rpc_user
-        print( self.login_info)
         return self.login_info['rpc_user']
 
     @property
