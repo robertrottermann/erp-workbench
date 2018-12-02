@@ -16,7 +16,7 @@ from config.config_data.servers_info import REMOTE_SERVERS
 from scripts.messages import *
 from scripts.bcolors import bcolors
 from importlib import reload
-from config import PROJECT_DEFAULTS, DOCKER_DEFAULTS
+from config import BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS
 
 class UpdateError(subprocess.CalledProcessError):
     """Specific class for errors occurring during updates of existing repos.
@@ -379,8 +379,14 @@ class SitesHandler(object):
             'site_info' : outer_template,
         }
         
+    def check_pull(self, auto='check'):
+        """automatically update sites-list according to seettings
+        config file.
+        
+        Keyword Arguments:
+            auto {str} -- should we first check config? (default: {'check'})
+        """
 
-    def pull(self, auto='check'):
         actual = os.getcwd()
         if not hasattr(self, 'sites_list_path'):
             return
@@ -395,3 +401,11 @@ class SitesHandler(object):
             shell=True)
         p.communicate()
         os.chdir(actual)
+
+    def fix_sites_list(self, fix=False):
+        """check if url to repository of sites list
+        has changed. Try to update settings.
+        """
+        pass
+
+

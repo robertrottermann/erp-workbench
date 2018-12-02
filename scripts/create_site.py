@@ -91,8 +91,6 @@ def set_default_subparser(self, name, args=None):
             name_to_return = name
     return name_to_return
 
-
-
 def main(opts, parsername, need_names_dic):
     """
     """
@@ -118,9 +116,16 @@ def main(opts, parsername, need_names_dic):
     else:
         handler = SiteCreator(opts, SITES)
 
-
     # ckeck whether the used option needs a name to work
     handler.check_name(need_names_dic=need_names_dic)
+
+    # ckeck wheter the path to the sites-list has to be adapted
+    # if yes, flag it to the user. To do the actual update
+    # the user has to use the support optin --fix-sites-list
+    from config import sites_handler
+    sites_handler.fix_sites_list()
+    # ckeck wheter the the sites-list has to be autoloaded
+    sites_handler.check_pull()
 
     # ----------------------
     # create commands
@@ -424,8 +429,6 @@ def main(opts, parsername, need_names_dic):
             handler.add_server_to_server_list()
             did_run_a_command = True
             return
-        
-
     
 def parse_args():
     argparse.ArgumentParser.set_default_subparser = set_default_subparser

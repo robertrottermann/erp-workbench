@@ -43,9 +43,9 @@ def add_options_support(parser, result_dic):
         help='provide docker port to new server.  To ckeck for availability use option -lp --list-port'
     )
     parser_support.add_argument(
-        "--remote-server",
-        action="store", dest="remote_server",
-        help='provide docker post to new server.  To ckeck for availability use option -lp --list-port'
+        "--fix-sites-list",
+        action="store", dest="fix_sites_list",
+        help='Fix sites-list after you have changed the the url where to its repo'
     )
     parser_support.add_argument(
         "--edit-site",

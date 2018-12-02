@@ -96,6 +96,10 @@ To inspect them you can load any of them in the default editor, which is "code",
 bin/e demo_global
 ```
 
-If code is not installed, you can adapt what editor to use in::
+If want to use an oder editor than VS code or if it is not installed, you can adapt what editor to use in::
     
     config/config.yaml
+
+On of the first elements you have to adapt, is to tell erp-workbench, in what repository to save the site-descriptions.
+By default is done using localhost and without git.
+Please generate and read the documentation on how to change it.
