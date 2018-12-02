@@ -50,7 +50,7 @@ def add_options_docker(parser, result_dic):
     )
     parser_docker.add_argument(
         "-dcdbPG", "--set-postgers-version",
-        action="store", dest="use_postgers_version",
+        action="store", dest="use_postgres_version",
         help='define postgres version to be used. Something like 9.6 or 10.0'
     )
     parser_docker.add_argument(
@@ -184,3 +184,4 @@ def add_options_docker(parser, result_dic):
         #action="store_true", dest="docker_add_ssh", default=False,
         #help = 'add ssh to a docker container'
     #)    
+    

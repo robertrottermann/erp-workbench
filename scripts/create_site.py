@@ -363,7 +363,7 @@ def main(opts, parsername, need_names_dic):
         
         # ----------> see create commands
         
-        if opts.dinstallown or opts.dupdateown or opts.dremoveown or opts.dinstallodoomodules:
+        if opts.dinstallown or opts.dupdateown or opts.dremoveown or opts.dinstall_erp_modules:
             #handler = dockerHandler(opts, default_values, site_name)
             handler.docker_install_own_modules()
             did_run_a_command = True

@@ -124,6 +124,10 @@ class DockerHandler(InitHandler, DBUpdater):
         #}
         # install_own_modules(self, list_only=False, quiet=False)
 
+    @property
+    def use_postgres_version(self):
+        return DOCKER_DEFAULTS.get('use_postgres_version')
+    
     def update_docker_info(self, name, required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
@@ -186,7 +190,7 @@ class DockerHandler(InitHandler, DBUpdater):
         - $MASTER_DOCKERNAME: this is the container name of the master site as found in sites.py.
         """
         name = self.site_name
-        site_info = self.sites[name]
+        site_infoself = self.sites[name]
         erp_provider  = site_info.get('erp_provider')
         docker = site_info.get('docker')
         if not docker or not docker.get('container_name'):
@@ -342,7 +346,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 self._create_container(docker_template, info_dic)
             else:
                 # we need a postgres version
-                pg_version = self.opts.set_postgers_version
+                pg_version = self.use_postgres_version
                 if not pg_version:
                     print(bcolors.FAIL)
                     print('*' * 80)
