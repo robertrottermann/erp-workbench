@@ -190,7 +190,7 @@ class DockerHandler(InitHandler, DBUpdater):
         - $MASTER_DOCKERNAME: this is the container name of the master site as found in sites.py.
         """
         name = self.site_name
-        site_infoself = self.sites[name]
+        site_info = self.sites[name]
         erp_provider  = site_info.get('erp_provider')
         docker = site_info.get('docker')
         if not docker or not docker.get('container_name'):
