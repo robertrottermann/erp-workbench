@@ -50,7 +50,7 @@ def add_options_docker(parser, result_dic):
     )
     parser_docker.add_argument(
         "-dcdbPG", "--set-postgers-version",
-        action="store", dest="set_postgers_version",
+        action="store", dest="use_postgers_version",
         help='define postgres version to be used. Something like 9.6 or 10.0'
     )
     parser_docker.add_argument(
