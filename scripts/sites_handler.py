@@ -62,17 +62,18 @@ class SitesHandler(object):
         self.template_name = template_name
         self.preset_values = preset_values
 
-    def _create_sites_rep(self, sites_list_path):
+    def _create_sites_rep(self, running_path):
         """
         create sites_list structure
         @p1 : base path 
         return:
         must_exit  : flag whether calling process should exit
         """
-        bp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
+        bp = '/' + '/'.join([p for p in running_path.split('/') if p][:-1])
         if not os.path.exists(bp):
             print(LOCALSITESLIST_BASEPATH_MISSING % bp)
-        p1 = sites_list_path
+        p1 = running_path
+        is_localhost = running_path.endswith('localhost')
         # there could be a siteslist folder existing but without
         # the its inner structure (how??, but it happens!)
         must_create = False
@@ -114,8 +115,9 @@ class SitesHandler(object):
                 did_change = True
                 os.mkdir(global_dir)
                 open('%s/sites_global/__init__.py' % p1, 'w').write(__ini__data)
-                open('%s/sites_global/demo_global.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
-                    'demo_global', template % defaults))
+                if is_localhost:
+                    open('%s/sites_global/demo_global.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
+                        'demo_global', template % defaults))
             else:
                 print_message = False
                 # maybe we cloned sites_list without ini files
@@ -128,11 +130,12 @@ class SitesHandler(object):
             __ini__data = __ini__data.replace('SITES_G', 'SITES_L')
             if not os.path.exists(local_dir):
                 did_change = True
-                os.mkdir(global_dir)
+                os.mkdir(local_dir)
                 open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
-                defaults['site_name'] = 'demo_local'
-                open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
-                    'demo_local', template % defaults))
+                if is_localhost:
+                    defaults['site_name'] = 'demo_local'
+                    open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
+                        'demo_local', template % defaults))
             else:
                 print_message = False
                 # maybe we cloned sites_list without ini files
@@ -141,9 +144,10 @@ class SitesHandler(object):
                     did_change = True
                     open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
             if print_message:
-                print(LOCALSITESLIST_CREATED % (
-                    os.path.normpath('%s/sites_global/demo_global.py' % p1), 
-                    os.path.normpath('%s/sites_local/demo_local.py' % p1)))
+                if is_localhost:
+                    print(LOCALSITESLIST_CREATED % (
+                        os.path.normpath('%s/sites_global/demo_global.py' % p1), 
+                        os.path.normpath('%s/sites_local/demo_local.py' % p1)))
         return did_change
     
 
@@ -156,6 +160,8 @@ class SitesHandler(object):
         sites_list_path = BASE_INFO.get('sitesinfo_path')
         if not sites_list_path:
             return '' # not yet configured
+        # create sitelisth path
+        os.makedirs(sites_list_path, exist_ok=True)
         siteinfos = BASE_INFO.get('siteinfos')
         for sitelist_name, sites_list_url in list(siteinfos.items()):
             #sites_list_url = BASE_INFO.get('sitesinfo_url')
@@ -167,16 +173,15 @@ class SitesHandler(object):
                 # try to git clone sites_list_url
                 must_update_ini = True
                 act = os.getcwd()
-                dp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
-                os.chdir(dp)
-                cmd_lines = ['git clone %s ' % sites_list_url]
-                for cmd_line in cmd_lines:
-                    p = subprocess.Popen(
-                        cmd_line,
-                        stdout=PIPE,
-                        env=dict(os.environ,  PATH='/usr/bin'),
-                        shell=True)
-                    p.communicate()
+                #dp = '/' + '/'.join([p for p in running_path.split('/') if p][:-1])
+                os.chdir(sites_list_path)
+                cmd_line = ['git clone %s %s' % (sites_list_url, sitelist_name)]
+                p = subprocess.Popen(
+                    cmd_line,
+                    stdout=PIPE,
+                    env=dict(os.environ,  PATH='/usr/bin'),
+                    shell=True)
+                p.communicate()
                 print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
                 os.chdir(act)
                 # now create missing elements
@@ -186,7 +191,7 @@ class SitesHandler(object):
             ini = SITES_LIST_OUTER_HEAD
             for sn in sitelist_names:
                 ini += (SITES_LIST_OUTER_LINE % {'file_name' : sn})
-            with open(sites_list_path, 'w') as f:
+            with open('%s/__init__.py' % sites_list_path, 'w') as f:
                 f.write(ini)
             sys.exit()
         if must_exit:
@@ -314,7 +319,7 @@ class SitesHandler(object):
         print(('%s is not an existing site description' % template_name))
         print((bcolors.ENDC))
                
-    def add_site_global(self, handler, template_name = '', preset_values = {}):
+    def add_site_global(self, handler, template_name = '', preset_values = {}, sublist='localhost'):
         """add a global site to the list of site
         
         Arguments:
@@ -357,9 +362,9 @@ class SitesHandler(object):
             with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
                 template = f.read() % handler.default_values
             template = template.replace('127.0.0.1', remote_url)
-        return self._add_site('G', template, no_outer)
+        return self._add_site('G', template, no_outer, sublist)
 
-    def add_site_local(self, handler, template_name = ''):
+    def add_site_local(self, handler, template_name = '', sublist='localhost'):
         self.handler = handler
         handler.default_values['base_sites_home'] = '/home/%s/erp_workbench' % ACT_USER
         handler.default_values['base_url'] = ('%s.ch' % handler.site_name)
@@ -376,9 +381,9 @@ class SitesHandler(object):
             with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
                 template = f.read() % handler.default_values
             template = template.replace('xx.xx.xx.xx', 'localhost')
-        return self._add_site('L', template, False)
+        return self._add_site('L', template, False, sublist)
 
-    def _add_site(self, where, template, no_outer):
+    def _add_site(self, where, template, no_outer, sublist):
         site_name = self.handler.site_name
         if self.handler.sites.get(site_name):
             print("site %s allready defined" % site_name)
@@ -394,10 +399,11 @@ class SitesHandler(object):
             outer_template = template
         if where == 'G':
             # add a new file with the sites info
-            f_path = '%s/sites_global/%s.py' % (BASE_INFO['sitesinfo_path'], site_name)
+            f_path = '%s/%s/sites_global/%s.py' % (BASE_INFO['sitesinfo_path'], sublist, site_name)
         elif where == 'L':
             site_name = self.handler.site_name
-            f_path = '%s/sites_local/%s.py' % (BASE_INFO['sitesinfo_path'], site_name)
+            f_path = '%s/%s/sites_local/%s.py' % (BASE_INFO['sitesinfo_path'], sublist, site_name)
+        f_path = os.path.normpath(f_path)
         with open(f_path, 'w') as f:
             f.write(outer_template)
         return {

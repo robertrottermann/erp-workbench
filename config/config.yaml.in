@@ -47,7 +47,7 @@ BASE_DEFAULTS:
   # with which the sites are maintained 
   siteinfos:
     localhost:
-      sitesinfo_url: 'localhost'
+      'localhost'
   #  redo2oo:
   #    'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
   #  cubie:

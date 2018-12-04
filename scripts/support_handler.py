@@ -78,7 +78,28 @@ class SupportHandler(InitHandler):
         from config import sites_handler
         opts = self.opts
         has_forbidden_chars=re.compile(r'[^A-Za-z0-9_]').search
-        if not opts.name or has_forbidden_chars(opts.name):
+        # if we have only on sub -site_list, we can take this one.
+        # if there are severals, the user has to tell which one
+        siteinfos = BASE_INFO.get('siteinfos')
+        siteinfo_names = siteinfos and list(siteinfos.keys()) or []
+        site_name, subsite = (opts.name.split() + [''])[:2]
+        if len(siteinfo_names) == 1:
+            # if we have one subsite, use it
+            subsite = siteinfo_names[0]
+        elif not subsite in siteinfo_names:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('Ther is more than one place to add the new site')
+            print('You have to add the subsite name to the sitename after a colon')
+            if site_name:
+                print('like %s:%s' % (site_name, siteinfo_names[0]))
+            else:
+                print('like new_site_name:localhost')
+            print('valid silte-list-name are %s' % siteinfo_names)
+            print(bcolors.ENDC)
+            sys.exit()
+                
+        if not site_name or has_forbidden_chars(site_name):
             print(bcolors.FAIL)
             print('*' * 80)
             print('The name %s contains forbidden charaters or is too short' % opts.name)
@@ -98,10 +119,10 @@ class SupportHandler(InitHandler):
             self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
         
         # check if user wants to copy an existing site
-        name = self.opts.name
-        template = ''
-        if ':' in name:
-            name, template = name.split(':')
+        name = site_name
+        template = '' #!!!!!!!!!!!!!!!!!!! does not work anymore
+        if '::' in name:
+            name, template = name.split('::')
             self.site_name = name
             self.opts.name = name
         site_name = self.site_name
