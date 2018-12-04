@@ -48,10 +48,10 @@ BASE_DEFAULTS:
   siteinfos:
     localhost:
       sitesinfo_url: 'localhost'
-    redo2oo:
-      'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
-    cubie:
-      'ssh://git@gitlab.redcor.ch:10022/cubie_sites/sites_list.git'
+  #  redo2oo:
+  #    'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
+  #  cubie:
+  #    'ssh://git@gitlab.redcor.ch:10022/cubie_sites/sites_list.git'
 
   # project_path:
   # path to the projects

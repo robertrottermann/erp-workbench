@@ -151,17 +151,21 @@ class SitesHandler(object):
         # check whether sites repo defined in BASEINFO exists
         # if not download and install it
         must_exit = False
+        must_update_ini = False
+        sitelist_names = []
         sites_list_path = BASE_INFO.get('sitesinfo_path')
         if not sites_list_path:
             return '' # not yet configured
         siteinfos = BASE_INFO.get('siteinfos')
         for sitelist_name, sites_list_url in list(siteinfos.items()):
             #sites_list_url = BASE_INFO.get('sitesinfo_url')
+            sitelist_names.append(sitelist_name)
             running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
             if sites_list_url == 'localhost':
                 must_exit = self._create_sites_rep(running_path)
             elif not os.path.exists(running_path):
                 # try to git clone sites_list_url
+                must_update_ini = True
                 act = os.getcwd()
                 dp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
                 os.chdir(dp)
@@ -177,8 +181,16 @@ class SitesHandler(object):
                 os.chdir(act)
                 # now create missing elements
                 must_exit = self._create_sites_rep(running_path)
-            if must_exit:
-                sys.exit()
+        # create outer inifile if needed
+        if must_update_ini:
+            ini = SITES_LIST_OUTER_HEAD
+            for sn in sitelist_names:
+                ini += (SITES_LIST_OUTER_LINE % {'file_name' : sn})
+            with open(sites_list_path, 'w') as f:
+                f.write(ini)
+            sys.exit()
+        if must_exit:
+            sys.exit()
         return sites_list_path
 
     @property
