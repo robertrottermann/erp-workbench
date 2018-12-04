@@ -45,7 +45,6 @@ BASE_DEFAULTS:
   # sitesinfo_url:
   # sitesinfo_url is the url where the git repository can be found
   # with which the sites are maintained 
-  sitesinfo_url: 'localhost'
   siteinfos:
     localhost:
       sitesinfo_url: 'localhost'

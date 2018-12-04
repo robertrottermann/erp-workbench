@@ -44,6 +44,17 @@ class UpdateError(subprocess.CalledProcessError):
 SITES_LIST_INI ="""from .sites_local import SITES_L
 from .sites_global import SITES_G
 """
+SITES_LIST_OUTER_HEAD = """
+SITES_G = {}
+SITES_L = {}
+"""
+SITES_LIST_OUTER_LINE = """
+from .%(file_name)s import SITES_G as SG_%(file_name)s
+SITES_G.update(SG_%(file_name)s)
+from .%(file_name)s import SITES_L as SL_%(file_name)s
+SITES_G.update(SL_%(file_name)s)
+"""
+
 class SitesHandler(object):
     def __init__(self, base_path, template_name='', preset_values=''):
         self.base_path = base_path
@@ -53,7 +64,7 @@ class SitesHandler(object):
 
     def _create_sites_rep(self, sites_list_path):
         """
-        create sites_list struchture
+        create sites_list structure
         @p1 : base path 
         return:
         must_exit  : flag whether calling process should exit
@@ -143,28 +154,31 @@ class SitesHandler(object):
         sites_list_path = BASE_INFO.get('sitesinfo_path')
         if not sites_list_path:
             return '' # not yet configured
-        sites_list_url = BASE_INFO.get('sitesinfo_url')
-        if sites_list_url == 'localhost':
-            must_exit = self._create_sites_rep(sites_list_path)
-        elif not os.path.exists(sites_list_path):
-            # try to git clone sites_list_url
-            act = os.getcwd()
-            dp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
-            os.chdir(dp)
-            cmd_lines = ['git clone %s ' % sites_list_url]
-            for cmd_line in cmd_lines:
-                p = subprocess.Popen(
-                    cmd_line,
-                    stdout=PIPE,
-                    env=dict(os.environ,  PATH='/usr/bin'),
-                    shell=True)
-                p.communicate()
-            print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
-            os.chdir(act)
-            # now create missing elements
-            must_exit = self._create_sites_rep(sites_list_path)
-        if must_exit:
-            sys.exit()
+        siteinfos = BASE_INFO.get('siteinfos')
+        for sitelist_name, sites_list_url in list(siteinfos.items()):
+            #sites_list_url = BASE_INFO.get('sitesinfo_url')
+            running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
+            if sites_list_url == 'localhost':
+                must_exit = self._create_sites_rep(running_path)
+            elif not os.path.exists(running_path):
+                # try to git clone sites_list_url
+                act = os.getcwd()
+                dp = '/' + '/'.join([p for p in sites_list_path.split('/') if p][:-1])
+                os.chdir(dp)
+                cmd_lines = ['git clone %s ' % sites_list_url]
+                for cmd_line in cmd_lines:
+                    p = subprocess.Popen(
+                        cmd_line,
+                        stdout=PIPE,
+                        env=dict(os.environ,  PATH='/usr/bin'),
+                        shell=True)
+                    p.communicate()
+                print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
+                os.chdir(act)
+                # now create missing elements
+                must_exit = self._create_sites_rep(running_path)
+            if must_exit:
+                sys.exit()
         return sites_list_path
 
     @property

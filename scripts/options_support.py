@@ -85,6 +85,12 @@ def add_options_support(parser, result_dic):
         need_name=True,
         name_valid=True,
     )
+    parser_support.add_argument(
+        "--remote-server",
+        action="store", dest="remote_server",
+        help = 'What remote server to use'
+    )
+
     # parser_support.add_argument(
     #     "-show",
     #     action="store_true", dest="show", default=False,

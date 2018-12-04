@@ -679,6 +679,8 @@ class DBUpdater(object):
             if opts.dataupdate_close_connections:
                 if opts.new_target_site:
                     use_site_name =  opts.new_target_site
+                else:
+                    use_site_name = site_name
                 self.close_db_connections_and_delete_db(use_site_name)
 
             # determine what erp command to execute

@@ -78,10 +78,10 @@ class SupportHandler(InitHandler):
         from config import sites_handler
         opts = self.opts
         has_forbidden_chars=re.compile(r'[^A-Za-z0-9_]').search
-        if has_forbidden_chars(opts.name):
+        if not opts.name or has_forbidden_chars(opts.name):
             print(bcolors.FAIL)
             print('*' * 80)
-            print('Tha name %s contains forbidden charaters' % opts.name)
+            print('The name %s contains forbidden charaters or is too short' % opts.name)
             print('only [A-Za-z0-9_] allowed')
             print(bcolors.ENDC)
             sys.exit()
