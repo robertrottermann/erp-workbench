@@ -345,14 +345,16 @@ class SupportHandler(InitHandler):
             fname = '%s/config/config_data/servers_info.py' % self.sites_home
         elif self.opts.edit_site:
             site_name = self.site_name
+            list_origin = self.site.get('site_list_name', '')
             if self.site.get('is_local'):
-                fname = '%s/sites_local/%s.py' % (
-                    BASE_INFO['sitesinfo_path'], site_name)
+                fname = '%s/%s/sites_local/%s.py' % (
+                    BASE_INFO['sitesinfo_path'], list_origin, site_name)
             else:
-                fname = '%s/sites_global/%s.py' % (
-                    BASE_INFO['sitesinfo_path'], site_name)
+                fname = '%s/%s/sites_global/%s.py' % (
+                    BASE_INFO['sitesinfo_path'], list_origin, site_name)
         # command = editor + " " + fname
         # status = os.system(command)
+        fname = os.path.normpath(fname)
         try:
             subprocess.check_call([editor, fname])
         except subprocess.CalledProcessError as e:

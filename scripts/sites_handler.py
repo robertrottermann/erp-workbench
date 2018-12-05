@@ -47,11 +47,16 @@ from .sites_global import SITES_G
 SITES_LIST_OUTER_HEAD = """
 SITES_G = {}
 SITES_L = {}
+def set_orig(dic, orig):
+    for k,v in list(dic.items()):
+        v['site_list_name'] = orig
 """
 SITES_LIST_OUTER_LINE = """
 from .%(file_name)s import SITES_G as SG_%(file_name)s
+set_orig(SG_%(file_name)s, '%(file_name)s')
 SITES_G.update(SG_%(file_name)s)
 from .%(file_name)s import SITES_L as SL_%(file_name)s
+set_orig(SL_%(file_name)s, '%(file_name)s')
 SITES_G.update(SL_%(file_name)s)
 """
 
