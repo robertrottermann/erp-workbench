@@ -76,26 +76,37 @@ class SupportHandler(InitHandler):
         returns dictonary with info about what happened, mainly for testing purposes
         """
         from config import sites_handler
+        # check if user wants to copy an existing site
+        template = '' #!!!!!!!!!!!!!!!!!!! does not work anymore
         opts = self.opts
+        if '::' in self.opts.name:
+            name, template = self.opts.name.split('::')
+            self.site_names = [name]
+            self.opts.name = name
+        #site_name = self.site_name
+        #name = site_name
         has_forbidden_chars=re.compile(r'[^A-Za-z0-9_]').search
         # if we have only on sub -site_list, we can take this one.
         # if there are severals, the user has to tell which one
         siteinfos = BASE_INFO.get('siteinfos')
         siteinfo_names = siteinfos and list(siteinfos.keys()) or []
-        site_name, subsite = (opts.name.split() + [''])[:2]
+        site_name, subsite_name = (opts.name.split(':') + [''])[:2]
+        # make sure all other processes pick the rigth name
+        self.site_names = [site_name]
+        self.default_values['site_name'] = site_name
         if len(siteinfo_names) == 1:
             # if we have one subsite, use it
-            subsite = siteinfo_names[0]
-        elif not subsite in siteinfo_names:
+            subsite_name = siteinfo_names[0]
+        elif not subsite_name in siteinfo_names:
             print(bcolors.FAIL)
             print('*' * 80)
-            print('Ther is more than one place to add the new site')
+            print('There is more than one place to add the new site')
             print('You have to add the subsite name to the sitename after a colon')
             if site_name:
                 print('like %s:%s' % (site_name, siteinfo_names[0]))
             else:
                 print('like new_site_name:localhost')
-            print('valid silte-list-name are %s' % siteinfo_names)
+            print('valid site-list-names are %s' % siteinfo_names)
             print(bcolors.ENDC)
             sys.exit()
                 
@@ -118,15 +129,6 @@ class SupportHandler(InitHandler):
             self.default_values['erp_minor'] = erp_minor
             self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
         
-        # check if user wants to copy an existing site
-        name = site_name
-        template = '' #!!!!!!!!!!!!!!!!!!! does not work anymore
-        if '::' in name:
-            name, template = name.split('::')
-            self.site_name = name
-            self.opts.name = name
-        site_name = self.site_name
-
         # if the site allready exist, we bail out
         if self.sites.get(self.site_name):
             print("site %s allready defined" % self.site_name)
@@ -168,7 +170,7 @@ class SupportHandler(InitHandler):
             pvals = {} # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
             if 1: #preset_values:
-                result = sites_handler.add_site_global(handler = self, template_name=template)#, preset_values=preset_values)
+                result = sites_handler.add_site_global(handler = self, template_name=template, sublist=subsite_name)#, preset_values=preset_values)
                 if result:
                     if not opts.quiet:
                         print("%s added to sites.py" % self.site_name)
