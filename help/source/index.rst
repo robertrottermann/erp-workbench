@@ -9,6 +9,7 @@ erp-workbench is a set of tools to manage odoo like erp sites during their lifec
     :caption: Contents:
 
     intro
+    login/index
     aliases/index
     walktrough/index
     howtos/index
