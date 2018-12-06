@@ -15,8 +15,10 @@ There are two parts in the description concerning docker behaviour:
 ::
 
     'docker': {
-        'base_image': 'robertredcor/coobytech:11-latest',
-        'erp_image_version': 'odoo:11',
+        # what images to use to construct the image
+        'base_image'       : 'robertredcor/odoo-project:11.0-latest',
+        'erp_image_version': 'robertredcor/odoo-project:11.0-latest',
+        'container_name': 'coobytech',
         'container_name': 'coobytech',
         # 'db_container_name'    : 'db', # needs only to be set if it is not 'db'
         # trough what port can we access oddo (mapped to 8069)
@@ -55,12 +57,36 @@ Please make sure, that you provide credentials to acces the docker hub repositor
 Creating a new image
 ********************
 
-command:
+Assuming we have the following in the site description::
+
+        # extra libraries needed to be installed by pip or apt
+        # this is used in two places
+        # 1. pip installs are executed when creating a site on the local computer
+        #    and executing bin/dosetup [-f] in the sites buildout directory
+        # 2. both pip and apt installs are executed when a docker image is created
+        'extra_libs': {
+            'pip' : [
+                'xlrd',
+                'email_validator',
+                'twilio',
+                'mysqlclient',
+                'sqlalchemy',
+                'phonenumbers',
+            ],
+            'apt' : [
+                'python-dev',
+                'libmysqlclient-dev',
+            ]
+        },
+
+
+
+command within the erp workbench:
 ::
 
     bin/d -dbi SITENAME
 
-The following stepss are executed while creating a docker image:
+The following steps are executed while creating a docker image:
 
 - check credentials to docker hub
 
@@ -70,25 +96,51 @@ The following stepss are executed while creating a docker image:
 
     $WB-DATA/$SITE/docker
 
-    Within this folder checkout the odoo source code.
-    What version is read from the site description.
-    the source target folder is something like::
+Within this folder checkout the odoo source code.
+What odoo-version to use is read from the site description.
+the source target folder is something like::
 
-docker_source_path
-'/home/robert/workbench/docker/docker/11/'
-docker_target_path
-
-
-docker_target_path
-'/home/robert/workbench/coobytech/docker/'
+        # path to copy odoo source to
+        docker_source_path: '~/workbench/docker/docker/11/'
+        # path to construct needed folder structure
+        docker_target_path: '~/workbench/coobytech/docker/'
         
 
-Withing this folder the following subfolders are created
+Within docker_target_path folder the following subfolders are created:
 
-Then all extralibs are collected
+    - 
 
-apt
-pip
+Then all extralibs are collected.
+In the site description you find them either in every module, or in the *extra_libs* stanza.::
+
+        # extra libraries needed to be installed by pip or apt
+        # this is used in two places
+        # 1. pip installs are executed when creating a site on the local computer
+        #    and executing bin/dosetup [-f] in the sites buildout directory
+        # 2. both pip and apt installs are executed when a docker image is created
+        'extra_libs': {
+            'pip' : [
+                'xlrd',
+                'email_validator',
+                'twilio',
+                'phonenumbers',
+                # the following is to install mysqlclient
+                'mysqlclient',
+                'sqlalchemy',
+            ],
+            'apt' : [
+                'python-dev',
+                'python3-dev',
+                # the following is to install mysqlclient
+                'default-libmysqlclient-dev',
+                'build-essential', 
+                'libssl-dev',  
+                'libffi-dev',
+                'libxml2-dev',  
+                'libxslt1-dev', 
+                'zlib1g-dev',
+            ]
+        },
 
 Then a Dockerfile is constructed using the following code snippet::
 
@@ -116,14 +168,37 @@ Then a Dockerfile is constructed using the following code snippet::
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
             result.write(docker_file)
 
-the Dockerfile constructed is simmilar to::            
+the Dockerfile constructed using the obove examples is simmilar to::            
 
-    FROM robertredcor/coobytech:11-latest
+    FROM robertredcor/odoo-project:11.0-latest
     MAINTAINER robert@redo2oo.ch
 
     # Project's specifics packages
     RUN set -x; \
-            && pip install twilio email_validator phonenumbers xlrd sqlalchemy mysqlclient \
+            apt-get update \
+            && apt-get install -y --no-install-recommends \
+                    python-dev \
+            default-libmysqlclient-dev \
+            libxslt1-dev \
+            libssl-dev \
+            build-essential \
+            zlib1g-dev \
+            libffi-dev \
+            python3-dev \
+            libxml2-dev \
+            && pip install email_validator mysqlclient twilio phonenumbers xlrd sqlalchemy \
+            && apt-get remove -y \
+                    python-dev \
+            default-libmysqlclient-dev \
+            libxslt1-dev \
+            libssl-dev \
+            build-essential \
+            zlib1g-dev \
+            libffi-dev \
+            python3-dev \
+            libxml2-dev \
+            && apt-get clean \
+            && rm -rf /var/lib/apt/lists/*
 
 
     COPY ./requirements.txt /opt/odoo/

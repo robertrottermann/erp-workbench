@@ -41,6 +41,8 @@ class DockerHandler(InitHandler, DBUpdater):
 
         if not self.site:
             return # when we are creating the db container
+        # make sure the registry exists
+        self.update_docker_info()
         # ----------------------
         # get the db container
         # ----------------------
@@ -128,7 +130,7 @@ class DockerHandler(InitHandler, DBUpdater):
     def use_postgres_version(self):
         return DOCKER_DEFAULTS.get('use_postgres_version')
     
-    def update_docker_info(self, name, required=False, start=True):
+    def update_docker_info(self, name='', required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
         If it does not exist and required is false, the container is created and started.
@@ -141,39 +143,40 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         registry = self.default_values.get('docker_registry', {})
         cli = self.default_values.get('docker_client')
-        # check whether a container with the requested name exists.
-        # similar to docker ps -a, we need to also consider the stoped containers
-        exists  = cli.containers(filters={'name' : name}, all=1)
-        if exists:
-            # collect info on the container
-            # this is equivalent to docker inspect name
-            try:
-                info = cli.inspect_container(name)
-            except docker.errors.NotFound:
-                info = []
-            if info:
-                if info['State']['Status'] != 'running':
-                    if start:
-                        cli.restart(name)
-                        info = cli.containers(filters={'name' : name})
-                        if not info:
-                            raise ValueError('could not restart container %s', name)
-                        info = info[0]
-                    elif required:
-                        raise ValueError('container %s is stoped, no restart is requested', name)
-                registry[name] = info
+        if name:
+            # check whether a container with the requested name exists.
+            # similar to docker ps -a, we need to also consider the stoped containers
+            exists  = cli.containers(filters={'name' : name}, all=1)
+            if exists:
+                # collect info on the container
+                # this is equivalent to docker inspect name
+                try:
+                    info = cli.inspect_container(name)
+                except docker.errors.NotFound:
+                    info = []
+                if info:
+                    if info['State']['Status'] != 'running':
+                        if start:
+                            cli.restart(name)
+                            info = cli.containers(filters={'name' : name})
+                            if not info:
+                                raise ValueError('could not restart container %s', name)
+                            info = info[0]
+                        elif required:
+                            raise ValueError('container %s is stoped, no restart is requested', name)
+                    registry[name] = info
+                else:
+                    if required:
+                        if name == 'db':
+                            print(DOCKER_DB_MISSING)
+                            return
+                        raise ValueError('required container:%s does not exist' % name)
             else:
                 if required:
                     if name == 'db':
                         print(DOCKER_DB_MISSING)
                         return
                     raise ValueError('required container:%s does not exist' % name)
-        else:
-            if required:
-                if name == 'db':
-                    print(DOCKER_DB_MISSING)
-                    return
-                raise ValueError('required container:%s does not exist' % name)
         self.default_values['docker_registry'] = registry
 
     def update_container_info(self):
