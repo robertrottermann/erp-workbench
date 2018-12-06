@@ -34,7 +34,9 @@ def add_options_docker(parser, result_dic):
     parser_docker.add_argument(
         "-dbiC", "--build_image_collect_sites",
         action="store_true", dest="use_collect_sites",
-        help='collect all libraries from sites with the same erp version, to create an image that can handle all situations'
+        help='collect all libraries from sites with the same erp version, to create an image that can handle all situations',
+        need_name = True,
+        name_valid = True,
     )
     parser_docker.add_argument(
         "-dc", "--create_container",
