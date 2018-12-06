@@ -197,8 +197,9 @@ class DockerHandler(InitHandler, DBUpdater):
             print('the site description for %s has no docker description or no container_name' % opts.name)
             return
         # collect info on database container which allways is named 'db'
-        self.update_docker_info(self.db_container_name, required=True) 
-        self.update_docker_info(docker['container_name'])
+        if not self.opts.docker_build_image:
+            self.update_docker_info(self.db_container_name, required=True) 
+            self.update_docker_info(docker['container_name'])
         # # check whether we are a slave
         # if self.opts.transferdocker and site_info.get('slave_info'):
         #     master_site = site_info.get('slave_info').get('master_site')
@@ -520,7 +521,7 @@ class DockerHandler(InitHandler, DBUpdater):
         # get path to where we want to write the docker file
         docker_target_path = '%s/docker/' % self.default_values['data_dir']
         if not os.path.exists(docker_target_path):
-            os.mkdir(docker_target_path)
+            os.makedirs(docker_target_path, exist_ok=True)
         # there are some files we can copy unaltered
         #for fname in DOCKER_FILES[erp_version]:
             #shutil.copy('%s%s' % (docker_source_path, fname), docker_target_path)

@@ -35,6 +35,13 @@ local sites, that are only used on the actual pc.
 
 The name of the site
 
+For each site a folder-structure is defined the first time it is created. 
+The topfolder of this structure is named identically as the site.
+Normally this folders are constructed in the erp-workbench's home foler ($WB) but
+can be configured to be elsewhere:
+
+- $WB-DATA
+
 - Project 
 
 A project is a local structure, where a site is constructed and can be run locally.
