@@ -254,3 +254,26 @@ and finally create the image wich can last a couple of minutes::
                 tag = tag, 
                 dockerfile = '%sDockerfile' % docker_target_path)
 
+
+
+1  ooin
+    2  cd
+    3  wb
+    4  bin/d -dc -v coobytech/
+    5  bin/c docker -dcdb
+    6  wing6.1 bin/_c:337
+    7  ack docker_create_container scripts/
+    8  ack postgres -i config/
+    9  code config/config.yaml*
+   10  code config/docker.yaml*
+   11  bin/c docker -dcdb
+   12  bin/d -dc -v coobytech/
+   13  docker ps
+   14  bin/d -dI coobytech/
+   15  history 
+
+create db
+login to docker hub
+tag image
+push
+
