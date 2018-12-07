@@ -21,9 +21,9 @@ BLOCK_TEMPLATE = """
     ],
 """
 BLOCK_WITH_NEW_SERVER = """
-    195.48.80.84:
+    %(remote_ip)s:
         server_name: 'AnyName'
-        server_ip: '195.48.77.77'
+        server_ip: '%(remote_ip)s'
         remote_user: 'root'
         remote_data_path: '%(BASE_PATH)s'
         # remote_pw is used as credential for the remote user. normaly unset
@@ -275,7 +275,7 @@ class SupportHandler(InitHandler):
         print(bcolors.WARNING)
         print("this method is not yet adated to erp-workbench")
         print("please add a block to the file %s/config/server.yaml with info simmilar to the following" % self.sites_home )
-        print(BLOCK_WITH_NEW_SERVER)      
+        print(BLOCK_WITH_NEW_SERVER % {'remote_ip' : server_info and server_info[0], 'remote_data_path' :'/root/erp_workbench'})      
         print(bcolors.ENDC)
         return 
         if not len(server_info) == 2:

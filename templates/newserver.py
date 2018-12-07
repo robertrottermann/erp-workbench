@@ -1,6 +1,6 @@
 %(marker)s
 
-    '%(use_ip)s' : { # ADDED bin/c support --add-server
+    '%(use_ip)s' : { # ADDED by bin/s support --add-server
         # if you want to have non root access to site dat you have to set the values
         # like so:
         #    'remote_user' : 'odooprojects',
