@@ -93,3 +93,7 @@ BASE_DEFAULTS:
   # should the list of sites be pulled automatically
   # if set to False, you have to do it manually
   sites_autopull: True
+
+  # print_banner:
+  # should the (beautiful) erp-workbench banner be printed?
+  print_banner: True
