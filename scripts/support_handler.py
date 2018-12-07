@@ -275,7 +275,7 @@ class SupportHandler(InitHandler):
         print(bcolors.WARNING)
         print("this method is not yet adated to erp-workbench")
         print("please add a block to the file %s/config/server.yaml with info simmilar to the following" % self.sites_home )
-        print(BLOCK_WITH_NEW_SERVER % {'remote_ip' : server_info and server_info[0], 'BASE_PATH' :'/root/erp_workbench'})      
+        print(BLOCK_WITH_NEW_SERVER % {'remote_ip' : server_info and server_info[-1], 'BASE_PATH' :'/root/erp_workbench'})      
         print(bcolors.ENDC)
         return 
         if not len(server_info) == 2:
