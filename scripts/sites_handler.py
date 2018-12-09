@@ -175,6 +175,9 @@ class SitesHandler(object):
                 running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
                 if sites_list_url == 'localhost':
                     must_exit = self._create_sites_rep(running_path)
+                    # when we create the site-list, we must also create the ini file
+                    if not os.path.exists('%s/__init__.py' % sites_list_path):
+                        must_update_ini = True
                 elif not os.path.exists(running_path):
                     # try to git clone sites_list_url
                     must_update_ini = True
