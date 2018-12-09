@@ -1,14 +1,5 @@
 # erp-workbench
 an environment to create odoo sites
-```
-git clone https://github.com/robertrottermann/erp-workbench.git
-cd erp-workbench/
-```
-
-install virtualenv:
--------------------
-
-`cat install/virtualenv_wrapper.txt`
 
 Preparation:
 ------------
@@ -36,6 +27,12 @@ make sure, that afther opening a new shell the following two conditions are met:
     which virtualenvwrapper.sh
     produces a valid result
 
+clone the erp-workbench repo
+----------------------------
+```
+git clone https://github.com/robertrottermann/erp-workbench.git
+cd erp-workbench/
+```
 
 create a virtualenv for erp-workbench
 -------------------------------------
@@ -103,3 +100,110 @@ If want to use an oder editor than VS code or if it is not installed, you can ad
 On of the first elements you have to adapt, is to tell erp-workbench, in what repository to save the site-descriptions.
 By default is done using localhost and without git.
 Please generate and read the documentation on how to change it.
+
+
+## step by step in a freshly installed ubuntu 18.04
+
+as user root:
+the package terminator is not strictly nessecary but very convinient for shekk junkies like me :)
+It migth be possible, that the following list of libraries must be adapted to othe linux versions.
+
+```
+        sudo apt install -y terminator postgresql postgresql-contrib \
+            build-essential libfreetype6-dev libjpeg8-dev liblcms2-dev libldap2-dev libsasl2-dev  libssl1.0-dev libffi-dev \
+            libtiff5-dev libwebp-dev libxml2-dev libxslt1-dev node-less postgresql-server-dev* python-dev python3-dev \
+            python-tk tcl8.6-dev tk8.6-dev zlib1g-dev postgresql-client python-virtualenv git vim npm nodejs nodejs-dev libmysqlclient-dev \
+            curl node-gyp python-pip
+```
+
+als normal user:
+### install and configure virtualenvwrapper
+
+```
+sudo pip install virtualenvwrapper
+```
+```
+echo '
+    # ------------------ start workon stuff -------------------
+    export WORKON_HOME=$HOME/.virtualenvs
+    export PROJECT_HOME=$HOME/projetcs
+    source /usr/local/bin/virtualenvwrapper.sh
+    ' >> $HOME/.bashrc
+
+```
+test if this worked. 
+```
+workon
+```
+this should not provide any output at all
+
+### clone erp-workbench
+
+```
+git clone https://github.com/robertrottermann/erp-workbench.git
+```
+
+### setup virtualenv an alias for erp-workbench
+
+**IMPORTANT!** the following commands have to be executed in a **NEW** bash shell
+
+```
+    cd $HOME/erp-workbench
+    # create virtualenv for erp-workbench
+    mkvirtualenv -a . -p python3 workbench
+    # for convinience crete the following two links
+    (cd bin; ln -s $(which python))
+    (cd bin; ln -s $(which pip))
+    # install all required python libraries
+    bin/pip install -r install/requirements.txt
+    # generate the help files
+    (cd help; make html)
+    # generate an alias to easily start the workbench
+    (echo $'\n''alias  wb="workon workbench"' >> ~/.bash_aliases)
+    # open the help files
+    bin/help
+```
+
+**BRAVO** you have installed erp-workbench, now lets configure it!
+
+In an **NEW** bash-shell (*always when you alter the environment, the changes will only be active in a new window*) you can execute the command:
+```
+wb
+```
+this will activate the erp-workbench environment, and change to its main folder.
+
+
+
+## Troubleshooting
+### error running command wb
+
+When after executing the command wb you get the message:
+```
+robert@lappi:~$ wb
+ERROR: Environment 'workbench' does not exist. Create it with 'mkvirtualenv workbench'.
+```
+
+execute the following commands:
+
+```
+    cd $HOME/erp-workbench
+    mkvirtualenv -a . -p python3 workbench
+```
+
+### command bin/help does not work
+
+### could not import sites list
+When executing a commmand like bin/c -ls
+pruducing an error like
+```
+********************************************************************************
+could not import sites list
+```
+then the easiest "solution" is to just remove the folder sites_list
+
+```
+rm -r sites_list/
+# and then let erp-workbench recreate them
+bin/c -ls
+```
+
