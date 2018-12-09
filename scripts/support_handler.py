@@ -20,7 +20,17 @@ BLOCK_TEMPLATE = """
 %s
     ],
 """
-
+BLOCK_WITH_NEW_SERVER = """
+    %(remote_ip)s:
+        server_name: 'AnyName'
+        server_ip: '%(remote_ip)s'
+        remote_user: 'root'
+        remote_data_path: '%(BASE_PATH)s'
+        # remote_pw is used as credential for the remote user. normaly unset
+        # to use public keys.
+        remote_pw: ''
+        local_user_email: 'user_to_use@please set in local data'
+"""
 class SupportHandler(InitHandler):
     # _preset_handler will be imported and instantiated on demand
     _preset_handler = None
@@ -259,10 +269,15 @@ class SupportHandler(InitHandler):
         @opts             : option instance
         @default_values   : dictionary with default values
         """
-        #needs to be adapted to the using of yaml
-        raise ValueError('add_server_to_server_list needs to be adapted')
+        #needs to be adapted to the using of yaml       
         opts = self.opts
         server_info = opts.add_server.strip().split('@')
+        print(bcolors.WARNING)
+        print("this method is not yet adated to erp-workbench")
+        print("please add a block to the file %s/config/server.yaml with info simmilar to the following" % self.sites_home )
+        print(BLOCK_WITH_NEW_SERVER % {'remote_ip' : server_info and server_info[-1], 'BASE_PATH' :'/root/erp_workbench'})      
+        print(bcolors.ENDC)
+        return 
         if not len(server_info) == 2:
             print(SITE_CREATED_SERVER_BAD_IP % opts.add_server)
             return
