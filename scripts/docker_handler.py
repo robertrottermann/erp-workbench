@@ -334,8 +334,8 @@ class DockerHandler(InitHandler, DBUpdater):
             'site_name' : name,
             'container_name' : container_name,
             'remote_data_path' : self.site and self.site.get('remote_server', {}).get('remote_data_path', '') or '',
-            'erp_image_version' : docker_info['erp_image_version'],
-            'erp_server_data_path' : BASE_INFO['erp_server_data_path'],           
+            'erp_image_version' : docker_info.get('erp_image_version', docker_info.get('odoo_image_version')),
+            'erp_server_data_path' : BASE_INFO.get('erp_server_data_path', docker_info.get('odoo_server_data_path')),           
         }
         if update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
@@ -481,6 +481,13 @@ class DockerHandler(InitHandler, DBUpdater):
             print('pip_list:%s' % pip_list)
             print(bcolors.ENDC)
         return apt_list, pip_list
+    
+    def _clean_run_block(self, block):
+        # make sure run_block is well formed
+        block = block.strip()
+        parts = block.split('\\')
+        block = '\\'.join([p for p in parts if p])
+        return block
          
     def build_image(self):
         """
@@ -494,7 +501,7 @@ class DockerHandler(InitHandler, DBUpdater):
         def apt_lines(block):
             if not block:
                 return []
-            result = ['&& apt-get install -y --no-install-recommends']
+            result = ['apt-get install -y --no-install-recommends']
             pref = ' ' * 4
             for line in block:
                 result.append(pref + line.strip())
@@ -538,8 +545,8 @@ class DockerHandler(InitHandler, DBUpdater):
                'apt_list' : '\n'.join(['%s%s \\' % (pref, a) for a in apt_list]),
             }
             if pip_list:
-                data_dic['pip_install'] = '&& pip install'
-                data_dic['pip_list'] = (' '.join(['%s' % p for p in pip_list])) + ' \\'
+                data_dic['pip_install'] = 'pip install'
+                data_dic['pip_list'] = (' '.join(['%s' % p for p in pip_list])) + (apt_list and ' \\' or '')
             else:
                 data_dic['pip_install'] = ''
                 data_dic['pip_list'] = '\\'
@@ -547,14 +554,12 @@ class DockerHandler(InitHandler, DBUpdater):
             # depending whether there are python-libraries and or apt modules to install
             # we have to constuct a docker run block
             if apt_list:
-                data_dic['run_block'] = docker_run_apt_template % data_dic
+                data_dic['run_block'] = self._clean_run_block(docker_run_apt_template % data_dic)
             elif pip_list:
-                data_dic['run_block'] = docker_run_no_apt_template % data_dic
+                data_dic['run_block'] = self._clean_run_block(docker_run_no_apt_template % data_dic)
             else:
                 data_dic['run_block'] = ''
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
-            from pprint import pformat
-            print(pformat(docker_file))
             result.write(docker_file)
         # construct folder layout as expected by the base image
         # see https://github.com/camptocamp/docker-odoo-project/tree/master/example
@@ -598,7 +603,7 @@ class DockerHandler(InitHandler, DBUpdater):
             #else:
                 #result.write( line ) 
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
-        tag = docker_info['erp_image_version']
+        tag = docker_info.get('erp_image_version', docker_info.get('odoo_image_version'))
         try:
             result = self.default_values['docker_client'].build(
                 docker_target_path, 

@@ -431,10 +431,10 @@ since there is no docker hub info
 
 DOCKER_IMAGE_CREATE_MISING_HUB_USER = """
 %s--------------------------------------------
-a new image for container %%s could not be created
-since there is no docker user or no password defined
+To uplad the new created image %%s to the docke-hub
+you will need to provide a hub-user and a password
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (bcolors.WARNING,bcolors.ENDC)
 
 DOCKER_INVALID_PORT = """
 %s--------------------------------------------
