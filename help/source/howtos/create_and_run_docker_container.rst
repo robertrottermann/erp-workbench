@@ -1,6 +1,55 @@
 Create and run a docker-container
 ---------------------------------
 
+In the following explanation we will create and use a site called coobytech.
+
+You should have executed the following beforehand::
+
+    bin/c -m coobytech
+
+Define what database version to use:
+************************************
+
+    in config/docker.yaml set the database version::
+
+        # use_postgres_version
+        # is used when creating the db image to define what postgres version to use
+        use_postgres_version: '10.0'
+
+Create a contained for the databases
+************************************
+    execute::
+
+        bin/d -dcdb
+
+Check whether the container is running:
+***************************************
+
+    execute::
+
+        docker ps
+
+    the exepected output is simmilar to::
+
+        CONTAINER ID        IMAGE                                   COMMAND                  CREATED             STATUS              PORTS                                                 NAMES
+        5a7ac08a5948        robertredcor/odoo-project:11.0-latest   "docker-entrypoint.s…"   41 minutes ago      Up 19 minutes       127.0.0.1:9000->8069/tcp, 127.0.0.1:19000->8072/tcp   coobytech
+        26e3bcd8e14e        postgres:10.0                           "docker-entrypoint.s…"   4 hours ago         Up 4 hours          0.0.0.0:55432->5432/tcp                               db
+
+Creating the container for coobytech
+************************************
+
+    ::
+
+        bin/d - coobytech
+
+
+Install all odoo main-modules
+*****************************
+
+    execute:
+
+        bin/d -dI coobytech
+        
 
 Troubleshhoting
 ----------------

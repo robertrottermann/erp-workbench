@@ -9,23 +9,30 @@ DOCKER_DEFAULTS:
     # docker_hub_name:
     # what is the name of the dockerhub to use
     docker_hub_name: 'robertredcor'
+
     # docker_port:
     # this is the default posrt we assign to a docker container to use
     # it has to be adapted in the site description depending on what
     # server the site is running
     docker_port: 9000
+
     # the name of the containe in which all database are created
     dockerdb_container_name: 'db'
+
     # dockerdbuser is used to access the database  in the database container
     dockerdbuser: 'odoo'
+
     # dockerdbpw is the dockerdbuser's password
     dockerdbpw: 'odoo'
+
     # dockerrpcuser is the user with which we want to login to the erp site running in the container
     dockerrpcuser: 'admin'
+
     # dockerrpcuserpw dockerrpcuser's password
     # this is in most cases NOT 'admin'
     # you can overrule it with -ddbpw
-    dockerrpcuserpw: 'admin'
+    dockerrpcuserpw: 'odoo'
+
     # dumper_image:
     # when dumping a container based erp site site to its backup structure
     # a docker container is used that has access to databse container

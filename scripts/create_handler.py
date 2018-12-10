@@ -200,12 +200,6 @@ class RPC_Mixin(object):
     def get_erp_modules(self):
         from odoorpc.error import RPCError
         modules = self.get_module_obj()
-        if not modules:
-            print(bcolors.FAIL)
-            print('*' * 80)
-            print('could not load modules. Is the erp server running?')
-            print(bcolors.ENDC)
-            sys.exit()
         mlist = modules.search([('application', '=', True)])
         result = {}
         for mid in mlist:
@@ -775,7 +769,7 @@ class InitHandler(RPC_Mixin):
             if SITES.get(name):
                 self.site_names = [name]
                 return name
-            if opts.subparser_name == 'create':
+            if opts.subparser_name == 'support':
                 if opts.add_site or opts.add_site_local:
                     self.site_names = [name]
                     return name
@@ -1588,7 +1582,7 @@ class InitHandler(RPC_Mixin):
         own modules are listed in the site description under the key addons
         """
         opts = self.opts
-        is_create = opts.subparser_name
+        is_create = opts.subparser_name == 'create'
         is_docker = not is_create
         default_values = self.default_values
         if list_only:
@@ -1618,7 +1612,7 @@ class InitHandler(RPC_Mixin):
                     if local_install and name not in local_install:
                         continue
                     if name:
-                        if opts.listownmodules:
+                        if (is_create and opts.listownmodules):
                             req.append((name, a.get('url')))
                         else:
                             req.append(name)
@@ -1628,7 +1622,7 @@ class InitHandler(RPC_Mixin):
                                   a.get('url', ''))
 
         # if we only want the list to install, no need to be wordy
-        if (is_docker and opts.dlistownmodules) or (is_create and opts.listownmodules) or quiet == 'listownmodules':
+        if (is_create and opts.listownmodules) or quiet == 'listownmodules':
             if quiet:
                 return req
             sn = self.site_name

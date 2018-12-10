@@ -71,11 +71,6 @@ def add_options_create(parser, result_dic):
         help='list available sites'
     )
     parser_manage.add_argument(
-        "-s", "--single-step",
-        action="store_true", dest="single_step", default=False,
-        help='load modules one after the other. MUCH! slower, but problems are easier to spot'
-    )
-    parser_manage.add_argument(
         "-u", "--dataupdate",
         action="store_true", dest="dataupdate", default=False,
         help='update local server from remote server. Automatically set local data'
