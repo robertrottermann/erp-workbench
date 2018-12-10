@@ -89,7 +89,7 @@ SITE_UNKNOW_IP = """%s
 please add the ip %%s found in the site description %%s
 to config/servers.yaml
 you can do so by executing:
-bin/c support --add-server %%s@%%s
+bin/s --add-server %%s@%%s
 --------------------------------------------------------
 %s
 """ % (bcolors.FAIL, bcolors.ENDC)
@@ -159,7 +159,7 @@ At least line:
 ----------- UNEDITED ----------------
 must be removed!
 this can be done executing:
-bin/c support --edit-server
+bin/s --edit-server
 ----------------------------------------------------
 """ % (bcolors.WARNING, bcolors.ENDC)
 
@@ -172,7 +172,7 @@ you can use bin/c
 ----------- UNEDITED ----------------
 must be removed!%s
 this can be done executing:
-bin/c support --edit-server
+bin/s --edit-server
 """ % (bcolors.FAIL, bcolors.ENDC, bcolors.WARNING, bcolors.ENDC)
 
 LOCALDATA_MOVED = """
@@ -197,7 +197,7 @@ Two siteslists have been created for you
 you can check and adapt them by executing:
 bin/c -ls
 and
-bin/c support --edit-site demo_global
+bin/s --edit-site demo_global
 ----------------------------------------------------
 """ % (bcolors.WARNING, bcolors.ENDC)
 
@@ -227,7 +227,7 @@ REMOTE_SERVERS = {
     ...
 }
 do do so, you can execute:
-bin/c support --edit-server
+bin/s --edit-server
 %s
 """ % (bcolors.FAIL, MARKER, MARKER,bcolors.ENDC)
 
@@ -358,7 +358,7 @@ DOCKER_DB_MISSING = """
 the database container db could not be found
 please create it.
 do do so, you can execute:
-bin/c docker -dcdb
+bin/d -dcdb
 ---------------------------------------------%s
 """ % (bcolors.FAIL,bcolors.ENDC)
 
@@ -367,7 +367,7 @@ DOCKER_IMAGE_PULLED = """
 a new image %%s for container %%s was pulled
 please stop and recreate all container using it
 you can do so by executing:
-bin/c docker -dr SITENAME
+bin/d -dr SITENAME
 ---------------------------------------------%s
 """ % (bcolors.OKGREEN,bcolors.ENDC)
 
@@ -401,7 +401,7 @@ DOCKER_IMAGE_CREATE = """
 a new image %%s for container %%s was created
 please stop and recreate all container using it
 you can do so by executing:
-bin/c docker -dr SITENAME
+bin/d -dr SITENAME
 ---------------------------------------------%s
 """ % (bcolors.OKGREEN,bcolors.ENDC)
 
@@ -441,7 +441,7 @@ DOCKER_INVALID_PORT = """
 The sitedescription for the site %%s has an
 invalid docker port '??'
 to fix it, you can execute:
-bin/c support --edit-site %%s
+bin/s --edit-site %%s
 ---------------------------------------------%s
 """ % (bcolors.FAIL,bcolors.ENDC)
 
