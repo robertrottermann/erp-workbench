@@ -775,7 +775,7 @@ class InitHandler(RPC_Mixin):
             if SITES.get(name):
                 self.site_names = [name]
                 return name
-            if opts.subparser_name == 'support':
+            if opts.subparser_name == 'create':
                 if opts.add_site or opts.add_site_local:
                     self.site_names = [name]
                     return name

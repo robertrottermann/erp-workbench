@@ -6,6 +6,8 @@ Some handy howtos
     :maxdepth: 2
     :caption: Contents:
 
+    setup_siteslist_repo
+    create_docker_container
     get_set_remote_data
     import_db_from_dropbox
     create_docker_image

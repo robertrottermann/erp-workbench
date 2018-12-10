@@ -938,7 +938,7 @@ def get_remote_server_info(opts, use_name=None):
     if not serverDic:
         print('*' * 80)
         print('the ip %s has no site description' % ip)
-        print('please add one using bin/c support --add-server %s' % ip)
+        print('please add one using bin/s support --add-server %s' % ip)
         print('*' * 80)
         sys.exit()
     # if the remote url is overridden, replace it now

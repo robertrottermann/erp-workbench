@@ -43,8 +43,8 @@ BASE_DEFAULTS:
   # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
 
   # sitesinfo_url:
-  # sitesinfo_url is the url where the git repository can be found
-  # with which the sites are maintained 
+  # sitesinfo_url is the url where git repositories can be found
+  # in which the sites are maintained 
   siteinfos:
     localhost:
       'localhost'
@@ -93,3 +93,7 @@ BASE_DEFAULTS:
   # should the list of sites be pulled automatically
   # if set to False, you have to do it manually
   sites_autopull: True
+
+  # print_banner:
+  # should the (beautiful) erp-workbench banner be printed?
+  print_banner: True

@@ -38,6 +38,7 @@ except ImportError:
 from config import ACT_USER, BASE_PATH, FOLDERNAMES, \
     BASE_INFO, MARKER, LOGIN_INFO_FILE_TEMPLATE, \
     REQUIREMENTS_FILE_TEMPLATE, DOCKER_DEFAULTS
+from config.config_data.base_info import BASE_DEFAULTS
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler
@@ -431,6 +432,11 @@ def main(opts, parsername, need_names_dic):
             return
     
 def parse_args():
+    print_banner = True
+    print_banner = BASE_DEFAULTS.get('print_banner', True)
+    if print_banner:
+        print(banner)
+    
     argparse.ArgumentParser.set_default_subparser = set_default_subparser
     usage = ""
     need_names_dic = {
@@ -516,7 +522,8 @@ def parse_args():
     args.command_line = command_line
     unknownargs = [a for a in unknownargs if a and a[0] != '-']
     if not args.name:
-        if unknownargs:
+        cmds = ['create', 'support', 'docker', 'remote', 'mail']
+        if unknownargs and unknownargs[0] not in cmds:
             args.name = unknownargs[0]
         else:
             args.name = ''
@@ -532,7 +539,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    #print(banner)
+    
     args, sub_parser_name, need_names_dic = parse_args()
 
 
@@ -542,7 +549,6 @@ if __name__ == '__main__':
     # set a marker, so we can check if any command was executed
     # --------------------------------------------------------
     did_run_a_command = False
-
     main(args, sub_parser_name, need_names_dic) #opts.noinit, opts.initonly)
 
     if 0: #not did_run_a_command:
