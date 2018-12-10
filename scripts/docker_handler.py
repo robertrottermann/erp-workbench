@@ -73,8 +73,8 @@ class DockerHandler(InitHandler, DBUpdater):
         # get the sites container
         # ----------------------
         container_name = docker_info['container_name']
-        self.docker_rpc_port = docker_info['erp_port']
-        long_polling_port = docker_info.get('erp_longpoll')
+        self.docker_rpc_port = docker_info.get('erp_port', docker_info.get('odoo_port'))
+        long_polling_port = docker_info.get('erp_longpoll', docker_info.get('odoo_longpoll'))
         if not long_polling_port:
             long_polling_port = int(self.docker_rpc_port) + 10000
         self.docker_long_polling_port = long_polling_port
@@ -516,9 +516,9 @@ class DockerHandler(InitHandler, DBUpdater):
         
         # copy files from the official erp-sites docker file to the sites data directory
         # while doing so adapt the dockerfile to pull all needed elements
-        erp_version = self.site['erp_version']
+        erp_version = self.site.get('erp_version', self.site.get('odoo_version'))
         if not erp_version in list(ODOO_VERSIONS.keys()):
-            print(ERP_VERSION_BAD % (self.site_name, self.site['erp_version']))
+            print(ERP_VERSION_BAD % (self.site_name, self.site.get('erp_version', self.site.get('odoo_version'))))
             return
         docker_source_path = '%s/docker/docker/%s/' % (self.default_values['erp_server_data_path'], erp_version)
         # get path to where we want to write the docker file
@@ -553,6 +553,8 @@ class DockerHandler(InitHandler, DBUpdater):
             else:
                 data_dic['run_block'] = ''
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
+            from pprint import pformat
+            print(pformat(docker_file))
             result.write(docker_file)
         # construct folder layout as expected by the base image
         # see https://github.com/camptocamp/docker-odoo-project/tree/master/example
