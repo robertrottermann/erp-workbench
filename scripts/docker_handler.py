@@ -624,7 +624,7 @@ class DockerHandler(InitHandler, DBUpdater):
         else:
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_IMAGE_CREATE_DONE % (line['stream'].strip().split(' ')[-1], tag, tag, dockerhub_user))                
+            print(DOCKER_IMAGE_CREATE_DONE % (dockerhub_user, line['stream'].strip().split(' ')[-1], tag, tag))                
 
     def rename_container(self, name, new_name):
         """
