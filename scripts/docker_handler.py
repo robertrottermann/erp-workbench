@@ -354,7 +354,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 if not pg_version:
                     print(bcolors.FAIL)
                     print('*' * 80)
-                    print('you must define a postgres version with option -dcdbPG')
+                    print('you must define a postgres in config/docker.yaml')
                     print('*' * 80)
                     print(bcolors.ENDC)
                     sys.exit()
