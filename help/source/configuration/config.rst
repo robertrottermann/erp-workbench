@@ -16,23 +16,23 @@ These yaml files exist:
     - servers.yaml
         describes with what servers we deal
 
-Base info
-=========
+Base info (config.yaml)
+=======================
 
-.. literalinclude:: ../../config/config.yaml
+.. literalinclude:: ../../../config/config.yaml
     :language: yaml
 
-Docker
-======
-.. literalinclude:: ../../config/docker.yaml
+Docker (docker.yaml)
+====================
+.. literalinclude:: ../../../config/docker.yaml
     :language: yaml  
 
-Project
-=======
-.. literalinclude:: ../../config/project.yaml
+Project (project.yaml)
+======================
+.. literalinclude:: ../../../config/project.yaml
     :language: yaml  
 
-Servers
-=======
-.. literalinclude:: ../../config/servers.yaml
+Servers (servers.yaml)
+======================
+.. literalinclude:: ../../../config/servers.yaml
     :language: yaml  

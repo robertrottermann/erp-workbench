@@ -1,13 +1,13 @@
 What is a site description
 --------------------------
 
-A site description is a file, that describes the structure of a site.
+A site description is the heart and soul of the erp-workbeanch. It is a file, that describes the structure of a site.
 The information in that file is used for a number of different tasks.
 
 - naming the site
 - providing info about its erp type and version
 - Info about the docker environment to create 
-- Info about erb-modules to load
+- Info about erp-modules to load
 - info about python modules needed to run the site
 - info about os-modules needed to construct the docker container
 

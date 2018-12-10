@@ -7,7 +7,8 @@ Some handy howtos
     :caption: Contents:
 
     setup_siteslist_repo
-    create_docker_container
+    create_demo_site
+    create_and_run_docker_container
     get_set_remote_data
     import_db_from_dropbox
     create_docker_image

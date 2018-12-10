@@ -8,3 +8,4 @@ Configuration
 
     configuration
     siteslist_repo
+    config
