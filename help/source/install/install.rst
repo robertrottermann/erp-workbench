@@ -246,35 +246,44 @@ handling sites
         the sites are described in three dictionaries (all of them in odoo_sites)
         - sites.py
             here the remote sites are described
+
         - sites_local.py:
             here you can have local sites described that are not on the
             remote server.
             there is a template file local_sites.py.in which you can copy.
+
         - sites_pw.py:
             here are the passwords for odoo and the mail accounts
             this file is not under version control and not distributed
 
         to manage the sites there are a number bash scripts in bin/:
+
             - bin/c
                 this script is used to create local sites
                 if available these local sites use the data copied from
                 the remote live servers.
                 bin/c -h to show its help
+
             - bin/d
                 this script handles docker instances
                 it is a shortcut for:bin/c docker
+
             - bin/e
                 this script is to edit site description
                 and server descriptions
+
             - bin/d
                 this script handles docker instances
                 it is a shortcut for:bin/c docker
+
             - bin/r
                 this script handles remote instances
                 it is a shortcut for:bin/c remote
+
             - bin/s
                 this script handles support instances
                 it is a shortcut for:bin/c support
+
             - bin/lc
                 this script handles local copies of sites
 
@@ -290,13 +299,15 @@ handling sites
 
     bin/c.sh is used to create local sites. To be able to do so, the site needs
     an entry either in sites.py or sites_local.py.
-    You can list the possible sites with:
+    You can list the possible sites with::
+
         bin/c.sh -l
         the output is something like this:
-            key2gont
-            odoodev (local)
-            redcorkmu
-            rederpdemo
+
+        key2gont
+        odoodev (local)
+        redcorkmu
+        rederpdemo
 
     Sites defined in sites_local.py are marked with (local).
 

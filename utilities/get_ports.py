@@ -7,7 +7,7 @@ from pprint import pprint
 # from name_completer import SimpleCompleter
 sys.path.insert(0, os.path.split(os.path.split(os.path.realpath(__file__))[0])[0])
 from scripts.bcolors import bcolors
-from sites_list.sites_global import SITES_G
+from sites_list import SITES_G
 server_map = {
     None : 'undefined',
     'xx.xx.xx.xx'   : 'undefined',
@@ -24,11 +24,15 @@ for k, v in list(SITES_G.items()):
     if not 'remote_url':
         continue
     docker = v.get('docker')
+    origin = v.get('site_list_name', '')
     if not docker:
         continue
     result_list = result.get(remote_url, [])
-    result_list.append([docker.get('odoo_port'), docker.get('container_name')])
-    result_list.sort()
+    result_list.append([docker.get('odoo_port', -1), docker.get('container_name'), origin])
+    try:
+        result_list.sort()
+    except:
+        pass
     result[remote_url] = result_list
 pprint(result)
     

@@ -294,12 +294,15 @@ def list_sites(sites_dic, quiet=False):
     keys = list(sites_dic.keys())
     keys.sort()
     for key in keys:
+        origin = sites_dic[key].get('site_list_name', '')
+        if origin:
+            origin = ':%s' % origin
         if sites_dic[key].get('is_local'):
             if not quiet:
-                print('%s (local)' % key)
+                print('%s%s (local)' % (key, origin))
         else:
             if not quiet:
-                print(key)
+                print('%s%s' % (key, origin))
 
 # ----------------------------------
 # module_add

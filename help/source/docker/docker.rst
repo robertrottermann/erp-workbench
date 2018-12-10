@@ -11,8 +11,7 @@ Settings within the site description
 ************************************
 There are two parts in the description concerning docker behaviour:
 
-* Creation of the container
-::
+* Creation of the container::
 
     'docker': {
         # what images to use to construct the image
@@ -37,10 +36,9 @@ There are two parts in the description concerning docker behaviour:
         'ODOO_BASE_URL': 'https://www.coobytech.ch'
     },
 
-* Creation of image used by the container
-Please make sure, that you provide credentials to acces the docker hub repository selected (robertrottermann in the following example)
+* Creation of image used by the container::
 
-::
+    Please make sure, that you provide credentials to acces the docker hub repository selected (robertrottermann in the following example)::
 
     # docker_hub is used to store images we build ourself
     # by default we use dockers own docker_hub, but could
@@ -52,7 +50,7 @@ Please make sure, that you provide credentials to acces the docker hub repositor
             # or merged in at creation time using the sites_pw.py facility
             'docker_hub_pw' : 'THEPASSWORD',
         }
-    },
+    }
 
 Creating a new image
 ********************
@@ -256,7 +254,7 @@ and finally create the image wich can last a couple of minutes::
 
 
 
-1  ooin
+    1  wb
     2  cd
     3  wb
     4  bin/d -dc -v coobytech/
