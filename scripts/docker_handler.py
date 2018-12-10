@@ -573,7 +573,7 @@ class DockerHandler(InitHandler, DBUpdater):
             if not os.path.exists(fp):
                 open(fp, 'w').write(f[1])
             else:
-                print('%s\n%s\n%snot overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
+                print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
         # check out odoo source
         act = os.getcwd()
         os.chdir(docker_target_path)
@@ -624,7 +624,7 @@ class DockerHandler(InitHandler, DBUpdater):
         else:
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_IMAGE_CREATE_DONE % (line['stream'].strip().split(' ')[-1], tag, tag))                
+            print(DOCKER_IMAGE_CREATE_DONE % (line['stream'].strip().split(' ')[-1], tag, tag), dockerhub_user)                
 
     def rename_container(self, name, new_name):
         """

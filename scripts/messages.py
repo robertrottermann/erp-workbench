@@ -460,8 +460,9 @@ Now it is the appropriate time to tag and upload it to
 your docker hub account.
 Todo so, make sure that you computer is logged into
 your docker hub account and then 
-please execute the following two commands:
+please execute the following commands:
 
+docker login -u %%s
 docker tag %%s %%s
 docker push %%s
 ---------------------------------------------%s
