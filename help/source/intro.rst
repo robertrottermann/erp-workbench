@@ -32,6 +32,14 @@ its base configuration_
 
     .. _configuration: config.html
 
+Create repository to maintain the site descriptions
+***************************************************
+
+You probably want ot share the site descriptions with your team.
+Have a look on how to setup a repo for them siteslist_repo_
+
+    .. _siteslist_repo: configuration/siteslist_repo.html
+
 Locations where WB maintains objects
 ************************************
 
