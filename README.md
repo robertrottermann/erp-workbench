@@ -113,7 +113,7 @@ It migth be possible, that the following list of libraries must be adapted to ot
             build-essential libfreetype6-dev libjpeg8-dev liblcms2-dev libldap2-dev libsasl2-dev  libssl1.0-dev libffi-dev \
             libtiff5-dev libwebp-dev libxml2-dev libxslt1-dev node-less postgresql-server-dev* python-dev python3-dev \
             python-tk tcl8.6-dev tk8.6-dev zlib1g-dev postgresql-client python-virtualenv git vim npm nodejs nodejs-dev libmysqlclient-dev \
-            curl node-gyp python-pip
+            curl node-gyp python-pip python3-sphinx
 ```
 
 als normal user:
@@ -171,6 +171,7 @@ In an **NEW** bash-shell (*always when you alter the environment, the changes wi
 wb
 ```
 this will activate the erp-workbench environment, and change to its main folder.
+
 
 
 

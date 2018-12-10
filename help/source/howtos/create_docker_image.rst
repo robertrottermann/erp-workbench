@@ -36,7 +36,7 @@ This process is done semiautomatically by running the following command::
 
 Create DB Image
 ---------------
-before changing anythin with an existing container, please check wher its data is by running::
+before changing anything with an existing container, please check wher its data is by running::
 
     docker inspect db
 
