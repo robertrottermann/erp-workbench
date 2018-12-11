@@ -233,6 +233,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'remote_data_path' : info_dic['remote_data_path'],
             'erp_image_version' : info_dic['erp_image_version'],
             'erp_server_data_path' : info_dic['erp_server_data_path'],
+            'docker_command' : shutil.which('docker'),
         }
         docker_template = docker_template % docker_info
         mp = self.default_values.get('docker_path_map')
@@ -259,6 +260,7 @@ class DockerHandler(InitHandler, DBUpdater):
 
         name = self.site_name or container_name
         site = self.site
+        BASE_INFO['docker_command'] = shutil.which('docker')
         if name == 'db':
             self.update_docker_info('db')
             site = {
@@ -354,7 +356,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 if not pg_version:
                     print(bcolors.FAIL)
                     print('*' * 80)
-                    print('you must define a postgres in config/docker.yaml')
+                    print('you must define a postgres version like 10.0 in config/docker.yaml')
                     print('*' * 80)
                     print(bcolors.ENDC)
                     sys.exit()

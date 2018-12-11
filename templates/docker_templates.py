@@ -3,7 +3,7 @@
 # -------------------- flectra ------------------------
 # --------------------------------------------------
 docker_template = """
-docker run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \
+%(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \
     -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \
     -v %(erp_server_data_path)s/%(site_name)s/start-entrypoint.d:/opt/odoo/start-entrypoint.d \
     -v %(erp_server_data_path)s/%(site_name)s/addons:/mnt/extra-addons \
@@ -20,7 +20,7 @@ docker run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --r
 # -d -> ''
 # -> --init /etc/odoo/runodoo.sh \
 docker_template_update = """
-docker run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --rm \
+%(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --rm \
     --entrypoint /etc/odoo/runodoo.sh \
     -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \
     -v %(erp_server_data_path)s/%(site_name)s/start-entrypoint.d:/opt/odoo/start-entrypoint.d \
@@ -35,7 +35,7 @@ docker run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --r
 """
 
 docker_db_template = """
-    docker run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo \
+    %(docker_command)s run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo \
     -v %(erp_server_data_path)s/database/data:/var/lib/postgresql/data --name db --restart always \
     -p 55432:5432 postgres:%(postgres_version)s
 """
