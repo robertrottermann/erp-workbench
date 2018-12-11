@@ -541,26 +541,24 @@ class DockerHandler(InitHandler, DBUpdater):
         apt_list, pip_list = self.collect_extra_libs()
         #line_matcher = re.compile(r'\s+&& pip install.+')
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
-            pref = ' ' * 8
             data_dic = {
                'erp_image_version'  : docker_info.get('base_image', 'camptocamp/odoo-project:%s-latest' % erp_version),
-               'apt_list' : '\n'.join(['%s%s \\' % (pref, a) for a in apt_list]),
             }
-            if pip_list:
-                data_dic['pip_install'] = 'pip install'
-                data_dic['pip_list'] = (' '.join(['%s' % p for p in pip_list])) + (apt_list and ' \\' or '')
-            else:
-                data_dic['pip_install'] = ''
-                data_dic['pip_list'] = '\\'
-                
-            # depending whether there are python-libraries and or apt modules to install
-            # we have to constuct a docker run block
-            if apt_list:
-                data_dic['run_block'] = self._clean_run_block(docker_run_apt_template % data_dic)
-            elif pip_list:
-                data_dic['run_block'] = self._clean_run_block(docker_run_no_apt_template % data_dic)
-            else:
-                data_dic['run_block'] = ''
+            data_str = """
+            RUN apt update;
+            RUN set -x; \\
+            """
+            if apt_list or pip_list:
+                pref = ' ' * 8
+                if apt_list:
+                    data_str += 'apt install '
+                    data_str += self._clean_run_block('\n'.join(['%s%s \\' % (pref, a) for a in apt_list]))
+                if pip_list:
+                    if apt_list:
+                        data_str += ';\\\n'
+                    data_str += '    pip install '
+                    data_str +=  (' '.join(['%s' % p for p in pip_list]))
+            data_dic['run_block'] = data_str     
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
             result.write(docker_file)
         # construct folder layout as expected by the base image

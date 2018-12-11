@@ -49,6 +49,7 @@ RUN apt-get update && apt-get install -y \
 RUN add-apt-repository universe
 RUN apt-get update && apt-get install -y \
     python-pip
+
 RUN pip install %(pip_list)s
 """
 docker_run_apt_template = """# Project's specifics packages
