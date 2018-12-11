@@ -72,6 +72,7 @@ class RPC_Mixin(object):
         try:
             conn = psycopg2.connect(conn_string)
         except psycopg2.OperationalError:
+            raise
             if postgres_port:
                 conn_string += (' port=%s' % postgres_port)
                 conn = psycopg2.connect(conn_string)
@@ -801,9 +802,13 @@ class InitHandler(RPC_Mixin):
         while not done:
             _name = cmpl.input_loop()
             if _name is None:
-                done = True
-                self.site_names = []
-                return ''
+                print(bcolors.FAIL)
+                print('no name provided')
+                print(bcolors.ENDC)               
+                sys.exit()
+                #done = True
+                #self.site_names = []
+                #return ''
             if opts.subparser_name == 'support':
                 if _name and (opts.add_site or opts.add_site_local):
                     if SITES.get(_name):
@@ -1034,8 +1039,8 @@ class InitHandler(RPC_Mixin):
                  if not provided check what option user has selected
         """
         opts = self.opts
-        need_name = need_names_dic['name_valid']
-        name_valid = need_names_dic['name_valid']
+        need_name = need_names_dic.get('name_valid', [])
+        name_valid = need_names_dic.get('name_valid', [])
         collected_opts = [item[0]
                           for item in list(opts.__dict__.items()) if item[1]]
         if not [opt for opt in collected_opts if opt in need_name]:

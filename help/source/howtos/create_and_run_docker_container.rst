@@ -50,7 +50,14 @@ Install all odoo main-modules
 
         bin/d -dI coobytech
         
-
+   parser_docker.add_argument(
+        "-dcu", "--create_update_container",
+        action="store_true", dest="docker_create_update_container", default=False,
+        help='create a docker container that runs the etc/runodoo.sh script at startup. Name must be provided',
+        need_name=True,
+        name_valid=True,
+    )
+ 
 Troubleshhoting
 ----------------
 

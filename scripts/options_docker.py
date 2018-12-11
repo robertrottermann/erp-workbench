@@ -50,11 +50,11 @@ def add_options_docker(parser, result_dic):
         action="store_true", dest="docker_create_db_container", default=False,
         help='create a docker database container. It will be named db.  You must also set option -dcdbPG to set postgres version',
     )
-    parser_docker.add_argument(
-        "-dcdbPG", "--set-postgers-version",
-        action="store", dest="use_postgres_version",
-        help='define postgres version to be used. Something like 9.6 or 10.0'
-    )
+    # parser_docker.add_argument(
+    #     "-dcdbPG", "--set-postgers-version",
+    #     action="store", dest="use_postgres_version",
+    #     help='define postgres version to be used. Something like 9.6 or 10.0'
+    # )
     parser_docker.add_argument(
         "-dcu", "--create_update_container",
         action="store_true", dest="docker_create_update_container", default=False,
@@ -161,25 +161,29 @@ def add_options_docker(parser, result_dic):
         "-dio", "--dinstallown",
         action="store_true", dest="dinstallown", default=False,
         help = 'install all modules listed as addons. Name must be provided',
-        need_name = True
+        need_name = True,
+        name_valid = True,
     )
     parser_docker.add_argument(
         "-duo", "--dupdateown",
         action="store", dest="dupdateown", default='',
         help = 'update modules listed as addons, pass a comma separated list (no spaces) or all. Name must be provided',
-        need_name = True
+        need_name = True,
+        name_valid = True,
     )
     parser_docker.add_argument(
         "-dro", "--dremoveown",
         action="store", dest="dremoveown", default='',
         help = 'remove modules listed as addons, pass a comma separated list (no spaces) or all. Name must be provided',
-        need_name = True
+        need_name = True,
+        name_valid = True,
     )
     parser_docker.add_argument(
         "-dI", "--dinstall_erp_modules",
         action="store_true", dest="dinstall_erp_modules", default=False,
         help = 'install modules listed as addons into docker. Name must be provided',
-        need_name = True
+        need_name = True,
+        name_valid = True,
     )
     #parser_docker.add_argument(
         #"-dassh", "--docker-add_ssh",
