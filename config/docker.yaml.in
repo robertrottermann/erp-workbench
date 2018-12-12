@@ -43,6 +43,6 @@ DOCKER_DEFAULTS:
     # and the dumper container need to use the same pgdump version.
     docker_dumper_image: 'robertredcor/dumper'
 
-    # use_postgers_version
+    # use_postgres_version
     # is used when creating the db image to define what postgres version to use
-    use_postgers_version: '10.0'
+    use_postgres_version: '10.0'

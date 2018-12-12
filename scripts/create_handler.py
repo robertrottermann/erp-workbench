@@ -2451,6 +2451,12 @@ class SiteCreator(InitHandler, DBUpdater):
     def do_copy(self, source, outer_target, inner_target):
         opts = self.opts
         # now copy files
+        if not(self.site and self.version):
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('Hoppalla, seems tha %s is not a valid name' % site.site_name)
+            print(bcolors.ENDC)
+        return 
         from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
         if self.site.get('erp_provider', 'odoo') == 'flectra':
             FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
