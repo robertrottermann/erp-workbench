@@ -603,15 +603,17 @@ class DockerHandler(InitHandler, DBUpdater):
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
         tag = docker_info.get('erp_image_version', docker_info.get('odoo_image_version'))
         try:
+            docker_file = '%sDockerfile' % docker_target_path
             result = self.default_values['docker_client'].build(
                 docker_target_path, 
                 tag = tag, 
-                dockerfile = '%sDockerfile' % docker_target_path)
+                dockerfile=docker_file)
             for line in result:
                 line = eval(line)
                 if isinstance(line, dict):
                     if line.get('errorDetail'):
-                        print(DOCKER_IMAGE_CREATE_ERROR % (self.site_name, self.site_name, line.get('errorDetail')))
+                        print(DOCKER_IMAGE_CREATE_ERROR % (
+                            self.site_name, self.site_name, line.get('errorDetail'), docker_file, docker_target_path))
                         return
                     status = line.get('status')
                     if status:

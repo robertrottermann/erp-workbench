@@ -40,7 +40,7 @@ Creating the container for coobytech
 
     ::
 
-        bin/d - coobytech
+        bin/d -dc coobytech
 
 
 Install all odoo main-modules
