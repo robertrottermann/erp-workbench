@@ -15,13 +15,14 @@ def add_options_create(parser, result_dic):
         action="store_true", dest="create", default=False,
         help='create new site structure in %s. Name must be provided' % BASE_INFO.get(
             'project_path', os.path.expanduser('projects')),
-        need_name=True
+        need_name=True,
+        name_valid = True,
     )
     parser_manage.add_argument(
         "-D", "--directories",
         action="store_true", dest="directories", default=False,
         help='create local directories for site %s. option -n must be set and valid. This option is seldomly needed. Normaly directories are created when needed'  % BASE_INFO.get('erp_server_data_path', BASE_PATH),
-        need_name=True        
+        need_name=True     
     )
     parser_manage.add_argument(
         "--DELETELOCAL",
@@ -33,7 +34,8 @@ def add_options_create(parser, result_dic):
         - virtualenv Proj_Name\n
         - database Proj_Name
         """,
-        need_name=True        
+        need_name=True,
+        name_valid = True, 
     )
     parser_manage.add_argument(
         "-lo", "--listownmodules",
