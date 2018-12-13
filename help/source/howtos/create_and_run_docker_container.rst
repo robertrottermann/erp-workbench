@@ -95,9 +95,52 @@ The reason could be, that the running odoo container has now access to its data 
 This is because within the container the user "odoo" gets assigned a user ID 1000.
 This guest-UID is mapped to an arbitrary host-UID. You should therfore grant access rigths to this host-UID
 
-The easiest (ut hacky) way to this is to execute::
+The easiest (but hacky) way to this is to execute::
 
     # assuming we are running site coobytech
     chmod 777 coobytech
     chmod 777 coobytech/* -R
+
+
+Installing own modules fails
+*****************************
+
+    ::
+
+        bin/d -duo all coobytech/
+
+        ...
+
+        the following modules need to be installed: ['agent_portal', 'sale_commission', 'partner_contact_personal_information_page', 'agent_portal_services', 'agent_portal_wallet', 'auth_signup_verify_email', 'agent_portal_profiles', 'cms_form', 'website_support', 'l10n_ch_hr_payroll', 'website_support_analytic_timesheets', 'agent_portal_signup', 'agent_portal_support', 'base_user_role', 'web_digital_sign']
+        ********************************************************************************
+        installing: agent_portal,sale_commission,partner_contact_personal_information_page,agent_portal_services,agent_portal_wallet,auth_signup_verify_email,agent_portal_profiles,cms_form,website_support,l10n_ch_hr_payroll,website_support_analytic_timesheets,agent_portal_signup,agent_portal_support,base_user_role,web_digital_sign
+        Traceback (most recent call last):
+        File "bin/_c", line 552, in <module>
+            main(args, sub_parser_name, need_names_dic) #opts.noinit, opts.initonly)
+        File "bin/_c", line 369, in main
+            handler.docker_install_own_modules()
+        File "/home/robert/workbench/scripts/docker_handler.py", line 761, in docker_install_own_modules
+            return self.install_own_modules( list_only, quiet)
+        File "/home/robert/workbench/scripts/create_handler.py", line 1743, in install_own_modules
+            modules.button_immediate_install()
+        File "/home/robert/.virtualenvs/workbench/lib/python3.6/site-packages/odoorpc/models.py", line 339, in rpc_method
+            self._name, method, args, kwargs)
+        File "/home/robert/.virtualenvs/workbench/lib/python3.6/site-packages/odoorpc/odoo.py", line 483, in execute_kw
+            'args': args_to_send})
+        File "/home/robert/.virtualenvs/workbench/lib/python3.6/site-packages/odoorpc/odoo.py", line 282, in json
+            data['error'])
+        odoorpc.error.RPCError: You try to install module 'agent_portal' that depends on module 'contract'.
+        But the latter module is not available in your system.
+
+As the last line of the above message indicates, there is a module not found in the system one of the installees depends on.
+You therefore have to edit the site-configuration file and add it tho the list of addons.
+
+Afther having edited the site-description, you have to run ::
+
+    wb
+    bin/c -c coobytech # or what ever the name of the failing site was
+    # OR ...
+    bin/c -m coobytech # this variant only downloads the modules and recreates the addonpath
+    docker restart coobytech
+    bin/d -duo all coobytech
 

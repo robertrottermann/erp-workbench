@@ -72,7 +72,6 @@ class RPC_Mixin(object):
         try:
             conn = psycopg2.connect(conn_string)
         except psycopg2.OperationalError:
-            raise
             if postgres_port:
                 conn_string += (' port=%s' % postgres_port)
                 conn = psycopg2.connect(conn_string)
@@ -2456,7 +2455,7 @@ class SiteCreator(InitHandler, DBUpdater):
             print('*' * 80)
             print('Hoppalla, seems tha %s is not a valid name' % site.site_name)
             print(bcolors.ENDC)
-        return 
+            return 
         from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
         if self.site.get('erp_provider', 'odoo') == 'flectra':
             FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)

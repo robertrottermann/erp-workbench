@@ -91,10 +91,10 @@ RUN pip install --cache-dir=.pip -e /odoo/src
 
 %(run_block)s
 
-COPY ./requirements.txt /opt/odoo/
-RUN cd /opt/odoo && pip install --cache-dir=.pip -r requirements.txt
+COPY ./requirements.txt /odoo/
+RUN cd /odoo && pip install --cache-dir=.pip -r requirements.txt
 
-ENV ADDONS_PATH=/opt/odoo/local-src,/opt/odoo/src/addons
+ENV ADDONS_PATH=/odoo/local-src,/odoo/src/addons
 #ENV DB_NAME=afbsdemo
 ENV MIGRATE=False
 # Set the default config file
