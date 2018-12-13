@@ -415,12 +415,13 @@ DOCKER_IMAGE_CREATE_ERROR = """
 %s--------------------------------------------
 a new image %%s for container %%s could not be created
 ERROR: %%s
-Please make sure, that there is a src directory within
-the docker folder of the site data structure
-It should contain the actual source of the odoo version
-the site is using.
+%sTo better understand what is the reason please inspect the generated
+Dockerfile: %%s
+You can try to build it like so:
+cd %%s
+docker build .
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (bcolors.FAIL,bcolors.WARNING,bcolors.ENDC)
 
 DOCKER_IMAGE_CREATE_MISING_HUB_INFO = """
 %s--------------------------------------------
@@ -431,7 +432,7 @@ since there is no docker hub info
 
 DOCKER_IMAGE_CREATE_MISING_HUB_USER = """
 %s--------------------------------------------
-To uplad the new created image %%s to the docke-hub
+To uplad the new created image %%s to the docker-hub
 you will need to provide a hub-user and a password
 ---------------------------------------------%s
 """ % (bcolors.WARNING,bcolors.ENDC)

@@ -72,7 +72,6 @@ class RPC_Mixin(object):
         try:
             conn = psycopg2.connect(conn_string)
         except psycopg2.OperationalError:
-            raise
             if postgres_port:
                 conn_string += (' port=%s' % postgres_port)
                 conn = psycopg2.connect(conn_string)

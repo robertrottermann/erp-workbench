@@ -79,3 +79,42 @@ query settings::
     SELECT *
     FROM   pg_settings
     WHERE  name = 'max_connections';
+
+Troubleshooting
+***************
+    ::
+
+        ...
+
+        Requirement already satisfied: chardet<3.1.0,>=3.0.2 in /usr/local/lib/python3.5/dist-packages 
+            (from requests>=2.0.0; python_version >= "3.0"->twilio) (3.0.4)
+        Requirement already satisfied: urllib3<1.25,>=1.21.1 in /usr/local/lib/python3.5/dist-packages 
+            (from requests>=2.0.0; python_version >= "3.0"->twilio) (1.23)
+
+        Exception:
+        Traceback (most recent call last):
+        File "/usr/local/lib/python3.5/dist-packages/pip/_internal/cli/base_command.py", line 154, in main
+            status = self.run(options, args)
+        File "/usr/local/lib/python3.5/dist-packages/pip/_internal/commands/install.py", line 346, in run
+            session=session, autobuilding=True
+        File "/usr/local/lib/python3.5/dist-packages/pip/_internal/wheel.py", line 788, in build
+            assert building_is_possible
+        AssertionError
+
+
+        --------------------------------------------
+        a new image coobytech for container coobytech could not be created
+        ERROR: {'code': 2, 'message': "The command '/bin/sh -c set -x;             apt install default-libmysqlclient-dev         libffi-dev         libxslt1-dev         zlib1g-dev         libssl-dev         build-essential         libxml2-dev         python3-dev         python-dev ;    pip install xlrd email_validator mysql-connector sqlalchemy twilio phonenumbers validate_email' returned a non-zero code: 2"}
+        To better understand what is the reason please inspect the generated
+        Dockerfile: /home/robert/erp-workbench/coobytech/docker/Dockerfile
+        You can try to build it like so:
+        cd /home/robert/erp-workbench/coobytech/docker/
+        docker build .
+        ---------------------------------------------
+
+In the above error message we see, that the build process failed while pip installing twilio.
+So we edit the Dockerfile by removing twilio. If that helps, we try to find out why it could not be installed
+and add the missing elements to the dockerfiles.
+
+When we have the Dockerfile building, we must make sure to add the elements that we added to the Dockerfile to the
+site-description from which the Dockerfile was generated. 
