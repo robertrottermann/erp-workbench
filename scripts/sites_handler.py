@@ -57,7 +57,7 @@ set_orig(SG_%(file_name)s, '%(file_name)s')
 SITES_G.update(SG_%(file_name)s)
 from .%(file_name)s import SITES_L as SL_%(file_name)s
 set_orig(SL_%(file_name)s, '%(file_name)s')
-SITES_G.update(SL_%(file_name)s)
+SITES_L.update(SL_%(file_name)s)
 """
 
 class SitesHandler(object):
