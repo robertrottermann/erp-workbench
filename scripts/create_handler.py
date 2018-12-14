@@ -2366,17 +2366,14 @@ class SiteCreator(InitHandler, DBUpdater):
         erp_provider = self.site.get('erp_provider', 'odoo')
         if 1:  # erp_provider == 'flectra' or use_workon:
             # need to find virtualenvwrapper.sh
-            cmd = ['/bin/bash', '-c', 'echo $(which virtualenvwrapper.sh)']
-            p = subprocess.Popen(cmd, stdout=PIPE)
-            virtualenvwrapper = p.communicate()[0].strip()
-            virtualenvwrapper = virtualenvwrapper.decode()
+            virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
             os.chdir(self.default_values['inner'])
             cmd_list = [
                 'export WORKON_HOME=%s/.virtualenvs' % os.path.expanduser("~"),
                 'export PROJECT_HOME=/home/robert/Devel',
                 'source %s' % virtualenvwrapper,
-                'mkvirtualenv -a . -p %s %s' % (
-                    
+                'mkvirtualenv -a %s -p %s %s' % (
+                    self.default_values['inner'],
                     python_version,
                     self.site_name
                 )
