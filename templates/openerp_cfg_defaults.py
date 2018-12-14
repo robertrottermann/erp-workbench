@@ -7,7 +7,7 @@ import collections
 # - logfile
 # - datadir
 # - addon path weg muss /opt/odoo/local-src,/opt/odoo/src/addons,
-# - hinzu 
+# - hinzu /odoo/local-src,/odoo/src/addons,
 # - server wide modules ??
 d = collections.OrderedDict()
 
