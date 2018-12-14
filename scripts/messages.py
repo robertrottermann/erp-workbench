@@ -303,6 +303,7 @@ ALIASOO = """
 alias  wwbw="workon workbench"
 """
 ALIAS_LINE = 'alias  %(sname)s="cd %(path)s"\n'
+ALIAS_LINE_PULL = 'alias  %(sname)s="cd %(path)s; git pull"\n'
 AMARKER = '##-----wb alias-marker %s-----##'
 ABLOCK = """%(aliasmarker_start)s
 # please do not change the lines between the two markers

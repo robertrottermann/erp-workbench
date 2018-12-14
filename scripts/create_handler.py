@@ -2017,6 +2017,40 @@ class InitHandler(RPC_Mixin):
         # now write stings to git excluse file
         self.add_aliases_to_git_exclude()
 
+    def _get_shortest(self, name, names, min_len=2):
+        """get stortes string uniqe beginnin name
+        
+        Arguments:
+            name {strin} -- name we want to find shortes elemen
+            names {list of strings} -- strings we test against
+            min_len {int} -- minimum length of string returned
+        """
+        for n in names:
+            if n == name:
+                continue
+            while min_len < len(name):
+                if not n.startswith(name[:min_len]):
+                    break
+                min_len += 1
+        return name[:min_len]
+
+
+    def create_siteslist_aliases(self):
+        """create one alias per siteslist, to easily cd into it
+        """
+        sitelist_names = []
+        sites_list_path = BASE_INFO.get('sitesinfo_path')
+        siteinfos = BASE_INFO.get('siteinfos', [])
+        alias_line = ALIAS_LINE
+        sitelist_names = list(siteinfos.keys())
+        result = ''
+        for sitelist_name, sites_list_url in list(siteinfos.items()):
+            running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
+            s = self._get_shortest(sitelist_name, sitelist_names)
+            result += ALIAS_LINE % { 'sname' : "wwli%s" % s, 'path' : running_path}
+            result += ALIAS_LINE_PULL % { 'sname' : "wwli%spull" % s, 'path' : running_path}
+        return result
+
     def create_aliases(self):
         """
         """
@@ -2058,7 +2092,8 @@ class InitHandler(RPC_Mixin):
         result += ALIASC
         result += ALIASOO
         result += VIRTENV_D
-
+        # add aliases for the siteslists
+        result += self.create_siteslist_aliases()
         return result
 
     def do_updates(self):
