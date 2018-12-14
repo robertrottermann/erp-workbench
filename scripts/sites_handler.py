@@ -288,25 +288,28 @@ class SitesHandler(object):
     
     def drop_site(self, template_name):
         # when dropping sites, it could be that we are in a testing environment
-        # that did not restart since creating the sit
-        # so we force a reload
-        import sites_list
-        reload(sites_list.sites_global)
-        reload(sites_list.sites_local)
-        from sites_list.sites_global import SITES_G
-        from sites_list.sites_local import SITES_L
+        # that did not restart since creating the site
+        SITES_G, SITES_L = self.get_sites()
         sites_list_path = self.sites_list_path
+        
         if template_name in list(SITES_L.keys()):
+            site = SITES_L[template_name]
+            origin = site['site_list_name']
             try:
-                os.unlink('%s/sites_local/%s.py' % (sites_list_path, template_name))
-                os.unlink('%s/sites_local/%s.pyc' % (sites_list_path, template_name))
+                os.unlink(os.path.normpath('%s/%s/sites_local/%s.py' % (sites_list_path, origin, template_name)))
+                os.unlink(os.path.normpath('%s/%s/sites_local/%s.pyc' %
+                                           (sites_list_path, origin, template_name)))
             except:
                 pass
             return True
         elif template_name in list(SITES_G.keys()):
+            site = SITES_G[template_name]
+            origin = site['site_list_name']
             try:
-                os.unlink('%s/sites_global/%s.py' % (sites_list_path, template_name))
-                os.unlink('%s/sites_global/%s.pyc' % (sites_list_path, template_name))
+                os.unlink(os.path.normpath('%s/%s/sites_global/%s.py' %
+                                           (sites_list_path, origin, template_name)))
+                os.unlink(os.path.normpath('%s/%s/sites_global/%s.pyc' %
+                                           (sites_list_path, origin, template_name)))
             except:
                 pass
             return True

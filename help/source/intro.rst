@@ -48,7 +48,7 @@ Objects that are maintained by erp-workbench are at three different locations:
     If you have installed erp-workbench as proposed in the INSTALL.txt these locations are as follows:
 
     - ~/erp_workbench  ($WB in this documentation)
-        that is where ERPW is installed and site-descriptions are maintained
+        that is where WB is installed and site-descriptions are maintained
 
     - ~/projects ($PROJECT in this documentation, or $SITE when the site description is meant)
         This is where for each local site a folder structure is maintained
@@ -56,8 +56,9 @@ Objects that are maintained by erp-workbench are at three different locations:
     - remote servers (anywhere out there ..)
         This is where docker containers running the sites are hosted
 
-Command categories:
--------------------
+Command categories
+******************
+
 Commands are grouped in several categories:
 
     - create / update 
@@ -72,6 +73,23 @@ Commands are grouped in several categories:
     - remote
         These are commands that typically are run on the remote servers
         like maintaining the Nginx/Apache virtual sites and their certificates.
+
+Global Sites and Local Sites
+****************************
+
+There can be any number of sites-list WB manages.
+Global Sites are sites-descriptions that are managed using git and can be shared with your team.
+Normally when you create a new sites-description WB asks in what sites-list you want to store it.
+
+::
+
+    bin/s --add-site NEWSITE
+
+But sometimes you want to create a "throw away" site to exeperiment with. For this you create a local site::
+
+    bin/s --add-site-local NEWLOCALSITE
+
+
 
 Create objects:
 ***************
