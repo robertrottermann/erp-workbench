@@ -4,17 +4,30 @@ an environment to create odoo sites
 Preparation:
 ------------
 ```
+    # python-tk tcl8.6-dev tk8.6-dev
+    # have postgres up and running
+    sudo apt install -y postgresql postgresql-contrib
+
+    #add yourself as postgres superuser to the database:
+    sudo -u postgres psql -e --command "CREATE USER $USER WITH SUPERUSER PASSWORD 'admin'"
+
+    # install os libraries
+        sudo apt-get -y install build-essential libfreetype6-dev libjpeg8-dev liblcms2-dev libldap2-dev libsasl2-dev libssl-dev libffi-dev \
+        libtiff5-dev libwebp-dev libxml2-dev libxslt1-dev node-less postgresql-server-dev* python-dev python3-dev python3-pip \
+        zlib1g-dev postgresql-client python-virtualenv git vim npm nodejs libmysqlclient-dev \
+        curl node-gyp
+
     # install the virtualenv wrapper 
     # (see http://virtualenvwrapper.readthedocs.io/en/latest/install.html):
-        pip install virtualenvwrapper
+        sudo pip install virtualenvwrapper
 ```
 
-add the following instruction to .bashrc
+add the following lines to .bashrc by executing 
 ```
-    # ------------------ start workon stuff -------------------
+    echo '# ------------------ start workon stuff -------------------
     export WORKON_HOME=$HOME/.virtualenvs
     export PROJECT_HOME=$HOME/projetcs
-    source /usr/local/bin/virtualenvwrapper.sh
+    source /usr/local/bin/virtualenvwrapper.sh' >> $HOME/.bashrc
 ```
 take care that the last line (source /usr/local/bin/virtualenvwrapper.sh) is correct.
 It could be, that virtualenvwrapper.sh was installed to a different directory.
@@ -38,7 +51,7 @@ create a virtualenv for erp-workbench
 -------------------------------------
 make sure you are in the folder into which you git cloned erp-workbench!
 
-ececute the following commands:
+ececute the following commands in a NEW bash window:
 ```
     # create virtualenv for erp-workbench
     mkvirtualenv -a . -p python3 workbench
@@ -112,7 +125,7 @@ It migth be possible, that the following list of libraries must be adapted to ot
         sudo apt install -y terminator postgresql postgresql-contrib \
             build-essential libfreetype6-dev libjpeg8-dev liblcms2-dev libldap2-dev libsasl2-dev  libssl1.0-dev libffi-dev \
             libtiff5-dev libwebp-dev libxml2-dev libxslt1-dev node-less postgresql-server-dev* python-dev python3-dev \
-            python-tk tcl8.6-dev tk8.6-dev zlib1g-dev postgresql-client python-virtualenv git vim npm nodejs nodejs-dev libmysqlclient-dev \
+            python-tk tcl8.6-dev tk8.6-dev zlib1g-dev postgresql-client python-virtualenv git vim npm nodejs libmysqlclient-dev \
             curl node-gyp python-pip python3-sphinx
 ```
 
