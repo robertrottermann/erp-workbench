@@ -50,7 +50,7 @@ BASE_DEFAULTS:
       'localhost'
   #  redo2oo:
   #    'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
-  #  cubie:
+  #  cooby:
   #    'git@gitlab.com:cooby/erp-workbench.git'
 
   # project_path:

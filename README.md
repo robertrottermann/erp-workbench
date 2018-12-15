@@ -136,12 +136,12 @@ als normal user:
 sudo pip install virtualenvwrapper
 ```
 ```
-echo '
+echo "
     # ------------------ start workon stuff -------------------
     export WORKON_HOME=$HOME/.virtualenvs
     export PROJECT_HOME=$HOME/projetcs
-    source /usr/local/bin/virtualenvwrapper.sh
-    ' >> $HOME/.bashrc
+    source $(which virtualenvwrapper.sh)
+    " >> $HOME/.bashrc
 
 ```
 test if this worked. 

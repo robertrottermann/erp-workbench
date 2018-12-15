@@ -9,10 +9,11 @@ add instructions to .bashrc to add virtualenvwrapper when a shell is opened::
     # ------------------ start workon stuff -------------------
     export WORKON_HOME=$HOME/.virtualenvs
     export PROJECT_HOME=$HOME/projetcs
-    source /usr/local/bin/virtualenvwrapper.sh
+    source $(which virtualenvwrapper.sh)
 
-take care that the last line (source /usr/local/bin/virtualenvwrapper.sh) is correkt.
-It could be, that virtualenvwrapper.sh was installed to a different directory.
+take care that the last lines which virtualenvwrapper.sh produces a result.
+It could be, that virtualenvwrapper.sh was installed to a different directory that is not in the path
+in which case it could not be found by the whihc command.
 
 important:
 
