@@ -188,13 +188,26 @@ class SitesHandler(object):
                     p = subprocess.Popen(
                         cmd_line,
                         stdout=PIPE,
+                        stderr=PIPE,
                         env=dict(os.environ,  PATH='/usr/bin'),
                         shell=True)
-                    p.communicate()
-                    print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
+                    result = p.communicate()
+                    if p.returncode:
+                        print(bcolors.FAIL)
+                        print('Error:')
+                        for part in result[1].split(b'\n'):
+                            print(part.decode("utf-8"))
+                        print(bcolors.ENDC)
+                        # clean up 
+                        if os.path.exists(running_path):
+                            os.unlink(running_path)
+                    else:
+                        print(bcolors.WARNING)
+                        print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
                     os.chdir(act)
                     # now create missing elements
-                    must_exit = self._create_sites_rep(running_path)
+                    if not p.returncode:
+                        must_exit = self._create_sites_rep(running_path)
             # create outer inifile if needed
             if must_update_ini:
                 ini = SITES_LIST_OUTER_HEAD
