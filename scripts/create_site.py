@@ -360,6 +360,10 @@ def main(opts, parsername, need_names_dic):
             handler.build_image()
             did_run_a_command = True
             return
+        if opts.build_dumper_image:
+            handler.build_dumper_image()
+            did_run_a_command = True
+            return           
 
         # installown or updateown or removeown
         # ------------------------------------
@@ -393,6 +397,18 @@ def main(opts, parsername, need_names_dic):
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
             handler.dump_instance()
             did_run_a_command = True
+
+        # start or restart docker
+        if opts.docker_restart_container or opts.docker_start_container or opts.docker_stop_container:
+            if opts.docker_start_container:
+                handler.start_container()
+            elif opts.docker_restart_container:
+                handler.restart_container()
+            else:
+                handler.stop_container()
+            did_run_a_command = True
+
+
 
     # ----------------------
     # support commands

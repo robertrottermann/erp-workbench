@@ -11,6 +11,7 @@ config/config_data/*_info.py
 docker/docker-odoo-project/
 help/source/_build/
 *.wp*
+dumper/Dockerfile
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

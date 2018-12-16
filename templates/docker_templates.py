@@ -153,3 +153,15 @@ docker run -p 127.0.0.1:%(erp_port)s:7073 -p 127.0.0.1:%(erp_longpoll)s:7072 --r
     -e PYTHONIOENCODING=utf-8 \
     --name %(container_name)s -d --link db:db -t %(erp_image_version)s
 """
+
+dumper_docker_template = """
+# dbdumper Dockerfile 
+FROM debian:stretch
+
+RUN apt update; apt install -y wget gnupg; \
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - ; \
+    sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
+RUN apt-get update &&  apt-get install postgresql-client-%(postgres_version)s vim python -y --allow-unauthenticated
+
+ENTRYPOINT ["/usr/bin/python", "/mnt/sites/dumper/dumper.py"]
+"""

@@ -30,3 +30,9 @@ Create the container
 ::
 
     bin/d -dc coobytech
+
+Caveats
+-------
+
+When for some reason a container was created but not started up properly, that the continers database was only created partially.
+Such a partial database **MUST** be deleted for the container to start up properly.

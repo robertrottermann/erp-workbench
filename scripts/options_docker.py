@@ -48,7 +48,24 @@ def add_options_docker(parser, result_dic):
     parser_docker.add_argument(
         "-dcdb", "--create_db_container",
         action="store_true", dest="docker_create_db_container", default=False,
-        help='create a docker database container. It will be named db.  You must also set option -dcdbPG to set postgres version',
+        help='create a docker database container. It will be named db. It uses the postgres version in config/docker.yaml',
+    )
+    parser_docker.add_argument(
+        "-dbdumper", "--build_dumper_image",
+        action="store_true", dest="build_dumper_image", default=False,
+        help='buid a dbdumper image. It uses the postgres version in config/docker.yaml',
+    )
+    parser_docker.add_argument(
+        "-dddb", "--drop_db",
+        action="store_true", dest="docker_drop_db", default=False,
+        help='drop database in db docker container. name of the site db belongs to must be provided',
+        need_name = True,
+        name_valid = True,
+    )
+    parser_docker.add_argument(
+        "-dlsdb", "--list_db",
+        action="store_true", dest="docker_list_db", default=False,
+        help='list databases in db docker container.',
     )
     # parser_docker.add_argument(
     #     "-dcdbPG", "--set-postgers-version",
@@ -89,12 +106,12 @@ def add_options_docker(parser, result_dic):
         #action="store_true", dest="docker_set_admin_pw", default = False,
         #help = 'Set admin password from site description in a docker conatiner. option -n must be set and valid.',
     #)
-    #parser_docker.add_argument(
-        #"-ds", "--start_container",
-        #action="store_true", dest="docker_start_container", default=False,
-        #help = 'start a docker container. Name must be provided',
-        #need_name = True
-    #)
+    parser_docker.add_argument(
+        "-ds", "--start_container",
+        action="store_true", dest="docker_start_container", default=False,
+        help = 'start a docker container. Name must be provided',
+        need_name = True
+    )
     parser_docker.add_argument(
         "-dshow",
         action="store_true", dest="docker_show", default=False,
@@ -109,17 +126,17 @@ def add_options_docker(parser, result_dic):
         need_name = True,
         name_valid = True,
     )
-    #parser_docker.add_argument(
-        #"-dS", "--stop_container",
-        #action="store_true", dest="docker_stop_container", default=False,
-        #help = 'stop a docker container. Name must be provided',
-        #need_name = True
-    #)
-    #parser_docker.add_argument(
-        #"-drs", "--restart_container",
-        #action="store_true", dest="docker_restart_container", default=False,
-        #help = 'restart a docker container. Name must be provided'
-    #)
+    parser_docker.add_argument(
+        "-dS", "--stop_container",
+        action="store_true", dest="docker_stop_container", default=False,
+        help = 'stop a docker container. Name must be provided',
+        need_name = True
+    )
+    parser_docker.add_argument(
+        "-drs", "--restart_container",
+        action="store_true", dest="docker_restart_container", default=False,
+        help = 'restart a docker container. Name must be provided'
+    )
     parser_docker.add_argument(
         "-ddbname", "--dockerdbname",
         action="store", dest="dockerdbname", # no default, otherwise we can not get it from the site description

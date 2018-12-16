@@ -3,7 +3,7 @@
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
 from docker import Client
-from config import SITES, BASE_INFO, DOCKER_DEFAULTS, ODOO_VERSIONS, PROJECT_DEFAULTS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
+from config import BASE_PATH, SITES, BASE_INFO, DOCKER_DEFAULTS, ODOO_VERSIONS, PROJECT_DEFAULTS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
 #from config.handlers import InitHandler, DBUpdater
 from scripts.create_handler import InitHandler
 from scripts.update_local_db import DBUpdater
@@ -508,6 +508,84 @@ class DockerHandler(InitHandler, DBUpdater):
         block = '\\'.join([p for p in parts if p])
         return block
          
+    def build_dumper_image(self):
+        """
+        build dbdumper image
+        """
+        from templates.docker_templates import dumper_docker_template
+        template = dumper_docker_template % {'postgres_version' : int(float(self.use_postgres_version))}
+        docker_target_path = '%s/dumper/' % BASE_PATH
+        with open('%sDockerfile' % docker_target_path, 'w') as f:
+            f.write(template)
+        try:
+            docker_file = '%sDockerfile' % docker_target_path
+            result = self.default_values['docker_client'].build(
+                docker_target_path, 
+                tag='dbdumper',
+                dockerfile=docker_file)
+            is_ok = self._print_docker_result(result, docker_file, docker_target_path)
+            if is_ok:
+                print(bcolors.OKGREEN)
+                print('*' * 80)
+                print('The dbdumper image has been created')
+                print('please check executing: docker images')
+                print('*' * 80)
+                print(bcolors.ENDC)
+            else:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('something is fishy in the state of danemark ..')
+                print('the dbdumper image could not be created')
+                print('*' * 80)
+                print(bcolors.ENDC)
+              
+        except Exception as e:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('something is fishy in the state of danemark ..')
+            print(str(e))
+            print('*' * 80)
+            print(bcolors.ENDC)
+
+    def _print_docker_result(self, result, docker_file, docker_target_path, return_info=[]):
+        """creating docker images provides no error code, we have to scruntinize the result
+        
+        Arguments:
+            result {stream} -- what the docker build returned
+            docker_file {strin} -- in fact the Dockerfile to be build
+            docker_target_path {string} -- the path to the Dockerfile
+        
+        Keyword Arguments:
+            return_info {list} -- just a hack so we can give a nicer feedback with the last line read (default: {[]})
+        
+        Returns:
+            list -- see above
+        """
+
+        is_ok = True
+        return_info.append('')
+        for line in result:
+            line = eval(line.decode('utf-8'))
+            if isinstance(line, dict):
+                if line.get('errorDetail'):
+                    print(DOCKER_IMAGE_CREATE_ERROR % (
+                        self.site_name, 
+                        self.site_name, 
+                        line.get('errorDetail'), 
+                        docker_file, 
+                        docker_target_path))
+                    is_ok = False
+                status = line.get('status')
+                if status:
+                    print(line['status'].strip())
+                    continue
+                sl = line.get('stream')
+                if sl:
+                    print(line['stream'].strip())
+                    return_info[0] = line['stream'].strip()
+
+        return is_ok
+
     def build_image(self):
         """
         build image that has all python modules installed mentioned in the site description
@@ -633,36 +711,22 @@ class DockerHandler(InitHandler, DBUpdater):
                 #result.write( line ) 
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
         tag = docker_info.get('erp_image_version', docker_info.get('odoo_image_version'))
+        return_info = []
         try:
             docker_file = '%sDockerfile' % docker_target_path
             result = self.default_values['docker_client'].build(
                 docker_target_path, 
                 tag = tag, 
                 dockerfile=docker_file)
-            for line in result:
-                line = eval(line)
-                if isinstance(line, dict):
-                    if line.get('errorDetail'):
-                        print(DOCKER_IMAGE_CREATE_ERROR % (
-                            self.site_name, self.site_name, line.get('errorDetail'), docker_file, docker_target_path))
-                        return
-                    status = line.get('status')
-                    if status:
-                        print(line['status'].strip())
-                        continue
-                    sl = line.get('stream')
-                    if not sl:
-                        print(DOCKER_IMAGE_CREATE_ERROR % (
-                            self.site_name, 
-                            self.site_name, 
-                            'no stream element found processing Dockerfile'))
-                    print(line['stream'].strip())
+            is_ok = self._print_docker_result(result, docker_file, docker_target_path, return_info)
+            if not is_ok:
+                return
         except docker.errors.NotFound:
             print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
         else:
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_IMAGE_CREATE_DONE % (dockerhub_user, line['stream'].strip().split(' ')[-1], tag, tag))                
+            print(DOCKER_IMAGE_CREATE_DONE % (dockerhub_user, return_info[0].split(' ')[-1], tag, tag))                
 
     def rename_container(self, name, new_name):
         """
