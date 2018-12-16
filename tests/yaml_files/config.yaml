@@ -7,10 +7,16 @@
 
 BASE_DEFAULTS:
   # erp_version:
-  # define what erp type should be uses for a new site
+  # define what erp version should be uses for a new site
   # this only affects the generation of new site descriptions
   # and can be easily changed in the generated site description
-  erp_version: 'odoo'
+  erp_version: '11'
+
+  # erp_minor:
+  # define what erp minor version should be uses for a new site
+  # this only affects the generation of new site descriptions
+  # and can be easily changed in the generated site description
+  erp_minor: '.0'
 
   # site_editor:
   # define what editor to use when editing site description
@@ -27,10 +33,25 @@ BASE_DEFAULTS:
   # %s(BASE_PATH)
   sitesinfo_path: '%(BASE_PATH)s/sites_list/'
 
+  # repo_mapper:
+  # repo_mapper allows to use locical names in a site description
+  # like:
+  # {
+  #     'type' : 'git',
+  #     'url' : '%(gitlab.redcor.ch)s/afbs/afbs_cms.git',
+  # }
+  # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
+
   # sitesinfo_url:
-  # sitesinfo_url is the url where the gitreository can be found
-  # with which the sites are maintained 
-  sitesinfo_url: 'localhost'
+  # sitesinfo_url is the url where git repositories can be found
+  # in which the sites are maintained 
+  siteinfos:
+    localhost:
+      'localhost'
+  #  redo2oo:
+  #    'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
+  #  cooby:
+  #    'git@gitlab.com:cooby/erp-workbench.git'
 
   # project_path:
   # path to the projects
@@ -52,14 +73,6 @@ BASE_DEFAULTS:
   # however if you create many site, this can quickly become confusing
   erp_server_data_path: '%(BASE_PATH)s'
 
-  # docker_dumper_image:
-  # erp-workkbench lets you dump a site running in a docker container
-  # into a dump folder within the sites folder structure
-  # erp-workbench needs to know what the name of the image is
-  # that is used to construct the folder
-  # to learn more about this, read the dumper description in the erp-workbench help
-  docker_dumper_image: 'robertredcor/dumper'
-
   # local_user_mail:
   # sometimes you want to avoid sending mails to real user
   # when you have copied a life server to your local environment
@@ -69,9 +82,18 @@ BASE_DEFAULTS:
   # db_user:
   # this is the default data base user, if no db user is defined in the
   # server description file from the sites.yaml file
-  db_user: 'admin'
+  db_user: '%(DB_USER)s'
 
   # db_password:
   # this is the default password, if it not is defined in the
   # server description file from the sites.yaml file
   db_password: 'admin'
+
+  # sites_autopull:
+  # should the list of sites be pulled automatically
+  # if set to False, you have to do it manually
+  sites_autopull: True
+
+  # print_banner:
+  # should the (beautiful) erp-workbench banner be printed?
+  print_banner: True

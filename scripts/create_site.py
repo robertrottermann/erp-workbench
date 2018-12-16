@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # make sure we are in a virtualenv
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Do NOT !!!!! sort imports
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!
 import os, sys, time
 # robert: i usualy thest in wingide
-if not os.environ.get('VIRTUAL_ENV') and not os.environ.get('WINGDB_ACTIVE'):
+if not os.environ.get('VIRTUAL_ENV') and not os.environ.get('WINGDB_ACTIVE') and not os.environ.get('UNIT_TESTING'):
     print('not running in a virtualenv')
     print('activate the worbench environment executing:')
     print('workon workbench')
@@ -39,6 +42,7 @@ from config import ACT_USER, BASE_PATH, FOLDERNAMES, \
     BASE_INFO, MARKER, LOGIN_INFO_FILE_TEMPLATE, \
     REQUIREMENTS_FILE_TEMPLATE, DOCKER_DEFAULTS
 from config.config_data.base_info import BASE_DEFAULTS
+from config.config_data.project_info import PROJECT_DEFAULTS
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler
@@ -160,7 +164,8 @@ def main(opts, parsername, need_names_dic):
             info_dic = {
                 'project_path' : handler.default_values['inner'],
                 'erp_version': BASE_INFO.get('erp_version', BASE_INFO.get('odoo_version')),
-                'site_name' : handler.site_name
+                'site_name' : handler.site_name,
+                'project_type' : PROJECT_DEFAULTS.get('project_type'),
             }
             if opts.create:
                 existed = handler.create_or_update_site()

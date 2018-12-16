@@ -47,3 +47,4 @@ pyyaml
 #future
 argcomplete
 # deasy # a odoo handler to handle databases
+reload

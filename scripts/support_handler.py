@@ -71,6 +71,7 @@ class SupportHandler(InitHandler):
         result = sites_handler.drop_site(self.site_name)
         if result:
             print("removed site %s from sites.py" % self.site_name)
+        return result
 
     # ----------------------------------
     # add_site_to_sitelist

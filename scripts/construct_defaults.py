@@ -50,13 +50,13 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
     We have three elements involved in this process:
     1. config/config_data/xx_info.py
        this file has the actual data. If it is newer than the rest, it is taken
-    2. if config/config_data/xx_info.py does not exist or is not new er than
+    2. if config/config_data/xx_info.py does not exist or is not newer than
        config/xx.yaml, it is generated from this file.
        config/xx.yaml was copied from config/xx.yaml.in if it did not exist (in config/__init__.py)
     3. When config/config_data/xx_info.py is generated, default values are read from
        templates/xx.yaml.
-       This is to make sure, that all the values needed esist, as the user could somehow have 
-       deleted it when edititing the config/xx.yaml file.
+       This is to make sure, that all the values needed exist, as the user could somehow have 
+       deleted it when editing the config/xx.yaml file.
 
     Arguments:
         yaml_files {list of tuples} -- tuples with (
@@ -64,7 +64,7 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
             path to the datafile to be constructed,
             {path to yaml with defaults}
         )
-        vals {dictonary} : values that are used in the yaml files
+        vals {dictionary} : values that are used in the yaml files
 
     Keyword Arguments:
         results {dict} -- dictionary with the data loaded (default: {{}})

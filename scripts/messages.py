@@ -27,8 +27,8 @@ In a %snew%s shell you can execute
 %%(site_name)sw
 To create the new site execute the following commands:
 cd %%(project_path)s
-bin/build_%%(erp_version)s.py
-bin/dosetup_%%(erp_version)s
+bin/build_%%(project_type)s.py
+bin/dosetup_%%(project_type)s
 ------------------------------------------------
 """ % (bcolors.WARNING, bcolors.ENDC)
 
@@ -202,12 +202,12 @@ bin/s --edit-site demo_global
 """ % (bcolors.WARNING, bcolors.ENDC)
 
 LOCALSITESLIST_CLONED = """
-----------------------------------------------------
+%s----------------------------------------------------
 The siteslists have been cloned from:
 %%s
 into %%s/sites_list
-%sPlease check their content%s
-----------------------------------------------------
+Please check their content
+----------------------------------------------------%s
 """ % (bcolors.WARNING, bcolors.ENDC)
 LOCALSITESLIST_BASEPATH_MISSING = """
 Can not  create sites list

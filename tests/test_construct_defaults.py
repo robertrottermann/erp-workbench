@@ -1,11 +1,11 @@
 import os
 import sys
+import getpass
+import shutil
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scripts import construct_defaults
-import getpass
-import shutil
 
 """
 run it with:
@@ -30,7 +30,7 @@ class TestConstructDefault(unittest.TestCase):
                 shutil.rmtree(os.path.join(root, d))        
 
     def test_check_and_update_base_defaults(self):
-        """test overal functionality of check_and_update_base_defaults
+        """test overall functionality of check_and_update_base_defaults
         check_and_update_base_defaults reads a yaml file adapted by the user
         and creates a importable datastructure out of it
         The yaml file should only be parsed when it is newer than the importable module
@@ -42,7 +42,8 @@ class TestConstructDefault(unittest.TestCase):
         vals = {
             'BASE_PATH' : self.base_path,
             'ACT_USER' : self.act_user,
-            'USER_HOME' : self.user_home,  
+            'USER_HOME' : self.user_home,
+            'DB_USER' : self.act_user,
         }
         must_reload = construct_defaults.check_and_update_base_defaults(
             [(

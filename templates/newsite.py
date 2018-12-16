@@ -32,7 +32,7 @@
             #'base_image': '%(docker_hub_name)s/%(site_name)s:%(erp_version)s-latest',
             'base_image'        : 'camptocamp/odoo-project:%(erp_version)s.0-latest',
             # when CREATING a container: what image do we use for it
-            'erp_image_version': '%(erp_image_version)s:%(erp_version)s',
+            'erp_image_version': '%(docker_hub_name)s/%(erp_image_version)s',
             'container_name': '%(site_name)s',
             # 'db_container_name'    : 'db', # needs only to be set if it is not 'db'
             # trough what port can we access oddo (mapped to 8069)

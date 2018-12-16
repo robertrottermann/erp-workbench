@@ -195,6 +195,8 @@ class SitesHandler(object):
                     if p.returncode:
                         print(bcolors.FAIL)
                         print('Error:')
+                        print('The commandline %s produced an error' % cmd_line)
+                        print('please check if the sites_list in config/config.yaml is properly formated')
                         for part in result[1].split(b'\n'):
                             print(part.decode("utf-8"))
                         print(bcolors.ENDC)
@@ -387,6 +389,14 @@ class SitesHandler(object):
             with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
                 template = f.read() % handler.default_values
             template = template.replace('127.0.0.1', remote_url)
+        # make sure do have a site name
+        if not handler.site_name:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('attempt to create a site without a name')
+            print(bcolors.ENDC)
+            sys.exit()
+
         return self._add_site('G', template, no_outer, sublist)
 
     def add_site_local(self, handler, template_name = '', sublist='localhost'):

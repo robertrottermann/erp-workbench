@@ -17,6 +17,12 @@ import docker
 import datetime
 from datetime import date
 
+# DOCKER_APT_PIP_HEAD is used when constructing docker and either pip or 
+# apt libraries needs to be merged in
+DOCKER_APT_PIP_HEAD = """WORKDIR /odoo
+RUN apt update;
+"""
+
 class DockerHandler(InitHandler, DBUpdater):
     master = '' # possible master site from which to copy
     def __init__(self, opts, sites=SITES, url='unix://var/run/docker.sock', use_tunnel=False):
@@ -339,6 +345,17 @@ class DockerHandler(InitHandler, DBUpdater):
             'erp_image_version' : docker_info.get('erp_image_version', docker_info.get('odoo_image_version')),
             'erp_server_data_path' : BASE_INFO.get('erp_server_data_path', docker_info.get('odoo_server_data_path')),           
         }
+        # make sure we have valid elements
+        for k,v in info_dic.items():
+            if k == 'erp_image_version':
+                v = v.split(':')[0] # avoid empty image version with only tag
+            if not v:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('the value for %s is not set but is needed to create a docker container.' % k)
+                print('*' * 80)
+                print(bcolors.ENDC)
+                sys.exit()                
         if update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
             from templates.docker_templates import docker_template_update
@@ -544,12 +561,9 @@ class DockerHandler(InitHandler, DBUpdater):
             data_dic = {
                'erp_image_version'  : docker_info.get('base_image', 'camptocamp/odoo-project:%s-latest' % erp_version),
             }
-            data_str = """
-            WORKDIR /odoo
-            RUN apt update;
-            RUN set -x; \\
-            """
+            data_str = DOCKER_APT_PIP_HEAD
             if apt_list or pip_list:
+                data_str += "RUN set -x; \\"
                 pref = ' ' * 8
                 if apt_list:
                     data_str += 'apt install -y '
@@ -585,10 +599,24 @@ class DockerHandler(InitHandler, DBUpdater):
         # check out odoo source
         act = os.getcwd()
         os.chdir(docker_target_path)
+        # construct a valid version
+        version = self.version
+        minor = self.minor
+        try:
+            version = str(int(float(version)))
+        except:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
+            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (version, self.site))
+            print(bcolors.ENDC)
+        if minor:
+            version = ('%s.%s' % (version, minor)).replace('..', '.')
+                
         cmd_lines = [
             'git init .',
             'git submodule init',
-            'git submodule add -b %s https://github.com/odoo/odoo.git src' % PROJECT_DEFAULTS.get('erp_nightly')
+            'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
         ]
         self.run_commands(cmd_lines=cmd_lines)
         #for line in open( '%sDockerfile' % docker_source_path, 'r' ):

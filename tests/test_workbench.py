@@ -1,8 +1,11 @@
 import os
+import random
+import string
 import sys
 import unittest
 from argparse import Namespace
 from importlib import reload
+from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -26,16 +29,20 @@ class TestCreate(unittest.TestCase):
         args.subparser_name = 'create'
         args.skip_name = True
         args.quiet = True
+        self.patcher = patch.dict('os.environ', {'UNIT_TESTING': 'True'})  
+        self.mock_foo = self.patcher.start()
         self.args = args
         self.handler = SiteCreator(args, {})
+        self.addCleanup(self.patcher.stop) # add this line
 
-    def x_test_create_create(self):
+    def test_create_create(self):
         """ run the create -c command 
         """
         self.handler.site_names = [list(self.handler.sites.keys())[0]]
         result = self.handler.create_or_update_site()
+        self.assertTrue(result)
 
-    def x_test_create_create_main(self):
+    def test_create_create_main(self):
         """ run the create -c command 
         using the scripts.create_site main method
         """
@@ -43,23 +50,26 @@ class TestCreate(unittest.TestCase):
         args = self.args
         args.create = True
         args.name = list(self.handler.sites.keys())[0]
-        main(args, args.subparser_name)
+        need_names_dic = {}
+        main(args, args.subparser_name, need_names_dic)
+        pass
 
-    def x_test_create_ls(self):
+    def test_create_ls(self):
         """ run the create -ls command 
         """
         from scripts.utilities import list_sites
         list_sites(self.handler.sites, quiet = True)
 
-    def x_test_create_ls_main(self):
+    def test_create_ls_main(self):
         """ run the create -ls command 
         """
         from scripts.create_site import main
         args = self.args
         args.list_sites = True
-        main(args, args.subparser_name)
+        need_names_dic = {}
+        main(args, args.subparser_name, need_names_dic)
 
-    def x_test_create_parse_args(self):
+    def test_create_parse_args(self):
         """ run the create parse_args command 
         """
         from scripts.create_site import parse_args
@@ -69,6 +79,9 @@ class TestSupportNewSites(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
+        self.patcher = patch('sys.exit')
+        self.mock_foo = self.patcher.start()
+        self.addCleanup(self.patcher.stop) # add this line
         self._get_sites()
         from config.handlers import SupportHandler
         args = MyNamespace()
@@ -78,13 +91,13 @@ class TestSupportNewSites(unittest.TestCase):
         args.quiet = True
         self.args = args
         self.handler = SupportHandler(args, {})
-        
+
     def _get_sites(self):
-        old_exit = sys.exit
+        # old_exit = sys.exit
         # monkey patch sys.exit not 
-        def exit(arg=0):
-            print('monkey patched sys exit executed')
-        sys.exit = exit
+        # def exit(arg=0):
+        #     print('monkey patched sys exit executed')
+        # sys.exit = exit
         try:
             # if the sites_list does not exist yet
             # the following import will create it
@@ -105,41 +118,52 @@ class TestSupportNewSites(unittest.TestCase):
             except:
                 raise
         finally:
-            sys.exit = old_exit
-        
+            # sys.exit = old_exit
+            pass
+
     def tearDown(self):
         super().tearDown()
         # remove sites we added
         for n, existing in [('sites_global',self.SITES_G)  , ('sites_local', self.SITES_L)]:
+            site_list_names = set()
+            [site_list_names.add(e['site_list_name'])  for e in list(existing.values())]
             keys = list(existing.keys())
-            temp_path = os.path.normpath('%s/%s' % (self.sites_list_path, n))
-            files = os.listdir(temp_path)
-            for file_name in files:
-                try:
-                    n, e = file_name.split('.')
-                except:
-                    continue
-                if n != '__init__' and e == 'py':
-                    if n not in keys:
-                        os.unlink('%s/%s' % (temp_path, file_name))
+            for site_list_name in site_list_names:
+                temp_path = os.path.normpath('%s/%s/%s' % (self.sites_list_path, site_list_name, n))
+                files = os.listdir(temp_path)
+                for file_name in files:
+                    try:
+                        fn, fe = file_name.split('.')
+                    except:
+                        continue
+                    if fn != '__init__' and fe == 'py':
+                        if fn not in keys:
+                            os.unlink('%s/%s' % (temp_path, file_name))
+        pass
 
-    def x_test_support_add_drop_site(self):
+    def test_support_add_drop_site(self):
         """ run the create -c command 
         """
         import sites_list
-        new_name = 'new_site'
-        self.handler.site_names = [new_name]
-        self.handler.name = new_name
+        r_string = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        new_name = 'new_site_' + r_string
+        # self.handler.site_names = [new_name]
+        # self.handler.name = new_name
         self.args.add_site = True
+        self.args.name = new_name + ':localhost'
         result = self.handler.add_site_to_sitelist()
-        reload(sites_list.sites_global)
-        from sites_list.sites_global import SITES_G
-        self.assertTrue(new_name in SITES_G.keys())
+        reload(sites_list.localhost.sites_global)
+        from sites_list.localhost.sites_global import SITES_G as S_XX
+        self.assertTrue(new_name in list(S_XX.keys()))
         # now delete the site again
+        # we have to reload all modules that where tainted by creating the module
+        keys = list(sys.modules.keys())
+        for key in keys:
+            if key.startswith('config') or key.startswith('sites_list'):
+                del sys.modules[key]
+        import config
         result = self.handler.drop_site()
-        reload(sites_list.sites_global)
-        from sites_list.sites_global import SITES_G
-        self.assertFalse(new_name in SITES_G.keys())
+        self.assertTrue(result)
 
 
 class TestSupport(unittest.TestCase):
@@ -154,7 +178,7 @@ class TestSupport(unittest.TestCase):
         self.args = args
         self.handler = SupportHandler(args, {})
    
-    def x_test_editor(self):
+    def test_editor(self):
         from config import BASE_INFO
         self.assertEqual(BASE_INFO.get('site_editor'), self.handler.editor)
 
@@ -172,7 +196,7 @@ class TestDocker(unittest.TestCase):
         self.args = args
         self.handler = DockerHandler(args)
    
-    def x_test_check_and_create_container(self):
+    def test_check_and_create_container(self):
         self.handler.check_and_create_container()
 
     def test_build_image(self):

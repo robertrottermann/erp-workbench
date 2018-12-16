@@ -320,11 +320,18 @@ class InitHandler(RPC_Mixin):
                 if self.sites[opts.name].get('erp_provider') == 'flectra':
                     self.default_values.update(FLECTRA_VERSIONS[self.version])
                 else:
-                    self.default_values.update(ODOO_VERSIONS[self.version])
+                    if self.version in ODOO_VERSIONS.keys():
+                        self.default_values.update(ODOO_VERSIONS[self.version])
+                    else:
+                        print (bcolors.FAIL)
+                        print ('*' * 80)
+                        print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
+                        print (bcolors.ENDC)
+                        raise(KeyError)
             except KeyError:
                 print (bcolors.FAIL)
                 print ('*' * 80)
-                print ('%s has no %s version' % (self.sites[opts.name].get('erp_version'), self.version))
+                print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
                 print (bcolors.ENDC)
                 if opts.subparser_name == 'support':
                     if not opts.edit_site or opts.drop_site:
@@ -1906,12 +1913,22 @@ class InitHandler(RPC_Mixin):
                 p = subprocess.Popen(
                     cmd_line,
                     stdout=PIPE,
+                    stderr=PIPE,
                     env=dict(os.environ, PGPASSWORD=pw, PATH='/usr/bin:/bin'),
                     shell=shell)
             if opts.verbose:
-                print(p.communicate())
+                output, errors = p.communicate()
+                if output:
+                    print(output.decode('utf8'))              
             else:
-                p.communicate()
+                output, errors = p.communicate()
+            if p.returncode:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('%s resulted in an error/warning' % cmd_line)
+                print(errors.decode('utf8'))
+                print('*' * 80)
+                print(bcolors.ENDC)          
 
     def add_aliases_to_git_exclude(self):
         """
@@ -2012,7 +2029,8 @@ class InitHandler(RPC_Mixin):
             'alias_header': ALIAS_HEADER % {'pp': pp},
             'ppath': pp,
         }
-        open(alias_path, 'w').write(alias_str)
+        with open(alias_path, 'w') as f:
+            f.write(alias_str)
 
         # now write stings to git excluse file
         self.add_aliases_to_git_exclude()
