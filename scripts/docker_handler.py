@@ -28,8 +28,6 @@ class DockerHandler(InitHandler, DBUpdater):
     def __init__(self, opts, sites=SITES, url='unix://var/run/docker.sock', use_tunnel=False):
         """
         """
-        self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        self.docker_db_admin = DOCKER_DEFAULTS['dockerdbuser']
         super(DockerHandler, self).__init__(opts, sites)
         try:
             from docker import Client
@@ -38,7 +36,7 @@ class DockerHandler(InitHandler, DBUpdater):
             print('could not import docker')
             print('please run bin/pip install -r install/requirements.txt')
             return
-        cli = self.default_values.get('docker_client')
+        cli = self.docker_client # self.default_values.get('docker_client')
         self.url = url
         if not cli:
             from docker import Client
@@ -53,63 +51,93 @@ class DockerHandler(InitHandler, DBUpdater):
         # get the db container
         # ----------------------
         # the name of the database container is by default db
-        docker_info = self.site['docker']
-        self.docker_db_admin_pw = docker_info.get('db_admin_pw', DOCKER_DEFAULTS['dockerdbpw'])
-        if not self.opts.dockerdbname:
-            db_container_name = docker_info.get('db_container_name', DOCKER_DEFAULTS['dockerdb_container_name'])
-        self.db_container_name = db_container_name
-        
-        # update the docker registry so we get info about the db_container_name 
+
+        # update the docker registry so we get info about the db_container_name
         self.update_container_info()
 
-        # get the dbcontainer
-        db_container_list = cli.containers(filters = {'name' : db_container_name})
+    @property
+    def db_container_name(self):
+        docker_info = self.docker_info  # self.site['docker']
+        if not self.opts.dockerdbname:
+            db_container_name = docker_info.get('db_container_name', DOCKER_DEFAULTS['dockerdb_container_name'])
+        return db_container_name
+        
+    # ----------------------
+    # get the sites container
+    # ----------------------
+    @property
+    def db_container(self):
+         # get the dbcontainer
+        db_container_list = cli.containers(filters = {'name' : self.db_container_name})
         if db_container_list:
             db_container = db_container_list[0]
         else:
+            xxx # provide error
             return # either db container was missing or some other problem
+        return db_container
+        
+    @property
+    def docker_db_ip(self):
         # the ip address to access the db container
-        self.docker_db_ip = db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+        return self.db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+
+    @property
+    def postgres_port(self):
         # the db container allows access to the postgres server running within
         # trough a port that has been defined when the container has been created
-        self.postgres_port = BASE_INFO.get('docker_postgres_port')
+        return BASE_INFO.get('docker_postgres_port')
         # todo should we check whether the postgres port is accessible??
         
-        # ----------------------
-        # get the sites container
-        # ----------------------
-        container_name = docker_info['container_name']
-        self.docker_rpc_port = docker_info.get('erp_port', docker_info.get('odoo_port'))
-        long_polling_port = docker_info.get('erp_longpoll', docker_info.get('odoo_longpoll'))
+    @property
+    def docker_rpc_port(self):
+        return self.docker_info.get(
+            'erp_port', self.docker_info.get('odoo_port'))
+
+    @property
+    def docker_long_polling_port(self):
+        long_polling_port = self.docker_info.get('erp_longpoll', docker_info.get('odoo_longpoll'))
         if not long_polling_port:
             long_polling_port = int(self.docker_rpc_port) + 10000
-        self.docker_long_polling_port = long_polling_port
-        self.registry = self.default_values['docker_registry'].get(container_name)
+        return long_polling_port
+
+    @property
+    def docker_rpc_host(self):
+        registry = self.docker_registry.get(self.container_name)
         try:
-            self.docker_rpc_host = self.registry['NetworkSettings']['IPAddress']
+            docker_rpc_host = registry['NetworkSettings']['IPAddress']
         except:
-            self.docker_rpc_host = 'localhost'
+            docker_rpc_host = 'localhost'
+        return docker_rpc_host
         
-        # --------------------------------------------------
-        # get the credential to log into the db container
-        # --------------------------------------------------
-        # by default the odoo docker user db is 'odoo'
-        self.docker_db_admin = docker_info.get('db_admin', 'odoo')
+    # --------------------------------------------------
+    # get the credential to log into the db container
+    # --------------------------------------------------
+    # by default the odoo docker user db is 'odoo'
+    @property
+    def docker_db_admin(self):
+        docker_db_admin = self.docker_info.get('db_admin', 'odoo')
         if self.opts.dockerdbuser:
-            self.docker_db_admin = self.opts.dockerdbuser or DOCKER_DEFAULTS['dockerdbuser']        
+            docker_db_admin = self.opts.dockerdbuser or DOCKER_DEFAULTS['dockerdbuser']
+        return docker_db_admin
+
+    @property
+    def docker_db_admin_pw(self):
         # by default the odoo docker db user's pw is 'odoo'
         #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        if self.opts.dockerdbpw:
-            self.docker_db_admin_pw = self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']  
+        return self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']  
           
-        # --------------------------------------------------
-        # get the credential to log into the sites container
-        # --------------------------------------------------
+    # --------------------------------------------------
+    # get the credential to log into the sites container
+    # --------------------------------------------------
+    @property
+    def docker_rpc_user(self):
         docker_rpc_user = self.opts.drpcuser
         if not docker_rpc_user:
             docker_rpc_user = DOCKER_DEFAULTS['dockerrpcuser']
-        self.docker_rpc_user = docker_rpc_user
+        return docker_rpc_user
         
+    @property
+    def docker_rpc_user_pw(self):
         docker_rpc_user_pw = self.opts.drpcuserpw
         if not docker_rpc_user_pw:
             # no password was provided by an option
@@ -117,25 +145,28 @@ class DockerHandler(InitHandler, DBUpdater):
             docker_rpc_user_pw = self.site.get('erp_admin_pw')
             if not docker_rpc_user_pw:
                 docker_rpc_user_pw = DOCKER_DEFAULTS['dockerrpcuserpw']
-        self.docker_rpc_user_pw = docker_rpc_user_pw
+        return docker_rpc_user_pw
         
-        #dbhost = self.db_host 
-        #info = {
-            #'rpchost' : 'localhost',
-            #'port' : ports[0].get("HostPort", '8069'),
-            #'rpcuser' : 'admin',
-            #'rpcpw' : self.sites[self.site_name]['erp_admin_pw'],
-            #'dbuser' : 'odoo', # should be configurable
-            #'dbpw' : 'odoo', # should be configurable
-            #'dbhost' : dbhost,
-            #'docker_postgres_port' : self.default_values.get('docker_postgres_port'),
-        #}
-        # install_own_modules(self, list_only=False, quiet=False)
+    @property
+    def container_name(self):
+        return self.docker_info['container_name']
 
     @property
     def use_postgres_version(self):
         return DOCKER_DEFAULTS.get('use_postgres_version')
+
+    @property
+    def docker_registry(self):
+        return self.default_values.get('docker_registry', {})
     
+    @property
+    def docker_client(self):
+        return self.default_values.get('docker_client')
+
+    @property
+    def docker_info(self):
+        return self.site['docker']
+
     def update_docker_info(self, name='', required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
@@ -147,8 +178,8 @@ class DockerHandler(InitHandler, DBUpdater):
         In all cases, status info read from the docker engine is saved into the registry
         maintained in self.default_values['docker_registry']
         """
-        registry = self.default_values.get('docker_registry', {})
-        cli = self.default_values.get('docker_client')
+        registry = self.docker_registry
+        cli = self.docker_client
         if name:
             # check whether a container with the requested name exists.
             # similar to docker ps -a, we need to also consider the stoped containers
