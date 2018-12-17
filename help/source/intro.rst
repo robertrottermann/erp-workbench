@@ -5,7 +5,7 @@ Introduction and first steps
 ERP Workbench (WB) is a set of tools that are used to create and maintain local and remote
 erp (odoo, flectra, ..) sites.
 
-erp-workbench's goal is to support you trough all steps in the lifecicle of an erp-site.
+erp-workbench's goal is to support you trough all steps in the life cycle of an erp-site.
 This starts from the very first steps of defining a project for a new site, to develop it,
 to deploy it, to maintain it, handle backups and upgrade to newer versions of the erp-software.
 
@@ -85,7 +85,7 @@ Normally when you create a new sites-description WB asks in what sites-list you 
 
     bin/s --add-site NEWSITE
 
-But sometimes you want to create a "throw away" site to exeperiment with. For this you create a local site::
+But sometimes you want to create a "throw away" site to experiment with. For this you create a local site::
 
     bin/s --add-site-local NEWLOCALSITE
 

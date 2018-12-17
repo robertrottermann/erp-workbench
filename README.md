@@ -51,7 +51,7 @@ create a virtualenv for erp-workbench
 -------------------------------------
 make sure you are in the folder into which you git cloned erp-workbench!
 
-ececute the following commands in a NEW bash window:
+execute the following commands in a NEW bash window:
 ```
     # create virtualenv for erp-workbench
     mkvirtualenv -a . -p python3 workbench
@@ -90,8 +90,8 @@ The following message will be displayed::
     --------------------------------------------------
 and the command will terminate.
 This is because no configuration files have existed yet, but have
-been construced for you.
-You have to restart your command, which then  will used the freshly created environment.
+been constructed for you.
+You have to restart your the command bin/ls. It will then use the freshly created environment.
 
 As a side effect, two new site descriptions have been created, and can be listed by repeating the above command:
 ```
@@ -118,8 +118,8 @@ Please generate and read the documentation on how to change it.
 ## step by step in a freshly installed ubuntu 18.04
 
 as user root:
-the package terminator is not strictly nessecary but very convinient for shekk junkies like me :)
-It migth be possible, that the following list of libraries must be adapted to othe linux versions.
+the package terminator is not strictly necessary but very convenient for shell junkies like me :)
+It migth be possible, that the following list of libraries must be adapted to the linux versions.
 
 ```
         sudo apt install -y terminator postgresql postgresql-contrib \
