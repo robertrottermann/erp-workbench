@@ -48,8 +48,8 @@ Create the container
 
     bin/d -dc coobytech
 
-check if it is running
-----------------------
+check if the container is running
+---------------------------------
 
 ::
 
