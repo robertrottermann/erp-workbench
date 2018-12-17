@@ -24,10 +24,10 @@ Preparation:
 
 add the following lines to .bashrc by executing 
 ```
-    echo '# ------------------ start workon stuff -------------------
+    echo "# ------------------ start workon stuff -------------------
     export WORKON_HOME=$HOME/.virtualenvs
     export PROJECT_HOME=$HOME/projetcs
-    source /usr/local/bin/virtualenvwrapper.sh' >> $HOME/.bashrc
+    source $(virtualenvwrapper.sh)" >> $HOME/.bashrc
 ```
 take care that the last line (source /usr/local/bin/virtualenvwrapper.sh) is correct.
 It could be, that virtualenvwrapper.sh was installed to a different directory.

@@ -12,6 +12,8 @@ docker/docker-odoo-project/
 help/source/_build/
 *.wp*
 dumper/Dockerfile
+bin/pip
+bin/python
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
