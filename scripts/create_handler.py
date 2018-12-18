@@ -317,7 +317,7 @@ class InitHandler(RPC_Mixin):
         # starting with odoo 11 we need to check what python version to use
         if self.version:
             try:
-                if self.sites[opts.name].get('erp_provider') == 'flectra':
+                if self.erp_provider == 'flectra':
                     self.default_values.update(FLECTRA_VERSIONS[self.version])
                 else:
                     if self.version in ODOO_VERSIONS.keys():
@@ -325,20 +325,19 @@ class InitHandler(RPC_Mixin):
                     else:
                         print (bcolors.FAIL)
                         print ('*' * 80)
-                        print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
+                        print ('%s has no %s version' % (self.erp_provider, self.version))
                         print (bcolors.ENDC)
                         raise(KeyError)
             except KeyError:
                 print (bcolors.FAIL)
                 print ('*' * 80)
-                print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
+                print ('%s has no %s version' % (self.erp_provider, self.version))
                 print (bcolors.ENDC)
                 if opts.subparser_name == 'support':
                     if not opts.edit_site or opts.drop_site:
                         raise
                 else:
                     raise
-                    
 
     def _create_login_info(self, login_info):
         # ----------------------------------
@@ -546,6 +545,10 @@ class InitHandler(RPC_Mixin):
                 print(bcolors.ENDC)
 
     @property
+    def erp_provider(self):
+        return self.site.get('erp_provider', 'odoo')
+    
+    @property
     def docker_postgres_port(self):
         if self.parsername == 'docker':
             return self.postgres_port
@@ -669,6 +672,10 @@ class InitHandler(RPC_Mixin):
         return self._db_host
 
     @property
+    def docker_path_map(self):
+        return self.default_values.get('docker_path_map')
+
+    @property
     def user(self):
         return self.login_info.get('user', ACT_USER)
 
@@ -734,7 +741,7 @@ class InitHandler(RPC_Mixin):
                     self.opts._o.__dict__[_o] = _r
             else:
                 self.opts._o.__dict__[_o] = input('value for %s:' % _o)
-
+                
     # -------------------------------------------------------------------
     # check_name
     # check if name is in any of the sites listed in list_sites
@@ -966,7 +973,7 @@ class InitHandler(RPC_Mixin):
         if not self.default_values.get('erp_nightly'):
             self.default_values['erp_nightly'] = PROJECT_DEFAULTS.get(
                 'erp_nightly') or '%s%s' % (self.default_values['erp_version'], self.default_values['erp_minor'])
-        if not self.default_values.get('erp_provider'):
+        if not self.erp_provider:
             self.default_values['erp_provider'] = PROJECT_DEFAULTS.get(
                 'erp_provider', 'odoo')
         # now make sure we have a minor version number
@@ -2381,7 +2388,7 @@ class SiteCreator(InitHandler, DBUpdater):
         adir = os.getcwd()
         os.chdir(target)
         # here we have to decide whether we run flectra or odoo
-        erp_provider = self.site.get('erp_provider', 'odoo')
+        erp_provider = self.erp_provider
         if 1:  # erp_provider == 'flectra' or use_workon:
             # need to find virtualenvwrapper.sh
             virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
@@ -2451,7 +2458,7 @@ class SiteCreator(InitHandler, DBUpdater):
             self.do_copy(skeleton_path, outer_path, inner_path)
             # make sure virtual env exist
             python_version = 'python2.7'
-            st = self.site.get('erp_provider', 'odoo')
+            st = self.site.erp_provider
             if st == 'odoo':
                 try:
                     if float(self.version) > 10:
@@ -2510,7 +2517,7 @@ class SiteCreator(InitHandler, DBUpdater):
             print(bcolors.ENDC)
             sys.exit()            
         from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
-        if self.site.get('erp_provider', 'odoo') == 'flectra':
+        if self.erp_provider == 'flectra':
             FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
         elif 1:  # self.version != '9.0':
             FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
@@ -2525,7 +2532,7 @@ class SiteCreator(InitHandler, DBUpdater):
                 '', outer_target, FILES_TO_COPY['project_home'])
             # now create a versions file
             from templates.versions import VERSIONS, VERSIONS_FLECTRA
-            if self.site.get('erp_provider', 'odoo') == 'flectra':
+            if self.erp_provider == 'flectra':
                 open('%s/versions.cfg' % outer_target,
                      'w').write(VERSIONS_FLECTRA[self.version])
             else:

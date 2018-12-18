@@ -5,8 +5,8 @@ import sys
 import unittest
 from importlib import reload
 from unittest.mock import patch
-from name_space import MyNamespace
-from sites_list_killer import SitesListKiller
+from tests.name_space import MyNamespace
+from tests.sites_list_killer import SitesListKiller
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -154,6 +154,7 @@ class TestDocker(unittest.TestCase):
         args.quiet = True
         args.docker_create_container = True
         args.name = 'demo_global'
+        #args.erp_image_version = ''
         #self.handler.site_names = ['demo_global']
         self.args = args
         self.handler = DockerHandler(args)
