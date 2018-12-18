@@ -302,7 +302,7 @@ class InitHandler(RPC_Mixin):
         #if self.site_name:
         # construct default values like list of target directories
         self.construct_defaults(self.site_name)
-        self.default_values['current_user'] = ACT_USER
+        self.default_values['current_user'] = self.user
         self.default_values['foldernames'] = FOLDERNAMES
         # construct path to datafolder erp_server_data_path
         if self.need_login_info:
@@ -317,7 +317,7 @@ class InitHandler(RPC_Mixin):
         # starting with odoo 11 we need to check what python version to use
         if self.version:
             try:
-                if self.erp_provider == 'flectra':
+                if self.sites[opts.name].get('erp_provider') == 'flectra':
                     self.default_values.update(FLECTRA_VERSIONS[self.version])
                 else:
                     if self.version in ODOO_VERSIONS.keys():
@@ -325,19 +325,20 @@ class InitHandler(RPC_Mixin):
                     else:
                         print (bcolors.FAIL)
                         print ('*' * 80)
-                        print ('%s has no %s version' % (self.erp_provider, self.version))
+                        print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
                         print (bcolors.ENDC)
                         raise(KeyError)
             except KeyError:
                 print (bcolors.FAIL)
                 print ('*' * 80)
-                print ('%s has no %s version' % (self.erp_provider, self.version))
+                print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
                 print (bcolors.ENDC)
                 if opts.subparser_name == 'support':
                     if not opts.edit_site or opts.drop_site:
                         raise
                 else:
                     raise
+                    
 
     def _create_login_info(self, login_info):
         # ----------------------------------
@@ -404,7 +405,7 @@ class InitHandler(RPC_Mixin):
                     print(SITE_UNKNOW_IP % (site_server_ip,
                                             self.site_name, self.user, site_server_ip))
                     sys.exit()
-            login_info['user'] = ACT_USER
+            login_info['user'] = self.user
             # access to the local database
             db_user = BASE_DEFAULTS.get('db_user')
             db_password = BASE_DEFAULTS.get('dbdb_password_user')
@@ -545,9 +546,16 @@ class InitHandler(RPC_Mixin):
                 print(bcolors.ENDC)
 
     @property
-    def erp_provider(self):
-        return self.site.get('erp_provider', 'odoo')
-    
+    def container_name(self):
+        return self.docker_info['container_name']
+
+    @property
+    def erp_image_version(self):
+        erp_image_version = self.docker_info.get('erp_image_version', self.docker_info.get('odoo_image_version'))
+        if not erp_image_version:
+            erp_image_version = DOCKER_DEFAULTS.get('erp_image_version', 'no-erp_image_version-defined')
+        return erp_image_version
+        
     @property
     def docker_postgres_port(self):
         if self.parsername == 'docker':
@@ -561,10 +569,39 @@ class InitHandler(RPC_Mixin):
             return self.db_ip
         # does it make sense to return a default at all??
         return 'localhost'
+    
+    @property
+    def docker_default_port(self):
+        return PROJECT_DEFAULTS.get('docker_default_port', 9000)
+
+    @property
+    def docker_info(self):
+        return self.site.get('docker', {})
+    
+    @property
+    def docker_hub_name(self):
+        return self.docker_info.get('hub_name', '')
+        
+    @property
+    def docker_rpc_port(self):
+        return self.docker_info.get(
+            'erp_port', self.docker_info.get('odoo_port'))
+
+    @property
+    def docker_long_polling_port(self):
+        long_polling_port = self.docker_info.get('erp_longpoll', self.docker_info.get('odoo_longpoll'))
+        if not long_polling_port:
+            long_polling_port = int(self.docker_rpc_port) + 10000
+        return long_polling_port
 
     @property
     def projectname(self):
         return self.site.get('projectname', self.site.get('site_name', ''))
+
+    @property
+    def project_type(self):
+        return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
+    erp_provider = project_type
 
     @property
     def is_local(self):
@@ -578,6 +615,10 @@ class InitHandler(RPC_Mixin):
     @property
     def sitesinfo_path(self):
         return BASE_INFO['sitesinfo_path']
+
+    @property
+    def siteinfos(self):
+        return BASE_INFO.get('siteinfos')
 
     @property
     def site(self, site_name=''):
@@ -612,6 +653,10 @@ class InitHandler(RPC_Mixin):
         return self.default_values.get('sites_home', BASE_PATH)
 
     @property
+    def use_postgres_version(self):
+        return DOCKER_DEFAULTS.get('use_postgres_version')
+
+    @property
     def version(self):
         """return the value of the version key of the site description
         
@@ -622,28 +667,28 @@ class InitHandler(RPC_Mixin):
         if self.site:
             return self.site.get('erp_version', self.site.get('odoo_version', self.default_values['erp_version']))
 
-    @property
-    def minor(self):
-        """minor version of the running erp
+    #@property
+    #def minor(self):
+        #"""minor version of the running erp
         
-        Returns:
-            string -- the minor version like '.0'
-        """
+        #Returns:
+            #string -- the minor version like '.0'
+        #"""
 
-        if self.site:
-            return self.site.get('erp_minor', self.default_values['erp_minor'])
+        #if self.site:
+            #return self.site.get('erp_minor', self.default_values['erp_minor'])
 
-    @property
-    def nightly(self):
-        """what directory on the nightly server to use 
+    #@property
+    #def nightly(self):
+        #"""what directory on the nightly server to use 
         
-        Returns:
-            string -- 'directory name'
-            example -- 'master'
-        """
+        #Returns:
+            #string -- 'directory name'
+            #example -- 'master'
+        #"""
 
-        if self.site:
-            return self.site.get('erp_nightly', '%s%s' % (self.version, self.minor))
+        #if self.site:
+            #return self.site.get('erp_nightly', '%s%s' % (self.version, self.erp_minor))
 
     @property
     def docker_db_user(self):
@@ -672,12 +717,24 @@ class InitHandler(RPC_Mixin):
         return self._db_host
 
     @property
-    def docker_path_map(self):
-        return self.default_values.get('docker_path_map')
+    def erp_minor(self):
+        return PROJECT_DEFAULTS.get('erp_minor', '12')
+    
+    @property
+    def erp_nightly(self):
+        return PROJECT_DEFAULTS.get('erp_nightly', '12')
+
+    @property
+    def erp_provider(self):
+        return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
+
+    @property
+    def erp_version(self):
+        return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
 
     @property
     def user(self):
-        return self.login_info.get('user', ACT_USER)
+        return ACT_USER
 
     @property
     def remote_user(self):
@@ -708,14 +765,18 @@ class InitHandler(RPC_Mixin):
             'remote_data_path', remote_dic.get('remote_path', self.remote_sites_home))
         return remote_data_path
 
+    # was an alias to remote_url
     @property
-    def remote_url(self):
-        return self.site['remote_server']['remote_url']
-    remote_server = remote_url  # an alias
+    def remote_server(self):
+        return self.site.get('remote_server', {})
 
     @property
     def remote_sites_home(self):
         return self.site.get('sites_home', '/root/erp_workbench')
+
+    @property
+    def remote_url(self):
+        return self.remote_server.get('remote_url', '')
 
     # the user can start using different paths
     # - without selecting anything:
@@ -741,7 +802,7 @@ class InitHandler(RPC_Mixin):
                     self.opts._o.__dict__[_o] = _r
             else:
                 self.opts._o.__dict__[_o] = input('value for %s:' % _o)
-                
+
     # -------------------------------------------------------------------
     # check_name
     # check if name is in any of the sites listed in list_sites
@@ -973,7 +1034,7 @@ class InitHandler(RPC_Mixin):
         if not self.default_values.get('erp_nightly'):
             self.default_values['erp_nightly'] = PROJECT_DEFAULTS.get(
                 'erp_nightly') or '%s%s' % (self.default_values['erp_version'], self.default_values['erp_minor'])
-        if not self.erp_provider:
+        if not self.default_values.get('erp_provider'):
             self.default_values['erp_provider'] = PROJECT_DEFAULTS.get(
                 'erp_provider', 'odoo')
         # now make sure we have a minor version number
@@ -2065,7 +2126,7 @@ class InitHandler(RPC_Mixin):
         """
         sitelist_names = []
         sites_list_path = BASE_INFO.get('sitesinfo_path')
-        siteinfos = BASE_INFO.get('siteinfos', [])
+        siteinfos = self.siteinfos
         alias_line = ALIAS_LINE
         sitelist_names = list(siteinfos.keys())
         result = ''
@@ -2388,7 +2449,7 @@ class SiteCreator(InitHandler, DBUpdater):
         adir = os.getcwd()
         os.chdir(target)
         # here we have to decide whether we run flectra or odoo
-        erp_provider = self.erp_provider
+        erp_provider = self.site.get('erp_provider', 'odoo')
         if 1:  # erp_provider == 'flectra' or use_workon:
             # need to find virtualenvwrapper.sh
             virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
@@ -2458,7 +2519,7 @@ class SiteCreator(InitHandler, DBUpdater):
             self.do_copy(skeleton_path, outer_path, inner_path)
             # make sure virtual env exist
             python_version = 'python2.7'
-            st = self.site.erp_provider
+            st = self.erp_provider
             if st == 'odoo':
                 try:
                     if float(self.version) > 10:
@@ -2517,7 +2578,7 @@ class SiteCreator(InitHandler, DBUpdater):
             print(bcolors.ENDC)
             sys.exit()            
         from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
-        if self.erp_provider == 'flectra':
+        if self.site.get('erp_provider', 'odoo') == 'flectra':
             FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
         elif 1:  # self.version != '9.0':
             FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
@@ -2532,7 +2593,7 @@ class SiteCreator(InitHandler, DBUpdater):
                 '', outer_target, FILES_TO_COPY['project_home'])
             # now create a versions file
             from templates.versions import VERSIONS, VERSIONS_FLECTRA
-            if self.erp_provider == 'flectra':
+            if self.site.get('erp_provider', 'odoo') == 'flectra':
                 open('%s/versions.cfg' % outer_target,
                      'w').write(VERSIONS_FLECTRA[self.version])
             else:

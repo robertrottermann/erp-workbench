@@ -41,7 +41,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if not cli:
             from docker import Client
             cli = Client(base_url=self.url)
-            self.default_values['docker_client'] = cli
+            self._cli = cli
 
         if not self.site:
             return # when we are creating the db container
@@ -68,7 +68,7 @@ class DockerHandler(InitHandler, DBUpdater):
     @property
     def db_container(self):
          # get the dbcontainer
-        db_container_list = cli.containers(filters = {'name' : self.db_container_name})
+        db_container_list = self.XXXXcontainers(filters = {'name' : self.db_container_name})
         if db_container_list:
             db_container = db_container_list[0]
         else:
@@ -82,24 +82,12 @@ class DockerHandler(InitHandler, DBUpdater):
         return self.db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
 
     @property
-    def postgres_port(self):
+    def docker_postgres_port(self):
         # the db container allows access to the postgres server running within
         # trough a port that has been defined when the container has been created
         return BASE_INFO.get('docker_postgres_port')
         # todo should we check whether the postgres port is accessible??
         
-    @property
-    def docker_rpc_port(self):
-        return self.docker_info.get(
-            'erp_port', self.docker_info.get('odoo_port'))
-
-    @property
-    def docker_long_polling_port(self):
-        long_polling_port = self.docker_info.get('erp_longpoll', self.docker_info.get('odoo_longpoll'))
-        if not long_polling_port:
-            long_polling_port = int(self.docker_rpc_port) + 10000
-        return long_polling_port
-
     @property
     def docker_rpc_host(self):
         registry = self.docker_registry.get(self.container_name)
@@ -124,7 +112,12 @@ class DockerHandler(InitHandler, DBUpdater):
     def docker_db_admin_pw(self):
         # by default the odoo docker db user's pw is 'odoo'
         #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        return self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']  
+        return self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']
+    
+    @property
+    def docker_path_map(self):
+        # make sure that within a docker container no "external" paths are used
+        return (os.path.expanduser('~/'), '/root/')
           
     # --------------------------------------------------
     # get the credential to log into the sites container
@@ -147,30 +140,15 @@ class DockerHandler(InitHandler, DBUpdater):
                 docker_rpc_user_pw = DOCKER_DEFAULTS['dockerrpcuserpw']
         return docker_rpc_user_pw
         
-    @property
-    def container_name(self):
-        return self.docker_info['container_name']
-
-    @property
-    def use_postgres_version(self):
-        return DOCKER_DEFAULTS.get('use_postgres_version')
-
+    _docker_registry = {}
     @property
     def docker_registry(self):
-        return self.default_values.get('docker_registry', {})
+        return self._docker_registry
     
     @property
     def docker_client(self):
-        return self.default_values.get('docker_client')
+        return self._cli
 
-    @property
-    def docker_info(self):
-        return self.site['docker']
-    
-    @property
-    def erp_image_version(self):
-        return self.docker_info.get('erp_image_version', self.docker_info.get('odoo_image_version'))
-        
     def update_docker_info(self, name='', required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
@@ -180,7 +158,6 @@ class DockerHandler(InitHandler, DBUpdater):
         If it does exist and is stoped and start is False, nothing happens.
 
         In all cases, status info read from the docker engine is saved into the registry
-        maintained in self.default_values['docker_registry']
         """
         registry = self.docker_registry
         cli = self.docker_client
@@ -218,7 +195,6 @@ class DockerHandler(InitHandler, DBUpdater):
                         print(DOCKER_DB_MISSING)
                         return
                     raise ValueError('required container:%s does not exist' % name)
-        self.default_values['docker_registry'] = registry
 
     def update_container_info(self):
         """
@@ -235,7 +211,7 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         name = self.site_name
         site_info = self.sites[name]
-        erp_provider  = self.erp_provider
+        #erp_provider  = self.erp_provider
         docker = site_info.get('docker')
         if not docker or not docker.get('container_name'):
             print('the site description for %s has no docker description or no container_name' % opts.name)
@@ -286,7 +262,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 pass
         self.run_commands([docker_template], self.user, pw='')
 
-    def check_and_create_container(self, container_name='', rename_container = False, pull_image = False, update_container=False):
+    def check_and_create_container(self, container_name='', rename_container = False, pull_image = False, update_container=False, delete_container=False):
         """create a new docker container or manage an existing one
         
         Keyword Arguments:
@@ -394,9 +370,14 @@ class DockerHandler(InitHandler, DBUpdater):
         if update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
             from templates.docker_templates import docker_template_update
-            self._create_container(docker_template_update, info_dic)    
-        elif rename_container or self.default_values.get('docker_registry') \
-            and not self.default_values['docker_registry'].get(container_name) or (container_name == 'db'):
+            self._create_container(docker_template_update, info_dic)
+        elif delete_container:
+            from templates.docker_templates import docker_delete_template
+            # make sure the container is stopped
+            self.stop_container(self.container_name)
+            self._create_container(docker_delete_template, info_dic)
+        elif rename_container or self.docker_registry \
+            and self.container_name or (container_name == 'db'):
             if container_name != 'db':
                 from templates.docker_templates import docker_template, flectra_docker_template
                 if self.erp_provider == 'flectra':
@@ -437,7 +418,7 @@ class DockerHandler(InitHandler, DBUpdater):
         docker push robertredcor/afbs
         """
         try:
-            self.default_values['docker_client'].pull(imagename)
+            self.docker_client.pull(imagename)
             print(DOCKER_IMAGE_PULLED % (imagename, self.site_name))
         except docker.errors.NotFound:
             print(DOCKER_IMAGE_PULL_FAILED % (imagename, self.site_name))
@@ -448,7 +429,7 @@ class DockerHandler(InitHandler, DBUpdater):
         docker tag e6861e4e5151 robertredcor/afbs:9.0
         docker push robertredcor/afbs
         """
-        client = self.default_values['docker_client']
+        client = self.docker_client
         name = self.site_name
         site = self.site
         if not site:
@@ -474,7 +455,7 @@ class DockerHandler(InitHandler, DBUpdater):
         
 
     def dockerhub_login(self):
-        client = self.default_values['docker_client']
+        client = self.docker_client
         site = self.site
         docker_info = site['docker']
         hname =  docker_info.get('hub_name', 'docker_hub')
@@ -554,7 +535,7 @@ class DockerHandler(InitHandler, DBUpdater):
             f.write(template)
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.default_values['docker_client'].build(
+            result = self.docker_client.build(
                 docker_target_path, 
                 tag='dbdumper',
                 dockerfile=docker_file)
@@ -640,7 +621,7 @@ class DockerHandler(InitHandler, DBUpdater):
             return result
         docker_info = self.site.get('docker', {})
         # do we have a dockerhub user?
-        hub_name  = docker_info.get('hub_name', '')
+        hub_name  = self.docker_hub_name
         if not hub_name:
             print(DOCKER_IMAGE_CREATE_MISING_HUB_INFO % self.site_name)
             return
@@ -749,7 +730,7 @@ class DockerHandler(InitHandler, DBUpdater):
         return_info = []
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.default_values['docker_client'].build(
+            result = self.docker_client.build(
                 docker_target_path, 
                 tag = tag, 
                 dockerfile=docker_file)
@@ -767,8 +748,8 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         try:
-            self.default_values['docker_client'].stop(name)
-            self.default_values['docker_client'].rename(name, new_name)
+            self.docker_client.stop(name)
+            self.docker_client.rename(name, new_name)
             print('rename %s to %s' % (name, new_name))
         except:
             print('container %s nicht gefunden' % name)
@@ -777,10 +758,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         if not name:
-            name = self.site_name
+            name = self.container_name
         try:
             print('stoping container %s' % name)
-            self.default_values['docker_client'].stop(name)
+            self.docker_client.stop(name)
             print('stopped %s' % name)
         except docker.errors.NotFound:
             print('container %s nicht gefunden' % name)
@@ -793,7 +774,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if not name:
             name = self.site_name
         print('starting container %s' % name)
-        self.default_values['docker_client'].start(name)
+        self.docker_client.start(name)
         print('started %s' % name)
 
     def restart_container(self, name=''):
@@ -802,7 +783,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if not name:
             name = self.site_name
         print('restarting container %s' % name)
-        self.default_values['docker_client'].restart(name)
+        self.docker_client.restart(name)
         print('restarted %s' % name)
 
     def doTransfer(self):
@@ -814,7 +795,7 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         # todo should also check remotely
-        return self.default_values['docker_client'].images(image_name)
+        return self.docker_client.images(image_name)
 
     def createDumperImage(self):
         """
@@ -875,8 +856,8 @@ class DockerHandler(InitHandler, DBUpdater):
         if list_only:
             return install_own_modules(self.opts, self.default_values, list_only, quiet)
         # get_module_obj
-        docker_info = self.default_values['docker_registry'].get(self.site_name)
-        db_info = self.default_values['docker_registry'].get(self.site_name)
+        docker_info = self.docker_registry.get(self.site_name)
+        db_info = self.docker_registry.get(self.site_name)
         if not db_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
             if self.opts.docker_start_container:
@@ -917,14 +898,14 @@ class DockerHandler(InitHandler, DBUpdater):
         # make sure container is up and running
         self.check_and_create_container()
         # this places info about the running container into the default_values
-        docker_info = self.default_values['docker_registry'].get(self.site_name)
+        docker_info = self.docker_registry.get(self.site_name)
         if not docker_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
             return
         # the docker id is used to access the running container
         container_id = docker_info['Id']
         # we need an interface to the docker engine
-        cli = self.default_values.get('docker_client')
+        cli = self.docker_client
 
         for cmds in cmd_lines:
             exe = cli.exec_create(container=container_id, cmd=cmds, tty=True, privileged=True)
@@ -995,7 +976,7 @@ class DockerHandler(InitHandler, DBUpdater):
         # make sure container is up and running
         self.check_and_create_container()
         # this places info about the running container into the default_values
-        docker_info = self.default_values['docker_registry'].get(self.site_name)
+        docker_info = self.docker_registry.get(self.site_name)
         if not docker_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
             return

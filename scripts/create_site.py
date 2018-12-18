@@ -348,6 +348,9 @@ def main(opts, parsername, need_names_dic):
             # "docker -dcu", "--create_update_container",
             handler.check_and_create_container(update_container=True)
             did_run_a_command = True
+        if opts.docker_delete_container:
+            handler.check_and_create_container(delete_container=True)
+            did_run_a_command = True
         if opts.docker_create_db_container:
             # "docker -dcdb", "--create_db_container",
             handler.check_and_create_container(container_name='db')

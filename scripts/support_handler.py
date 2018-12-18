@@ -99,7 +99,7 @@ class SupportHandler(InitHandler):
         has_forbidden_chars=re.compile(r'[^A-Za-z0-9_]').search
         # if we have only on sub -site_list, we can take this one.
         # if there are severals, the user has to tell which one
-        siteinfos = BASE_INFO.get('siteinfos')
+        siteinfos = self.siteinfos
         siteinfo_names = siteinfos and list(siteinfos.keys()) or []
         site_name, subsite_name = (opts.name.split(':') + [''])[:2]
         # make sure all other processes pick the rigth name
@@ -149,12 +149,9 @@ class SupportHandler(InitHandler):
             }
 
         # make sure the variables for the the docker port and remote site are set
-        docker_port = DOCKER_DEFAULTS.get('docker_port', 9000) 
-        docker_long_poll_port = 19000
         if opts.docker_port:
             try:
                 docker_port = int(opts.docker_port)
-                docker_long_poll_port = docker_port + 10000
             except Exception as e:
                 print((bcolors.FAIL))
                 print(('*' * 80))
@@ -162,19 +159,19 @@ class SupportHandler(InitHandler):
                 print((bcolors.ENDC))
                 return {'error' : e}
         else:
-            docker_port = self.default_values.get('docker_port', docker_port)
-            docker_long_poll_port = self.default_values.get('docker_long_poll_port', docker_long_poll_port)
+            docker_port = self.docker_default_port
+        docker_long_poll_port = docker_port + 10000
         self.default_values['docker_port'] = docker_port
         self.default_values['docker_long_poll_port'] = docker_long_poll_port
         
         # docker hub
-        self.default_values['docker_hub_name'] = DOCKER_DEFAULTS.get('docker_hub_name', 'dockerhubname missing')
-        self.default_values['erp_image_version'] = PROJECT_DEFAULTS.get('project_type', 'odoo')       
+        self.default_values['docker_hub_name'] = self.docker_hub_name
+        self.default_values['erp_image_version'] = self.erp_image_version   
 
         if opts.remote_server:
             self.default_values['remote_server'] = opts.remote_server
         else:
-            self.default_values['remote_server'] = self.default_values.get('remote_server', '127.0.0.1')
+            self.default_values['remote_server'] = self.remote_user_data_path # bad naming!!
    
         if opts.add_site:
             # before we can construct a site description we need a a file with site values

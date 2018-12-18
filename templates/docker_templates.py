@@ -15,6 +15,9 @@ docker_template = """
     -e PYTHONIOENCODING=utf-8 \
     --name %(container_name)s -d --link db:db -t %(erp_image_version)s
 """
+docker_delete_template = """
+%(docker_command)s rm  %(container_name)s
+"""
 # for docker_template_update I changed:
 # --restart always -> --rm
 # -d -> ''
