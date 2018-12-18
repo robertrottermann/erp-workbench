@@ -171,7 +171,7 @@ class SupportHandler(InitHandler):
         if opts.remote_server:
             self.default_values['remote_server'] = opts.remote_server
         else:
-            self.default_values['remote_server'] = self.remote_user_data_path # bad naming!!
+            self.default_values['remote_server'] = self.remote_data_path # bad naming!!
    
         if opts.add_site:
             # before we can construct a site description we need a a file with site values

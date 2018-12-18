@@ -394,7 +394,7 @@ class InitHandler(RPC_Mixin):
                             #must_exit = False
                 #if must_exit:
                     #sys.exit()
-            if self.site and not REMOTE_SERVERS.get(site_server_ip):
+            if self.site and not self.remote_servers.get(site_server_ip):
                 selections = self.selections
                 must_exit = True
                 if selections:
@@ -419,7 +419,7 @@ class InitHandler(RPC_Mixin):
             # remote
             # -----------------
             # remote user depends which server the site is running on
-            server = self.site and REMOTE_SERVERS.get(
+            server = self.site and self.remote_servers.get(
                 site_server_ip, {}) or {}
             login_info['remote_user'] = server.get('remote_user') or ''
             login_info['remote_user_pw'] = self.site and server.get(
@@ -732,38 +732,82 @@ class InitHandler(RPC_Mixin):
     def erp_version(self):
         return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
 
+    # remote servers are construced from 
+    # config/servers.yaml into dictonary entries like:
+    # '88.198.51.174': {'local_user_email': 'robert@redcor.ch',
+    #                 'remote_data_path': '/root/odoo_instances',
+    #                 'remote_pw': '', # the password ist patched in at runtime
+    #                 'remote_user': 'root',
+    #                 'server_ip': '88.198.51.174',
+    #                 'server_name': 'lisa'}}
+    #
+    # the remote server stanza from a site description
+    # 'remote_server': {
+    #     'remote_url': 'localhost',  # please adapt
+    #     'remote_data_path': '/root/erp_workbench',
+    #     'remote_user': 'root',
+    #     # where is sites home on the remote server for non root users
+    #     'remote_sites_home': '/home/robert/erp_workbench',
+    #     'redirect_emil_to': '',  # redirect all outgoing mail to this account
+    #     # needs red_override_email_recipients installed
+    # },
+ 
+    @property
+    def remote_servers(self):
+        return REMOTE_SERVERS
+        
     @property
     def user(self):
         return ACT_USER
 
+    # @property
+    # def remote_url(self):
+    #     # remote_url is the key in the list of remote servers
+    #     return self.remote_servers.get(
+    #         # get the one we find in the remote_server stanza
+    #         # of the running site description
+    #         self.site.get('remote_server', {}).get(
+    #             # from this stanza get the url
+    #             # that is used as key into the list of retome servers
+    #             'remote_url', ''))
+
     @property
     def remote_user(self):
-        return REMOTE_SERVERS[self.site['remote_server']['remote_url']]['remote_user']
+        # from the list of remote servers
+        return self.remote_servers.get(
+            # find as what user we access that remote server
+            self.remote_url, {}).get('remote_user', '')
 
     @property
     def remote_user_pw(self):
-        return REMOTE_SERVERS[self.site['remote_server']['remote_url']].get('remote_pw', '')
+        # from the list of remote servers
+        return self.remote_servers.get(
+            # and finally find what pw to use on the remote server
+            # this pw is patched in at runtime
+            self.remote_url, {}).get('remote_pw', '')
 
     @property
     def remote_data_path(self):
+        # refacture the following as the above props
         # we first check whether config/localdata.py has an remote path set.
-        remote_dic = self.site.get('remote_server')
+        remote_dic = self.remote_server
         remote_data_path = remote_dic.get(
             'remote_data_path', remote_dic.get('remote_path'))
         if remote_data_path:
             return remote_data_path
         # then we check whether config/localdata.py has an remote path set.
-        remote_dic = REMOTE_SERVERS[self.site['remote_server']['remote_url']]
-        remote_data_path = remote_dic.get(
-            'remote_data_path', remote_dic.get('remote_path', self.remote_sites_home))
+        remote_data_path =  self.remote_servers.get(
+            # and finally find what pw to use on the remote server
+            # this pw is patched in at runtime
+            self.remote_url, {}).get('remote_data_path', '')
         return remote_data_path
 
-    @property
-    def remote_user_data_path(self):
-        remote_dic = REMOTE_SERVERS[self.site['remote_server']['remote_url']]
-        remote_data_path = remote_dic.get(
-            'remote_data_path', remote_dic.get('remote_path', self.remote_sites_home))
-        return remote_data_path
+    # @property
+    # def remote_user_data_path(self):
+    #     remote_dic = self.remote_servers.get(self.remote_url, {})
+    #     remote_data_path = remote_dic.get(
+    #         'remote_data_path', remote_dic.get('remote_path', self.remote_sites_home))
+    #     return remote_data_path
 
     # was an alias to remote_url
     @property
