@@ -36,12 +36,8 @@ class DockerHandler(InitHandler, DBUpdater):
             print('could not import docker')
             print('please run bin/pip install -r install/requirements.txt')
             return
-        cli = self.docker_client # self.default_values.get('docker_client')
         self.url = url
-        if not cli:
-            from docker import Client
-            cli = Client(base_url=self.url)
-            self._cli = cli
+        cli = self.docker_client # self.default_values.get('docker_client')
 
         if not self.site:
             return # when we are creating the db container
@@ -145,8 +141,13 @@ class DockerHandler(InitHandler, DBUpdater):
     def docker_registry(self):
         return self._docker_registry
     
+    _cli = {}
     @property
     def docker_client(self):
+        if not self._cli:
+            from docker import Client
+            cli = Client(base_url=self.url)
+            self._cli = cli
         return self._cli
 
     def update_docker_info(self, name='', required=False, start=True):
@@ -695,7 +696,7 @@ class DockerHandler(InitHandler, DBUpdater):
         os.chdir(docker_target_path)
         # construct a valid version
         version = self.version
-        minor = self.minor
+        minor = self.erp_minor
         try:
             version = str(int(float(version)))
         except:

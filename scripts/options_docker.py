@@ -107,13 +107,13 @@ def add_options_docker(parser, result_dic):
         #help = 'Set admin password from site description in a docker conatiner. option -n must be set and valid.',
     #)
     parser_docker.add_argument(
-        "-ds", "--delete_container",
+        "-dd", "--delete_container",
         action="store_true", dest="docker_delete_container", default=False,
         help = 'delete a docker container. Name must be provided',
         need_name = True
     )
     parser_docker.add_argument(
-        "-dd", "--start_container",
+        "-ds", "--start_container",
         action="store_true", dest="docker_start_container", default=False,
         help = 'start a docker container. Name must be provided',
         need_name = True
