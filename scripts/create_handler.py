@@ -16,7 +16,6 @@ from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, \
 from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
 
-from copy import deepcopy
 from scripts.name_completer import SimpleCompleter
 import stat
 import shutil
@@ -29,6 +28,10 @@ from scripts.utilities import collect_options, _construct_sa, bcolors, find_addo
 from scripts.messages import *
 import shutil
 from docker_handler.docker_mixin import DockerHandlerMixin
+
+# refactoring 
+from site_desc_handler.sdesc_utilities import flatten_sites
+from site_desc_handler.site_desc_handler import SiteDescHandlerMixin
 
 # the templatefile contains placeholder
 # that will be replaced with real values
@@ -259,29 +262,52 @@ class RPC_Mixin(object):
         return result
 
 
-class InitHandler(RPC_Mixin, DockerHandlerMixin):
+class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     # need_login_info will be set to false by local opperations
     # like --add-site that need no login
     need_login_info = True
 
-    def __init__(self, opts, sites=SITES, parsername=''):
+    _sites_local = {}
+    @property
+    def sites_local(self):
+        return self._sites_local
+    
+    _sites = {}
+    @property
+    def sites(self):
+        return self._sites
+    
+    _default_values = {}
+    @property
+    def default_values(self):
+        return self._default_values 
+    
+    _login_info = {}
+    @property
+    def login_info(self):
+        return self._login_info
+
+    @property
+    def sites_local(self):
+        return self._sites_local
+
+    def __init__(self, opts, sites, parsername=''):
         if opts.name:
             self.site_names = [opts.name]
         else:
             self.site_names = []
         self.opts = opts
         if sites:
-            self.sites = sites
+            self._sites = sites
         else:
-            self.sites = SITES
+            self._sites = SITES
+        
 
         # call the DockerHandlerMixin to setup the docker environment
-        DockerHandlerMixin.setup_docker_env()
-
-        self.default_values = {}
+        self.setup_docker_env(self.site)
         #self.check_name(no_completion=True, must_match=True)
         # resolve inheritance within sites
-        self.flatten_sites(sites)
+        flatten_sites(self._sites)
         # collect info on what parser and what options are selected
         parsername, selected, options = collect_options(opts)
         self.selections = selected
@@ -293,7 +319,7 @@ class InitHandler(RPC_Mixin, DockerHandlerMixin):
             # check again if selected
             parsername, selected, options = collect_options(opts)
         self.parsername = parsername
-        self.login_info = {}
+
         # now we can really check whether name is given and valid
         # while converting to workbench: I think wemake all options check 
         # themselfs whether they need a name
@@ -305,8 +331,8 @@ class InitHandler(RPC_Mixin, DockerHandlerMixin):
         #if self.site_name:
         # construct default values like list of target directories
         self.construct_defaults(self.site_name)
-        self.default_values['current_user'] = self.user
-        self.default_values['foldernames'] = FOLDERNAMES
+        self._default_values['current_user'] = self.user
+        self._default_values['foldernames'] = FOLDERNAMES
         # construct path to datafolder erp_server_data_path
         if self.need_login_info:
             # this will just return when there is no site name
@@ -321,10 +347,10 @@ class InitHandler(RPC_Mixin, DockerHandlerMixin):
         if self.version:
             try:
                 if self.sites[opts.name].get('erp_provider') == 'flectra':
-                    self.default_values.update(FLECTRA_VERSIONS[self.version])
+                    self._default_values.update(FLECTRA_VERSIONS[self.version])
                 else:
                     if self.version in ODOO_VERSIONS.keys():
-                        self.default_values.update(ODOO_VERSIONS[self.version])
+                        self._default_values.update(ODOO_VERSIONS[self.version])
                     else:
                         print (bcolors.FAIL)
                         print ('*' * 80)
@@ -898,202 +924,6 @@ class InitHandler(RPC_Mixin, DockerHandlerMixin):
                 self.site_names = [_name]
                 return _name
 
-    # ----------------------------------
-    # flatten_sites
-    # sites can inherit settings fro other sites
-    # flatten_sites resolfes this inheritance tree
-    # @SITES            : the global list of sites
-    def flatten_sites(self, sites=SITES):
-        """
-        sites can inherit settings from other sites
-        flatten_sites resolves this inheritance tree
-        @SITES            : the global list of sites
-        """
-        # we allow only one inheritance level
-        # check this
-        for k, v in list(sites.items()):
-            inherits = v.get('inherit')
-            vkeys = list(v.keys())
-            if inherits:
-                # also the inherited site must be deepcopied
-                # otherwise we copy the original to our copy that is in fact nothing but a reference fo the original
-                inherited = deepcopy(sites.get(inherits))
-                if not inherited:
-                    print('*' * 80)
-                    print('warning !!! site description %s tries to inherit %s which does not exist' % (
-                        k, inherits))
-                elif inherited.get('inherit'):
-                    print('*' * 80)
-                    print('warning !!! site description %s tries to inherit %s which does also inherit from a site. this is forbidden' % (
-                        k, inherits))
-                    sys.exit()
-                # first copy the running site to a temporary var
-                # result = v # deepcopy(v)
-                # now overwrite what is in the temporary var
-                # result.update(inherited)
-                # now copy things back but do not overwrite "inherited" values
-                # update does not work as this overwrites values that are directories
-                for key, val in list(inherited.items()):
-                    if isinstance(val, dict):
-                        # make sure the dic exists otherwise we can not add the items
-                        vvkeys = list(v.get(key, {}).keys())
-                        if key not in v:
-                            v[key] = {}
-                        for val_k, val_val in list(val.items()):
-                            if isinstance(val_val, list):
-                                # v is the element in the inherited site
-                                # if v does not have a key we add it with an empty list
-                                if val_k not in v[key]:
-                                    v[key][val_k] = []
-                                [v[key][val_k].append(vi)
-                                    for vi in val_val if vi not in v[key][val_k] and not ('-' + vi in v[key][val_k])]
-                                # clean resulting list
-                                v[key][val_k] = [vi for vi in v[key]
-                                                 [val_k] if not vi.startswith('-')]
-                            elif isinstance(val_val, dict):
-                                # v is the site into which we inherit (the parent)
-                                # key is the key in the child
-                                # val is the value in the child
-                                # val_val
-                                if val_k not in v[key]:
-                                    # so we have a target dict
-                                    v[key][val_k] = {}
-                                # now add elements to the the target dict
-                                target = v[key][val_k]
-                                for val_val_k, val_val_v in list(val_val.items()):
-                                    # we do an other level of hierarchy
-                                    if isinstance(val_val_v, list):
-                                        if val_val_k not in target:
-                                            target[val_val_k] = []
-                                        sub_target = target[val_val_k]
-                                        for tk in val_val_v:
-                                            # should it be possible to decuct keys???
-                                            if tk not in sub_target:
-                                                sub_target.append(tk)
-                                    elif isinstance(val_val_v, dict):
-                                        if val_val_k not in target:
-                                            target[val_val_k] = {}
-                                        sub_target = target[val_val_k]
-                                        for val_val_v_k, val_val_v_v in list(val_val_v.items()):
-                                            sub_target[val_val_v_k] = val_val_v_v
-                                    else:
-                                        if val_val_k not in target:
-                                            target[val_val_k] = val_val_v
-                            else:
-                                if val_k not in vvkeys:
-                                    v[key][val_k] = val_val
-                    elif isinstance(val, list):
-                        existing = v.get(key, [])
-                        v[key] = existing + \
-                            [vn for vn in val if vn not in existing]
-                    else:
-                        # ['site_name', 'servername', 'db_name']:
-                        if key in vkeys:
-                            continue
-
-    # ----------------------------------
-    # construct_defaults
-    # construct defaultvalues for a site
-    # @site_name        : name of the site
-    # ----------------------------------
-    def construct_defaults(self, site_name):
-        """
-        construct defaultvalues for a site
-        @site_name        : name of the site
-        """
-        # construct a dictonary with default values
-        # some of the values in the imported default_values are to be replaced
-        # make sure we can do this more than once
-        opts = self.opts
-        from templates.default_values import default_values as d_v
-        self.default_values = deepcopy(d_v)
-        default_values = self.default_values
-        default_values['sites_home'] = BASE_PATH
-        # first set default values that migth get overwritten
-        # local sites are defined in local_sites and are not added to the repository
-        is_local = site_name and not(SITES_LOCAL.get(site_name) is None)
-        default_values['is_local'] = is_local
-        default_values['db_user'] = self.db_user
-        # the site_name is defined with option -n and was checked by check_name
-        default_values['site_name'] = site_name
-        default_values.update(BASE_INFO)
-        if site_name and isinstance(site_name, str) and SITES.get(site_name):
-            default_values.update(SITES.get(site_name))
-        # now we try to replace the %(xx)s element with values we connected from 
-        # the yaml files
-        tmp_dic = {}
-        for td in [DOCKER_DEFAULTS, PROJECT_DEFAULTS]:
-            tmp_dic.update(td)
-        for k,v in self.default_values.items():
-            try:
-                self.default_values[k] = v % tmp_dic
-            except:
-                pass
-        # we need nightly to construct an url to download the software 
-        if not self.default_values.get('erp_nightly'):
-            self.default_values['erp_nightly'] = PROJECT_DEFAULTS.get(
-                'erp_nightly') or '%s%s' % (self.default_values['erp_version'], self.default_values['erp_minor'])
-        if not self.default_values.get('erp_provider'):
-            self.default_values['erp_provider'] = PROJECT_DEFAULTS.get(
-                'erp_provider', 'odoo')
-        # now make sure we have a minor version number
-        if not default_values.get('erp_minor'):
-            default_values['erp_minor'] = PROJECT_DEFAULTS.get('erp_minor', '')
-        site_base_path = os.path.normpath(os.path.expanduser(
-            '%(project_path)s/%(site_name)s/' % default_values))
-        # /home/robert/projects/afbsecure/afbsecure/parts/odoo
-        default_values['base_path'] = site_base_path
-        default_values['data_dir'] = "%s/%s" % (
-            self.erp_server_data_path, self.site_name)
-        default_values['db_name'] = site_name
-        default_values['outer'] = '%s/%s' % (
-            BASE_INFO['project_path'], site_name)
-        default_values['inner'] = '%(outer)s/%(site_name)s' % default_values
-        default_values['addons_path'] = '%(base_path)s/parts/odoo/openerp/addons,%(base_path)s/parts/odoo/addons,%(data_dir)s/%(site_name)s/addons' % default_values
-        # if we are using docker, the addon path is very different
-        default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
-        default_values['skeleton'] = '%s/skeleton' % self.sites_home
-        # add modules that must be installed using pip
-        _s = {}
-        if is_local:
-            _s = SITES_LOCAL.get(site_name)
-        else:
-            if SITES.get(site_name):
-                _s = SITES.get(site_name)
-        site_addons = _s.get('addons', [])
-        pip_modules = _s.get('extra_libs', {}).get('pip', [])
-        skip_list = _s.get('skip', {}).get('addons', [])
-        # every add on module can have its own pip module that must be used
-        for addon in _s.get('addons', []):
-            pip_modules += addon.get('pip_list', [])
-        pm = '\n'
-        if pip_modules:
-            pip_modules = list(set(pip_modules)) # make them uniqu
-            for m in pip_modules:
-                pm += '%s\n' % m
-        default_values['pip_modules'] = pm
-        # the site addons will only contain paths to download
-        # if from one of the downloaded addon folders more than one addon should be installed ??????
-        default_values['site_addons'] = _construct_sa(
-            site_name, deepcopy(site_addons), skip_list)
-
-        default_values['skip_list'] = skip_list
-
-        # make sure that all placeholders are replaced
-        m = re.compile(r'.*%\(.+\)s')
-        for k, v in list(self.default_values.items()):
-            if isinstance(v, str):
-                counter = 0
-                while m.match(v) and counter < 10:
-                    v = v % self.default_values
-                    self.default_values[k] = v
-                    counter += 1  # avoid endless loop
-        if not self.default_values.get('erp_version'):
-            if 'erp_version' in vars(self.opts).keys():
-                erp_version = self.opts.erp_version
-            else:
-                erp_version = PROJECT_DEFAULTS.get('erp_version', '12.0')
-            self.default_values['erp_version'] = erp_version
         
     # -------------------------------------------------------------------
     # name_needed
@@ -1514,7 +1344,7 @@ class InitHandler(RPC_Mixin, DockerHandlerMixin):
                 # this should be done in a mor systematic way.when I use massmailing, a click to the send button
                 remote_info = self.site.get('remote_server', {})
                 if remote_info.get('redirect_emil_to'):
-                    self.default_values['local_user_mail'] = remote_info.get(
+                    self._default_values['local_user_mail'] = remote_info.get(
                         'redirect_emil_to')
             for c_param in config_params:
                 # list of (search-key-name, value), {'field' : value, 'field' : value ..}
@@ -2369,232 +2199,4 @@ class InitHandler(RPC_Mixin, DockerHandlerMixin):
             except Exception as e:
                 if self.opts.verbose:
                     print(str(e))
-class SiteCreator(InitHandler, DBUpdater):
-
-    def __init__(self, opts, sites=SITES):
-        super(SiteCreator, self).__init__(opts, sites)
-
-    # ------------------------------------
-    # get_value_from_config
-    # gets a value from etc/open_erp.conf
-    # ------------------------------------
-    def get_value_from_config(self, path, key=''):
-        """
-        gets a value from etc/open_erp.conf
-        """
-        res = {}
-        for l in open(path):
-            if l and l.find('=') > -1:
-                parts = l.split('=', 1)
-                res[parts[0].strip()] = parts[1].strip()
-        if key:
-            return res.get(key)
-        else:
-            return res
-
-    # =============================================================
-    # create site stuff
-    # =============================================================
-    def create_or_update_site(self):
-        # read and update the data from which login_info.cfg.in will be created
-        config_info = self.get_config_info()
-        # check if the project in the project folder defined in the configuration exists
-        # if not create the project structure and copy all files from the skeleton folder
-        existed = False
-        if self.site_name:
-            existed = self.check_project_exists()
-            # construct list of addons read from site
-            open(LOGIN_INFO_FILE_TEMPLATE % self.default_values['inner'], 'w').write(
-                config_info % self.default_values)
-            # overwrite requrements.txt with values from systes.py
-            data = open(REQUIREMENTS_FILE_TEMPLATE %
-                        self.default_values['inner'], 'r').read()
-            # we want to preserve changes in the requirements.txt
-            data = '\n'.join(list(dict(enumerate([d for d in data.split('\n') if d] +
-                                            self.default_values['pip_modules'].split('\n'))).values()))
-            # MODULES_TO_ADD_LOCALLY are allways added to a local installation
-            # these are tools to help testing and such
-            s = data.split('\n') + (MODULES_TO_ADD_LOCALLY and MODULES_TO_ADD_LOCALLY or [])
-            s = set(s)
-            open(REQUIREMENTS_FILE_TEMPLATE % self.default_values['inner'], 'w').write(
-                '\n'.join(s))  # 25.7.17 robert % self.default_values)
-        return existed
-
-    def remove_virtual_env(self, site_name):
-        """remove an existing virtual env
-         
-         Arguments:
-             site_name {string} -- the name of the virtual env to remove
-        """
-        virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
-        commands = """
-        export WORKON_HOME=%(home)s/.virtualenvs\n
-        export PROJECT_HOME=/home/robert/Devel\n
-        source %(virtualenvwrapper)s\n
-        rmvirtualenv  %(site_name)s       
-        """ % {
-            'home': os.path.expanduser("~"),
-            'virtualenvwrapper': str(virtualenvwrapper),
-            'site_name': site_name
-        }
-        p = subprocess.Popen(
-            '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        out, err = p.communicate(commands.encode())
-
-    def create_virtual_env(self, target, python_version='python2.7', use_workon=True):
-        """
-        """
-        "create a virtual env within the new project"
-        adir = os.getcwd()
-        os.chdir(target)
-        # here we have to decide whether we run flectra or odoo
-        erp_provider = self.site.get('erp_provider', 'odoo')
-        if 1:  # erp_provider == 'flectra' or use_workon:
-            # need to find virtualenvwrapper.sh
-            virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
-            os.chdir(self.default_values['inner'])
-            cmd_list = [
-                'export WORKON_HOME=%s/.virtualenvs' % os.path.expanduser("~"),
-                'export PROJECT_HOME=/home/robert/Devel',
-                'source %s' % virtualenvwrapper,
-                'mkvirtualenv -a %s -p %s %s' % (
-                    self.default_values['inner'],
-                    python_version,
-                    self.site_name
-                )
-            ]
-            commands = b'$$'.join([e.encode() for e in cmd_list])
-            commands = commands.replace(b'$$', b'\n')
-            #p = subprocess.call(commands, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            p = subprocess.Popen(
-                '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=os.environ.copy())
-            out, err = p.communicate(input=commands)
-            if not self.opts.quiet:
-                print(out)
-                print(err)
-        else:
-            # create virtual env
-            cmd_line = ['virtualenv', '-p', python_version, 'python']
-            p = subprocess.Popen(cmd_line, stdout=PIPE, stderr=PIPE)
-            if self.opts.verbose:
-                print(os.getcwd())
-                print(cmd_line)
-                print(p.communicate())
-            else:
-                p.communicate()
-        os.chdir(adir)
-
-    def get_config_info(self):
-        """
-        collect values needed to put into the openerp.cfg file
-        """
-        default_values = self.default_values
-        default_values['projectname'] = self.projectname
-        # only set when creating or editing the site
-        default_values['erp_version'] = self.site.get('erp_version', self.site.get('odoo_version', ''))
-        # read the login_info.py.in
-        # in this file, all variables are of the form $(VARIABLENAME)$
-        # replace_dic is constructed in get_user_info_base->build_replace_info
-        # the names to replace are defined globaly as REPLACE_NAMES
-        p2 = LOGIN_INFO_TEMPLATE_FILE % default_values['skeleton']
-        return open(p2, 'r').read() % default_values
-
-    def check_project_exists(self):
-        """
-        check if a project exists, if not create it
-        """
-        opts = self.opts
-        default_values = self.default_values
-        existed = True
-        # we only create a site, if we have a site_name
-        if self.site_name:
-            # check if project exists
-            skeleton_path = default_values['skeleton']
-            outer_path = default_values['outer']
-            inner_path = default_values['inner']
-            if not os.path.exists(inner_path):
-                self.create_new_project()
-                existed = False
-            self.do_copy(skeleton_path, outer_path, inner_path)
-            # make sure virtual env exist
-            python_version = 'python2.7'
-            st = self.erp_provider
-            if st == 'odoo':
-                try:
-                    if float(self.version) > 10:
-                        python_version = 'python3'
-                except:
-                    python_version = 'python3'
-            elif st == 'flectra':
-                python_version = 'python3'
-            self.create_virtual_env(inner_path, python_version=python_version)
-        return existed
-
-    def create_new_project(self):
-        """ create a new project with all the substructures
-            These are:
-            - a project structure in procects
-            - a folder with a predefined set of folders in
-              the data directory
-            - a virtual environment (done by the calling method)
-        """
-
-        opts = self.opts
-        default_values = self.default_values
-        "ask for project info, create the structure and copy the files"
-        skeleton = default_values['skeleton']
-        outer = default_values['outer']
-        inner = default_values['inner']
-        # create project folders
-        # create sensible error message
-        # check whether projects folder exists
-        pp = default_values['project_path']
-        if not os.path.exists(pp) and not os.path.isdir(pp):
-            # try to create it
-            try:
-                os.makedirs(pp)
-            except OSError:
-                print('*' * 80)
-                print('could not create %s' % pp)
-                sys.exit()
-        for p in [outer, inner]:
-            if not os.path.exists(p):
-                os.mkdir(p)
-        ppath_ini = '%s/__init__.py' % outer
-        if not os.path.exists(ppath_ini):
-            open(ppath_ini, 'w').close()
-        # reate virtualenv
-        # copy files
-        # reate_virtual_env(inner)
-
-    def do_copy(self, source, outer_target, inner_target):
-        opts = self.opts
-        # now copy files
-        if not(self.site and self.version):
-            print(bcolors.WARNING)
-            print('*' * 80)
-            print('Hoppalla, seems that %s is not a valid name' % self.site_name)
-            print(bcolors.ENDC)
-            sys.exit()            
-        from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
-        if self.site.get('erp_provider', 'odoo') == 'flectra':
-            FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
-        elif 1:  # self.version != '9.0':
-            FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
-        from pprint import pprint
-        # pprint(FILES_TO_COPY)
-        # odules_update = False # only copy some files so we can rerun dosetup
-        self.handle_file_copy_move(
-            source, inner_target, FILES_TO_COPY['project'])
-        # create directories and readme in the project home
-        if outer_target:
-            self.handle_file_copy_move(
-                '', outer_target, FILES_TO_COPY['project_home'])
-            # now create a versions file
-            from templates.versions import VERSIONS, VERSIONS_FLECTRA
-            if self.site.get('erp_provider', 'odoo') == 'flectra':
-                open('%s/versions.cfg' % outer_target,
-                     'w').write(VERSIONS_FLECTRA[self.version])
-            else:
-                open('%s/versions.cfg' % outer_target,
-                     'w').write(VERSIONS[self.version])
+                    

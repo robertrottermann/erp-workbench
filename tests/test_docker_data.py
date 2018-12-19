@@ -6,10 +6,13 @@ import unittest
 import random
 import string
 from importlib import reload
-from sites_list_killer import SitesListKiller
-from name_space import MyNamespace
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, '.')
+
+from .sites_list_killer import SitesListKiller
+from .name_space import MyNamespace
+
 from scripts import construct_defaults
 
 """

@@ -432,36 +432,6 @@ def find_addon_names(addon):
 
     return [n.strip() for n in names if n]
 
-# --------------------------------------------
-# _construct_sa
-# return list of urls to download addons from
-# --------------------------------------------
-
-
-def _construct_sa(site_name, site_addons, skip_list):
-    """
-    """
-    added = []
-    name = ''
-    for a in (site_addons or []):
-        names = find_addon_names(a)
-        for name in names:
-            if not name:
-                continue
-            if name and name in skip_list:
-                continue
-            ap = a.get('add_path')
-            if ap:
-                p = os.path.normpath(
-                    '%s/%s/addons/%s' % (BASE_INFO['erp_server_data_path'], site_name, ap))
-            else:
-                p = os.path.normpath(
-                    '%s/%s/addons' % (BASE_INFO['erp_server_data_path'], site_name))
-            if p not in added:
-                added.append(p)
-    return '\n'.join(['    local %s' % a for a in added])
-
-
 # ----------------------------------
 # checkout_sa
 # get addons from repository

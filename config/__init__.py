@@ -105,7 +105,7 @@ sites_handler = None
 
 try:
     pwd = os.getcwd()
-    from scripts.sites_handler import SitesHandler
+    from site_desc_handler.site_desc_handler import SitesHandler
     sites_handler = SitesHandler(BASE_PATH) # will exit when installation not yet finished
     SITES, SITES_LOCAL = sites_handler.get_sites()
     # MARKER is used to mark the position in sites.py to add a new site description
