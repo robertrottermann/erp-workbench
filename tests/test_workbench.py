@@ -5,10 +5,11 @@ import sys
 import unittest
 from importlib import reload
 from unittest.mock import patch
-from tests.name_space import MyNamespace
-from tests.sites_list_killer import SitesListKiller
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, '.')
+from tests.name_space import MyNamespace
+from tests.sites_list_killer import SitesListKiller
 
 """
 run it with:

@@ -28,7 +28,7 @@ from scripts.update_local_db import DBUpdater
 from scripts.utilities import collect_options, _construct_sa, bcolors, find_addon_names
 from scripts.messages import *
 import shutil
-
+from docker_handler.docker_mixin import DockerHandlerMixin
 
 # the templatefile contains placeholder
 # that will be replaced with real values
@@ -259,11 +259,10 @@ class RPC_Mixin(object):
         return result
 
 
-class InitHandler(RPC_Mixin):
+class InitHandler(RPC_Mixin, DockerHandlerMixin):
     # need_login_info will be set to false by local opperations
     # like --add-site that need no login
     need_login_info = True
-    docker_registry = None
 
     def __init__(self, opts, sites=SITES, parsername=''):
         if opts.name:
@@ -275,6 +274,10 @@ class InitHandler(RPC_Mixin):
             self.sites = sites
         else:
             self.sites = SITES
+
+        # call the DockerHandlerMixin to setup the docker environment
+        DockerHandlerMixin.setup_docker_env()
+
         self.default_values = {}
         #self.check_name(no_completion=True, must_match=True)
         # resolve inheritance within sites
@@ -545,54 +548,6 @@ class InitHandler(RPC_Mixin):
                 print('it must be of the form key=value')
                 print(bcolors.ENDC)
 
-    @property
-    def container_name(self):
-        return self.docker_info['container_name']
-
-    @property
-    def erp_image_version(self):
-        erp_image_version = self.docker_info.get('erp_image_version', self.docker_info.get('odoo_image_version'))
-        if not erp_image_version:
-            erp_image_version = DOCKER_DEFAULTS.get('erp_image_version', 'no-erp_image_version-defined')
-        return erp_image_version
-        
-    @property
-    def docker_postgres_port(self):
-        if self.parsername == 'docker':
-            return self.postgres_port
-        # does it make sense to return a default at all??
-        return '8069'
-
-    @property
-    def db_container_ip(self):
-        if self.parsername == 'docker':
-            return self.db_ip
-        # does it make sense to return a default at all??
-        return 'localhost'
-    
-    @property
-    def docker_default_port(self):
-        return PROJECT_DEFAULTS.get('docker_default_port', 9000)
-
-    @property
-    def docker_info(self):
-        return self.site.get('docker', {})
-    
-    @property
-    def docker_hub_name(self):
-        return self.docker_info.get('hub_name', '')
-        
-    @property
-    def docker_rpc_port(self):
-        return self.docker_info.get(
-            'erp_port', self.docker_info.get('odoo_port'))
-
-    @property
-    def docker_long_polling_port(self):
-        long_polling_port = self.docker_info.get('erp_longpoll', self.docker_info.get('odoo_longpoll'))
-        if not long_polling_port:
-            long_polling_port = int(self.docker_rpc_port) + 10000
-        return long_polling_port
 
     @property
     def projectname(self):
