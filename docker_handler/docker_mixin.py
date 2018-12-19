@@ -2,14 +2,41 @@ import docker
 from docker import Client
 
 
-def collect_docker_info(self, opts, sites, parsername):
+def collect_docker_info(self, site):
+    """collect docker info from the site description
+    Store the data in a instance variable _docker_info
+    
+    Arguments:
+        sites {dict} -- site description
+    """
+
     pass
 
 class DockerHandlerMixin(object):
     docker_registry = None
 
-    def setup_docker_env(self):
-        collect_docker_info(self, opts, sites, parsername)
+    def setup_docker_env(self, site):
+        """collect docker info from the site description
+        Store the data in a instance variable _docker_info
+        
+        Arguments:
+            sites {dict} -- site description
+        """
+        self._docker_info = collect_docker_info(self, site)
+
+    _docker_registry = {}
+    @property
+    def docker_registry(self):
+        return self._docker_registry
+    
+    _cli = {}
+    @property
+    def docker_client(self):
+        if not self._cli:
+            from docker import Client
+            cli = Client(base_url=self.url)
+            self._cli = cli
+        return self._cli
 
     @property
     def container_name(self):

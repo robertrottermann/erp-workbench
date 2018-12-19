@@ -28,7 +28,7 @@ class DockerHandler(InitHandler, DBUpdater):
     def __init__(self, opts, sites=SITES, url='unix://var/run/docker.sock', use_tunnel=False):
         """
         """
-        super(DockerHandler, self).__init__(opts, sites)
+        super().__init__(opts, sites)
         try:
             from docker import Client
         except ImportError:
@@ -136,20 +136,6 @@ class DockerHandler(InitHandler, DBUpdater):
                 docker_rpc_user_pw = DOCKER_DEFAULTS['dockerrpcuserpw']
         return docker_rpc_user_pw
         
-    _docker_registry = {}
-    @property
-    def docker_registry(self):
-        return self._docker_registry
-    
-    _cli = {}
-    @property
-    def docker_client(self):
-        if not self._cli:
-            from docker import Client
-            cli = Client(base_url=self.url)
-            self._cli = cli
-        return self._cli
-
     def update_docker_info(self, name='', required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
