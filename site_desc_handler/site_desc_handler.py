@@ -5,7 +5,7 @@ from site_desc_handler.sdesc_utilities import _construct_sa
 import re
 
 class SiteDescHandlerMixin(object):
-    """This calss holds the site descriptions and
+    """This class holds the site descriptions and
     knows how to handle them
     
     Arguments:
@@ -36,14 +36,14 @@ class SiteDescHandlerMixin(object):
         default_values['sites_home'] = BASE_PATH
         # first set default values that migth get overwritten
         # local sites are defined in local_sites and are not added to the repository
-        is_local = site_name and not(SITES_LOCAL.get(site_name) is None)
+        is_local = site_name and not(self.sites_local.get(site_name) is None)
         default_values['is_local'] = is_local
         default_values['db_user'] = self.db_user
         # the site_name is defined with option -n and was checked by check_name
         default_values['site_name'] = site_name
         default_values.update(BASE_INFO)
-        if site_name and isinstance(site_name, str) and SITES.get(site_name):
-            default_values.update(SITES.get(site_name))
+        if site_name and isinstance(site_name, str) and self.sites.get(site_name):
+            default_values.update(self.sites.get(site_name))
         # now we try to replace the %(xx)s element with values we connected from 
         # the yaml files
         tmp_dic = {}

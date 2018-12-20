@@ -1,4 +1,8 @@
+import os
+import sys
 from copy import deepcopy
+from config import BASE_INFO
+from scripts.utilities import find_addon_names
 
 # ----------------------------------
 # flatten_sites

@@ -1,5 +1,12 @@
+import os
+import sys
+import shutil
+import subprocess
 from scripts.update_local_db import DBUpdater
 from scripts.create_handler import InitHandler
+from config import LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY
+
+LOGIN_INFO_TEMPLATE_FILE = '%s/login_info.cfg.in'
 
 class SiteCreator(InitHandler, DBUpdater):
     

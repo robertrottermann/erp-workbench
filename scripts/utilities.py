@@ -32,12 +32,6 @@ set of configuration files and keep them in sync.
 
 It knows enough about odoo to be able to treat some special values correctly
 
-# last setting contains all the setting used for the last project
-from scripts.create_new_project import create_new_project, \
-    check_project_exists, get_base_info, set_base_info, \
-    BASE_DEFAULTS, base_info, LOGIN_INFO_TEMPLATE_FILE, get_user_info
-
-
 """
 
 # after strt tag we start to lok for values
@@ -797,8 +791,8 @@ def checkout_sa(opts):
         print((bcolors.ENDC))     
     return result
 
-
-def update_docker_info(default_values, name, url='unix://var/run/docker.sock', required=False, start=True):
+# docker_handler ??
+def XXupdate_docker_info(default_values, name, url='unix://var/run/docker.sock', required=False, start=True):
     """
     """
     cli = default_values.get('docker_client')
@@ -827,7 +821,8 @@ def update_docker_info(default_values, name, url='unix://var/run/docker.sock', r
     default_values['docker_registry'] = registry
 
 
-def update_container_info(default_values, opts):
+# docker_handler ??
+def XXupdate_container_info(default_values, opts):
     """
     """
     sys.path.insert(0, '..')

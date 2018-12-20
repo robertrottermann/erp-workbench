@@ -46,7 +46,7 @@ class DockerHandlerMixin(object):
     def erp_image_version(self):
         erp_image_version = self.docker_info.get('erp_image_version', self.docker_info.get('odoo_image_version'))
         if not erp_image_version:
-            erp_image_version = DOCKER_DEFAULTS.get('erp_image_version', 'no-erp_image_version-defined')
+            erp_image_version = 'no-erp_image_version-defined'
         return erp_image_version
         
     @property
@@ -65,7 +65,8 @@ class DockerHandlerMixin(object):
     
     @property
     def docker_default_port(self):
-        return PROJECT_DEFAULTS.get('docker_default_port', 9000)
+        # must be defined in the parent class
+        return self.project_defaults.get('docker_default_port', 9000)
 
     @property
     def docker_info(self):

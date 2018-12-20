@@ -12,7 +12,7 @@ from subprocess import PIPE
 from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, \
     ACT_USER, LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY, \
     NO_NEED_SERVER_IP, ODOO_VERSIONS, FLECTRA_VERSIONS, PROJECT_DEFAULTS, \
-    DOCKER_DEFAULTS, DOCKER_DEFAULTS, DB_PASSWORD
+    DB_PASSWORD, DOCKER_DEFAULTS
 from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
 
@@ -24,7 +24,9 @@ import psycopg2.extras
 import urllib.request, urllib.error, urllib.parse
 from pprint import pformat
 from scripts.update_local_db import DBUpdater
-from scripts.utilities import collect_options, _construct_sa, bcolors, find_addon_names
+from site_desc_handler.sdesc_utilities import _construct_sa
+from scripts.bcolors import bcolors 
+from scripts.utilities import collect_options, find_addon_names
 from scripts.messages import *
 import shutil
 from docker_handler.docker_mixin import DockerHandlerMixin
@@ -35,7 +37,6 @@ from site_desc_handler.site_desc_handler import SiteDescHandlerMixin
 
 # the templatefile contains placeholder
 # that will be replaced with real values
-LOGIN_INFO_TEMPLATE_FILE = '%s/login_info.cfg.in'
 BASE_INFO_TEMPLATE = """base_info = %s"""
 """
 create_new_project.py
@@ -266,6 +267,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     # need_login_info will be set to false by local opperations
     # like --add-site that need no login
     need_login_info = True
+
+    @property
+    def docker_defaults(self):
+        return DOCKER_DEFAULTS
+
+    @property
+    def project_defaults(self):
+        return PROJECT_DEFAULTS
 
     _sites_local = {}
     @property
@@ -581,7 +590,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
 
     @property
     def project_type(self):
-        return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
+        return self.project_defaults.get('erp_provider', 'odoo')
     erp_provider = project_type
 
     @property
@@ -635,7 +644,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
 
     @property
     def use_postgres_version(self):
-        return DOCKER_DEFAULTS.get('use_postgres_version')
+        return self.docker_default.get('use_postgres_version')
 
     @property
     def version(self):
@@ -699,19 +708,19 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
 
     @property
     def erp_minor(self):
-        return PROJECT_DEFAULTS.get('erp_minor', '12')
+        return self.project_defaults.get('erp_minor', '12')
     
     @property
     def erp_nightly(self):
-        return PROJECT_DEFAULTS.get('erp_nightly', '12')
+        return self.project_defaults.get('erp_nightly', '12')
 
     @property
     def erp_provider(self):
-        return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
+        return self.project_defaults.get('erp_provider', 'odoo')
 
     @property
     def erp_version(self):
-        return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
+        return self.project_defaults.get('erp_version', self.project_defaults.get('odoo_version', '12'))
 
     # remote servers are construced from 
     # config/servers.yaml into dictonary entries like:

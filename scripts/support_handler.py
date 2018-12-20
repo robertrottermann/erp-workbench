@@ -3,7 +3,7 @@
 import os
 import re
 import sys
-from config import SITES, BASE_INFO, MARKER, ODOO_VERSIONS, MIGRATE_FOLDER, sites_handler, DOCKER_DEFAULTS, PROJECT_DEFAULTS
+from config import SITES, BASE_INFO, MARKER, ODOO_VERSIONS, MIGRATE_FOLDER, sites_handler
 from site_desc_handler.sites_handler import UpdateError
 from scripts.create_handler import InitHandler, bcolors
 from scripts.messages import *
@@ -41,15 +41,13 @@ class SupportHandler(InitHandler):
 
     @property
     def preset_handler(self):
-        """import, initiate a preset_handler
-        return: preset_handler instance
-        """
         if not self._preset_handler:
             import scripts.preset_handler
+        return _preset_handler
 
     @property
     def editor(self):
-        # firs check whether an editor is defined in BASE_INFO
+        # first check whether an editor is defined in BASE_INFO
         editor = BASE_INFO.get('site_editor')
         if not editor:
             editor = os.environ.get('EDITOR')

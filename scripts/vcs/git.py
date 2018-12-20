@@ -335,7 +335,14 @@ class GitRepo(BaseRepo):
             if rtype == 'tag':
                 self.log_call(['git', 'checkout', revision])
             elif rtype in ('branch', 'HEAD'):
-                self.update_fetched_branch(revision)
+                try:
+                    self.update_fetched_branch(revision)
+                except Exception as e:
+                    print('*' * 80)
+                    print('Target_dir:', target_dir)
+                    print(str(e))
+                    print('*' * 80)
+                    raise
             else:
                 raise NotImplementedError(
                     "Unknown remote reference type %r" % rtype)
