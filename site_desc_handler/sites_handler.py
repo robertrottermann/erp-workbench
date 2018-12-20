@@ -16,15 +16,7 @@ from scripts.messages import *
 from scripts.bcolors import bcolors
 from importlib import reload
 from config import BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS
-
-
-class AttrDict(dict):
-    def __init__(self, *args, **kwargs):
-        super(AttrDict, self).__init__(*args, **kwargs)
-        self.__dict__ = self
-class UpdateError(subprocess.CalledProcessError):
-    """Specific class for errors occurring during updates of existing repos.
-    """
+from .sdesc_utilities import AttrDict, UpdateError
 
 # --------------------------------------
 # sites_handler.py maintains two set of data

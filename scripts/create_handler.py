@@ -34,6 +34,7 @@ from docker_handler.docker_mixin import DockerHandlerMixin
 # refactoring 
 from site_desc_handler.sdesc_utilities import flatten_sites
 from site_desc_handler.site_desc_handler import SiteDescHandlerMixin
+from site_desc_handler.sdesc_utilities import AttrDict
 
 # the templatefile contains placeholder
 # that will be replaced with real values
@@ -631,9 +632,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         else:
             name = self.site_name
         if name:
-            return self.sites.get(name, {})
+            return self.sites.get(name, AttrDict())
         else:
-            return {}
+            return AttrDict()
         
     @property
     def site_name(self):

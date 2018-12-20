@@ -1,3 +1,4 @@
+import os
 import docker
 from docker import Client
 from config import DOCKER_DEFAULTS
@@ -44,22 +45,29 @@ def collect_docker_info(self, site):
     # ------------------------------------
     # data not from site_description
     # ------------------------------------
+    docker_rpc_user = ''
+    if self.subparser_name == 'docker':
+        docker_rpc_user = self.opts.drpcuser
+    if not docker_rpc_user:
+        docker_rpc_user = self.docker_defaults.get('dockerrpcuser', '')
+
+    self._docker_rpc_user_pw = docker_rpc_user
     docker_rpc_user_pw = ''
     if self.subparser_name == 'docker':
         docker_rpc_user_pw = self.opts.drpcuserpw
     if not docker_rpc_user_pw:
         # no password was provided by an option
         # we try whether we can learn it from the site itself
-        docker_rpc_user_pw = self.site.erp_admin_pw
+        docker_rpc_user_pw = self.site.get('docker_erp_admin_pw', '')
         if not docker_rpc_user_pw:
-            docker_rpc_user_pw = DOCKER_DEFAULTS['dockerrpcuserpw']
+            docker_rpc_user_pw = self.docker_defaults.get('dockerrpcuserpw', '')
     self._docker_rpc_user_pw = docker_rpc_user_pw
     
-    docker_info = self.docker_info  # self.site['docker']
+    db_container_name = ''
     if self.subparser_name == 'docker':
         db_container_name = self.opts.dockerdbname
     if not db_container_name:
-        db_container_name = docker_info.get('db_container_name', DOCKER_DEFAULTS['dockerdb_container_name'])
+        db_container_name = self.docker_defaults.get('dockerdb_container_name', 'db')
     self._docker_db_container_name = db_container_name
     
     # get the dbcontainer
@@ -72,61 +80,19 @@ def collect_docker_info(self, site):
             xxx # provide error
             return # either db container was missing or some other problem
         self._docker_db_container = docker_db_container
-
-# ----------------------
-# get the sites container
-# ----------------------
-_docker_db_container = ''
-@property
-def docker_db_container(self):
-    return _docker_db_container
     
-@property
-def docker_db_ip(self):
-    # the ip address to access the db container
-    return self.db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+    if self.subparser_name == 'docker':
+        registry = self.docker_registry.get(self.container_name)
+        try:
+            docker_rpc_host = registry['NetworkSettings']['IPAddress']
+        except:
+            docker_rpc_host = 'localhost'
+        self._docker_rpc_host = docker_rpc_host
 
-@property
-def docker_postgres_port(self):
-    # the db container allows access to the postgres server running within
-    # trough a port that has been defined when the container has been created
-    return BASE_INFO.get('docker_postgres_port')
-    # todo should we check whether the postgres port is accessible??
-    
-@property
-def docker_rpc_host(self):
-    registry = self.docker_registry.get(self.container_name)
-    try:
-        docker_rpc_host = registry['NetworkSettings']['IPAddress']
-    except:
-        docker_rpc_host = 'localhost'
-    return docker_rpc_host
-        
-@property
-def docker_path_map(self):
     # make sure that within a docker container no "external" paths are used
-    return (os.path.expanduser('~/'), '/root/')
-      
-# --------------------------------------------------
-# get the credential to log into the sites container
-# --------------------------------------------------
-@property
-def docker_rpc_user(self):
-    docker_rpc_user = self.opts.drpcuser
-    if not docker_rpc_user:
-        docker_rpc_user = DOCKER_DEFAULTS['dockerrpcuser']
-    return docker_rpc_user
+    self._docker_path_map =  (os.path.expanduser('~/'), '/root/')
     
-_docker_rpc_user_pw = ''    
-@property
-def docker_rpc_user_pw(self):
-    return self._docker_rpc_user_pw
-    
-_db_container_name = ''    
-@property
-def docker_db_container_name(self):
-    return self._docker_db_container_name
-  
+
 
 class DockerHandlerMixin(object):
     docker_registry = None
@@ -142,6 +108,47 @@ class DockerHandlerMixin(object):
             site = self.sites.get(site)
         self._docker_info = collect_docker_info(self, site)
 
+    # ----------------------
+    # get the sites container
+    # ----------------------
+    _docker_db_container = ''
+    @property
+    def docker_db_container(self):
+        return _docker_db_container
+        
+    @property
+    def docker_db_ip(self):
+        # the ip address to access the db container
+        return self.db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+        
+    _docker_rpc_host = 'localhost'
+    @property
+    def docker_rpc_host(self):
+        return self._docker_rpc_host
+          
+    _docker_path_map = ''       
+    @property
+    def docker_path_map(self):
+        return self._docker_path_map
+          
+    # --------------------------------------------------
+    # get the credential to log into the sites container
+    # --------------------------------------------------
+    _docker_rpc_user = ''
+    @property
+    def docker_rpc_user(self):
+        return self._docker_rpc_user
+        
+    _docker_rpc_user_pw = ''    
+    @property
+    def docker_rpc_user_pw(self):
+        return self._docker_rpc_user_pw
+        
+    _db_container_name = ''    
+    @property
+    def docker_db_container_name(self):
+        return self._docker_db_container_name
+      
     # --------------------------------------------------
     # get the credential to log into the db container
     # --------------------------------------------------
@@ -182,14 +189,6 @@ class DockerHandlerMixin(object):
         return self._docker_image_version
     erp_image_version = docker_image_version
         
-    @property
-    def docker_postgres_port(self):
-        # why self... ?? and not like the other props
-        if self.parsername == 'docker':
-            return self.postgres_port
-        # does it make sense to return a default at all??
-        return '8069'
-
     @property
     def db_container_ip(self):
         if self.parsername == 'docker':

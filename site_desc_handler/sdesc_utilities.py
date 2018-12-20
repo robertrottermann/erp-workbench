@@ -1,8 +1,18 @@
 import os
 import sys
+import subprocess
 from copy import deepcopy
 from config import BASE_INFO
 from scripts.utilities import find_addon_names
+
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+class UpdateError(subprocess.CalledProcessError):
+    """Specific class for errors occurring during updates of existing repos.
+    """
 
 # ----------------------------------
 # flatten_sites

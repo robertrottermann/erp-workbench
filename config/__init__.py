@@ -96,6 +96,17 @@ if must_reload and construct_result[yaml_dic['project'][0]]:
     PROJECT_DEFAULTS = construct_result[yaml_dic['project'][0]]['PROJECT_DEFAULTS']
 else:
     from config.config_data.project_info import PROJECT_DEFAULTS
+# load servers
+if must_reload and construct_result[yaml_dic['servers'][0]]:
+    REMOTE_SERVERS = construct_result[yaml_dic['servers'][0]]['REMOTE_SERVERS']
+else:
+    from config.config_data.servers_info import REMOTE_SERVERS
+    
+from site_desc_handler.sdesc_utilities import AttrDict
+BASE_INFO = AttrDict(BASE_INFO)
+DOCKER_DEFAULTS = AttrDict(DOCKER_DEFAULTS)
+PROJECT_DEFAULTS = AttrDict(PROJECT_DEFAULTS)
+REMOTE_SERVERS = AttrDict(REMOTE_SERVERS)
 
 # sites is a combination created from "regular" sites listed in sites.py
 # an a list of localsites listed in local_sites.py
