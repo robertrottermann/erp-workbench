@@ -231,6 +231,11 @@ class MailHandler(InitHandler):
         self.MailuserFroxlor = MailuserFroxlor
         self.MailvirtualFroxlor = MailvirtualFroxlor
 
+    _subparser_name = 'mail'
+    @property
+    def subparser_name(self):
+        return self._subparser_name 
+    
     def get_tables(self):
         if not self.tables:
             session = self.get_session()

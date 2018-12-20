@@ -50,92 +50,12 @@ class DockerHandler(InitHandler, DBUpdater):
 
         # update the docker registry so we get info about the db_container_name
         self.update_container_info()
+        
+    _subparser_name = 'docker'
+    @property
+    def subparser_name(self):
+        return self._subparser_name     
 
-    @property
-    def db_container_name(self):
-        docker_info = self.docker_info  # self.site['docker']
-        if not self.opts.dockerdbname:
-            db_container_name = docker_info.get('db_container_name', DOCKER_DEFAULTS['dockerdb_container_name'])
-        return db_container_name
-        
-    # ----------------------
-    # get the sites container
-    # ----------------------
-    @property
-    def db_container(self):
-         # get the dbcontainer
-        db_container_list = self.XXXXcontainers(filters = {'name' : self.db_container_name})
-        if db_container_list:
-            db_container = db_container_list[0]
-        else:
-            xxx # provide error
-            return # either db container was missing or some other problem
-        return db_container
-        
-    @property
-    def docker_db_ip(self):
-        # the ip address to access the db container
-        return self.db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
-
-    @property
-    def docker_postgres_port(self):
-        # the db container allows access to the postgres server running within
-        # trough a port that has been defined when the container has been created
-        return BASE_INFO.get('docker_postgres_port')
-        # todo should we check whether the postgres port is accessible??
-        
-    @property
-    def docker_rpc_host(self):
-        registry = self.docker_registry.get(self.container_name)
-        try:
-            docker_rpc_host = registry['NetworkSettings']['IPAddress']
-        except:
-            docker_rpc_host = 'localhost'
-        return docker_rpc_host
-        
-    # --------------------------------------------------
-    # get the credential to log into the db container
-    # --------------------------------------------------
-    # by default the odoo docker user db is 'odoo'
-    @property
-    def docker_db_admin(self):
-        docker_db_admin = self.docker_info.get('db_admin', 'odoo')
-        if self.opts.dockerdbuser:
-            docker_db_admin = self.opts.dockerdbuser or DOCKER_DEFAULTS['dockerdbuser']
-        return docker_db_admin
-
-    @property
-    def docker_db_admin_pw(self):
-        # by default the odoo docker db user's pw is 'odoo'
-        #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        return self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']
-    
-    @property
-    def docker_path_map(self):
-        # make sure that within a docker container no "external" paths are used
-        return (os.path.expanduser('~/'), '/root/')
-          
-    # --------------------------------------------------
-    # get the credential to log into the sites container
-    # --------------------------------------------------
-    @property
-    def docker_rpc_user(self):
-        docker_rpc_user = self.opts.drpcuser
-        if not docker_rpc_user:
-            docker_rpc_user = DOCKER_DEFAULTS['dockerrpcuser']
-        return docker_rpc_user
-        
-    @property
-    def docker_rpc_user_pw(self):
-        docker_rpc_user_pw = self.opts.drpcuserpw
-        if not docker_rpc_user_pw:
-            # no password was provided by an option
-            # we try whether we can learn it from the site itself
-            docker_rpc_user_pw = self.site.get('erp_admin_pw')
-            if not docker_rpc_user_pw:
-                docker_rpc_user_pw = DOCKER_DEFAULTS['dockerrpcuserpw']
-        return docker_rpc_user_pw
-        
     def update_docker_info(self, name='', required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
@@ -320,7 +240,7 @@ class DockerHandler(InitHandler, DBUpdater):
             t_folder = os.path.normpath('%s/%s' % (BASE_INFO['erp_server_data_path'], name))
             try:
                 os.chdir(t_folder)
-                user_and_group =  docker_info.get('external_user_group_id', '104:107')
+                user_and_group = self.docker_external_user_group_id
                 cmdlines = [
                     ['/bin/chown', user_and_group, 'log'],
                     ['/bin/chown', user_and_group, 'filestore', '-R'],
@@ -451,8 +371,8 @@ class DockerHandler(InitHandler, DBUpdater):
         hub_info = site['docker_hub'].get(hname)
         if not hub_info:
             print(DOCKER_IMAGE_PUSH_MISING_HUB_INFO % self.site_name)
-        user = hub_info.get('user')
-        pw = hub_info.get('docker_hub_pw')
+        user = self.docker_hub_user
+        pw = hub_info.get('docker_hub_user_pw')
         try:
             client.login(username=user, password=pw)
         except:
@@ -640,7 +560,7 @@ class DockerHandler(InitHandler, DBUpdater):
         #line_matcher = re.compile(r'\s+&& pip install.+')
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
             data_dic = {
-               'erp_image_version'  : docker_info.get('base_image', 'camptocamp/odoo-project:%s-latest' % erp_version),
+               'erp_image_version'  : self.docker_base_image
             }
             data_str = DOCKER_APT_PIP_HEAD
             if apt_list or pip_list:

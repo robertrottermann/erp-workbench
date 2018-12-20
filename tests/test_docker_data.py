@@ -10,10 +10,15 @@ from importlib import reload
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, '.')
 
-from sites_list_killer import SitesListKiller
-from name_space import MyNamespace
-
+try:
+    from sites_list_killer import SitesListKiller
+    from name_space import MyNamespace
+except ImportError:
+    from tests.sites_list_killer import SitesListKiller
+    from tests.name_space import MyNamespace
+    
 from scripts import construct_defaults
+import sites_list
 
 """
 run it with:
@@ -31,39 +36,35 @@ class TesGetDockerData(SitesListKiller):
 
     def setUp(self):
         super().setUp()
-        from config.handlers import SupportHandler
+        from config.handlers import DockerHandler, SupportHandler
 
         args = MyNamespace()
         args.name = ''
-        args.subparser_name = 'support'
+        args.subparser_name = 'docker'
         args.skip_name = True
         args.quiet = True
         self.args = args
+        self.dHandler = DockerHandler(args, {})
         self.sHandler = SupportHandler(args, {})
-
+        r_string = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+        self.new_name = 'new_site_' + r_string
+        self.args.add_site = True
+        self.args.name = self.new_name + ':localhost'
+        result = self.sHandler.add_site_to_sitelist()
+        self.kill_sites_list()
 
     def tearDown(self):
         super().tearDown()
         # remove sites we added
         result = self.sHandler.drop_site()
 
- 
-    def test_support_add_drop_site(self):
-        """ run the create -c command 
+    def test_get_docker_info(self):
+        """ 
+        get_docker_info is the method, that collects docker info form the
+        site description
         """
         import sites_list
-        r_string = ''.join(random.choices(
-            string.ascii_uppercase + string.digits, k=4))
-        new_name = 'new_site_' + r_string
-        print('------->', new_name)
-        self.new_name = new_name
-        # self.sHandler.site_names = [new_name]
-        # self.sHandler.name = new_name
-        self.args.add_site = True
-        self.args.name = new_name + ':localhost'
-        result = self.sHandler.add_site_to_sitelist()
-        reload(sites_list.localhost.sites_global)
-        from sites_list.localhost.sites_global import SITES_G as S_XX
-        self.assertTrue(new_name in list(S_XX.keys()))
-        # un-import the sites list
-        self.kill_sites_list()
+        self.dHandler.setup_docker_env(sites_list.SITES_G[self.new_name])
+        docker_info = self.dHandler.docker_container_name
+        self.assertTrue(docker_info==self.new_name)
+        print(docker_info)

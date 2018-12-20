@@ -122,3 +122,4 @@ def _construct_sa(site_name, site_addons, skip_list):
             if p not in added:
                 added.append(p)
     return '\n'.join(['    local %s' % a for a in added])
+

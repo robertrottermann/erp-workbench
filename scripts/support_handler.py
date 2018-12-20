@@ -39,6 +39,11 @@ class SupportHandler(InitHandler):
         self.need_login_info = True
         super(SupportHandler, self).__init__(opts, sites)
 
+    _subparser_name = 'support'
+    @property
+    def subparser_name(self):
+        return self._subparser_name  
+    
     @property
     def preset_handler(self):
         if not self._preset_handler:

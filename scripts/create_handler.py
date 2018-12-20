@@ -268,6 +268,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     # like --add-site that need no login
     need_login_info = True
 
+    _subparser_name = 'create'
+    @property
+    def subparser_name(self):
+        return self._subparser_name     
+
     @property
     def docker_defaults(self):
         return DOCKER_DEFAULTS

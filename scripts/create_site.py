@@ -120,6 +120,7 @@ def main(opts, parsername, need_names_dic):
         handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
+        _subparser_name = 'docker'
 
     # ckeck whether the used option needs a name to work
     handler.check_name(need_names_dic=need_names_dic)

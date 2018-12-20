@@ -17,6 +17,11 @@ from scripts.bcolors import bcolors
 from importlib import reload
 from config import BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS
 
+
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
 class UpdateError(subprocess.CalledProcessError):
     """Specific class for errors occurring during updates of existing repos.
     """
@@ -331,6 +336,12 @@ class SitesHandler(object):
                         docker_hub_pw = kdic_hub_info.get(hub_user, {}).get('docker_hub_pw', '')
                         if docker_hub_pw:
                             SITES[key]['docker_hub'][hub_name]['docker_hub_pw'] = docker_hub_pw
+
+        for k,v in SITES.items():
+            SITES[k] = AttrDict(v)
+
+        for k,v in SITES_L.items():
+            SITES_L[k] = AttrDict(v)
 
         return SITES, SITES_L
     
