@@ -90,15 +90,3 @@ def add_options_support(parser, result_dic):
         action="store", dest="remote_server",
         help = 'What remote server to use'
     )
-
-    # parser_support.add_argument(
-    #     "-show",
-    #     action="store_true", dest="show", default=False,
-    #     help='show configure settings.'
-    # )
-    # parser_support.add_argument(
-    #     "-set", "--set-config",
-    #     action="store", dest="set_config",
-    #     help='provide a comma separated (no space) list of key=value pairs to set in the config. if the value is --, the key is removed'
-    # )
-

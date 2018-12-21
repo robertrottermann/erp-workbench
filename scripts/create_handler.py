@@ -10,10 +10,9 @@ import socket
 import subprocess
 from subprocess import PIPE
 from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, \
-    ACT_USER, LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY, \
-    NO_NEED_SERVER_IP, ODOO_VERSIONS, FLECTRA_VERSIONS, PROJECT_DEFAULTS, \
+    ACT_USER, NO_NEED_SERVER_IP, ODOO_VERSIONS, FLECTRA_VERSIONS, PROJECT_DEFAULTS, \
     DB_PASSWORD, DOCKER_DEFAULTS
-from config.config_data.base_info import BASE_DEFAULTS
+#from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
 
 from scripts.name_completer import SimpleCompleter
@@ -34,7 +33,6 @@ from docker_handler.docker_mixin import DockerHandlerMixin
 # refactoring 
 from site_desc_handler.sdesc_utilities import flatten_sites
 from site_desc_handler.site_desc_handler import SiteDescHandlerMixin
-from site_desc_handler.sdesc_utilities import AttrDict
 
 # the templatefile contains placeholder
 # that will be replaced with real values
@@ -269,43 +267,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     # like --add-site that need no login
     need_login_info = True
 
-    _subparser_name = 'create'
-    @property
-    def subparser_name(self):
-        return self._subparser_name     
-
-    @property
-    def docker_defaults(self):
-        return DOCKER_DEFAULTS
-
-    @property
-    def project_defaults(self):
-        return PROJECT_DEFAULTS
-
-    _sites_local = {}
-    @property
-    def sites_local(self):
-        return self._sites_local
-    
-    _sites = {}
-    @property
-    def sites(self):
-        return self._sites
-    
-    _default_values = {}
-    @property
-    def default_values(self):
-        return self._default_values 
-    
-    _login_info = {}
-    @property
-    def login_info(self):
-        return self._login_info
-
-    @property
-    def sites_local(self):
-        return self._sites_local
-
     def __init__(self, opts, sites, parsername=''):
         if opts.name:
             self.site_names = [opts.name]
@@ -413,7 +374,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             return
         if self.site:
             p = '%s/sites_global/%s.py' % (
-                BASE_INFO['sitesinfo_path'], self.site_name)
+                self.base_info['sitesinfo_path'], self.site_name)
             if not self.site.get('remote_server'):
                 print(SITE_HAS_NO_REMOTE_INFO %
                       (self.site_name, os.path.normpath(p)))
@@ -428,7 +389,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             #if site_server_ip == 'xx.xx.xx.xx':
                 #if self.default_values['is_local']:
                     #p = '%s/sites_local/%s.py' % (
-                        #BASE_INFO['sitesinfo_path'], self.site_name)
+                        #self.base_info['sitesinfo_path'], self.site_name)
                 #print(SITE_NOT_EDITED % (self.site_name, os.path.normpath(p)))
                 #selections = self.selections
                 #must_exit = True
@@ -451,8 +412,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
                     sys.exit()
             login_info['user'] = self.user
             # access to the local database
-            db_user = BASE_DEFAULTS.get('db_user')
-            db_password = BASE_DEFAULTS.get('dbdb_password_user')
+            db_user = self.base_info.get('db_user')
+            db_password = self.base_info.get('db_password')
             login_info['db_password'] = self.opts.__dict__.get('db_password', db_password)
             login_info['db_user'] = self.opts.__dict__.get('db_user', db_user)
             # access to the locally running odoo
@@ -507,7 +468,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         """
         import imp
         opts = self.opts
-        extra_scripts_path = BASE_INFO.get(
+        extra_scripts_path = self.base_info.get(
             'extra_scripts_path', '%s/extra_scripts/' % self.default_values.get('sites_home'))
         script = opts.executescript
         run_fun = 'run'
@@ -551,44 +512,37 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             sys.exit()
 
     def show_config(self):
-        for k, v in list(BASE_INFO.items()):
+        for k, v in list(self.base_info.items()):
             print(bcolors.WARNING + k + bcolors.ENDC, v)
 
-    def set_config(self):
-        raise ValueError('must be reimplemented')
-        data = self.opts.set_config
-        force = self.opts.force
-        changed = False
-        if data:
-            data = [tuple(d.split('=')) for d in data.split(',') if d]
-            try:
-                for k, v in data:
-                    if v and v[0] == '-':
-                        if k in BASE_INFO:
-                            BASE_INFO.pop(k)
-                            changed = True
-                    else:
-                        if force:
-                            BASE_INFO[k] = v
-                            changed = True
-                        elif k in BASE_INFO and v:
-                            BASE_INFO[k] = v
-                            changed = True
-                        else:
-                            print(bcolors.WARNING + k + bcolors.ENDC,
-                                  'is unknown or empty value provided\nconsider using -F to force setting')
-                # now write to the BASE_INFO_FILENAME
-                if changed:
-                    baseinfo = pformat(BASE_INFO)
-                    open(BASE_INFO_FILENAME, 'w').write(
-                        BASE_INFO_TEMPLATE % baseinfo)
-                    print(bcolors.WARNING + BASE_INFO_FILENAME +
-                          ' has been written' + bcolors.ENDC)
-            except ValueError:
-                print(bcolors.FAIL + 'could not set value %s' % d)
-                print('it must be of the form key=value')
-                print(bcolors.ENDC)
+    # -----------------------------------------------------
+    # property declarations
+    # -----------------------------------------------------
 
+    # -----------------------------------------------------
+    # base data read from the yaml files
+
+    @property
+    def base_info(self):
+        return self.BASE_INFO
+
+    @property
+    def docker_defaults(self):
+        return DOCKER_DEFAULTS
+
+    @property
+    def project_defaults(self):
+        return PROJECT_DEFAULTS
+
+    _default_values = {}
+    @property
+    def default_values(self):
+        return self._default_values 
+    
+    _login_info = {}
+    @property
+    def login_info(self):
+        return self._login_info
 
     @property
     def projectname(self):
@@ -605,16 +559,26 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
 
     @property
     def erp_server_data_path(self):
-        return BASE_INFO['erp_server_data_path']
+        return self.base_info['erp_server_data_path']
     data_path = erp_server_data_path
 
     @property
     def sitesinfo_path(self):
-        return BASE_INFO['sitesinfo_path']
+        return self.base_info['sitesinfo_path']
 
+    _sites_local = {}
+    @property
+    def sites_local(self):
+        return self._sites_local
+    
+    _sites = {}
+    @property
+    def sites(self):
+        return self._sites
+    
     @property
     def siteinfos(self):
-        return BASE_INFO.get('siteinfos')
+        return self.base_info.get('siteinfos')
 
     @property
     def site(self, site_name=''):
@@ -632,9 +596,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         else:
             name = self.site_name
         if name:
-            return self.sites.get(name, AttrDict())
+            return self.sites.get(name, {})
         else:
-            return AttrDict()
+            return {}
         
     @property
     def site_name(self):
@@ -704,7 +668,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     def db_user(self):
         if self.parsername == 'docker':
             return self.docker_db_admin
-        return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', BASE_DEFAULTS['db_user'])
+        return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', self.base_info['db_user'])
 
     @property
     def db_host(self):
@@ -1324,7 +1288,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             base_url = local_settings.get('base_url', '')
         admin_mail = local_settings.get('admin_mail', '')
         if admin_mail.find('%(local_user_mail)s') > -1:
-            admin_mail = BASE_INFO.get('local_user_mail', 'robert@redO2oo.ch')
+            admin_mail = self.base_info.get('local_user_mail', 'robert@redO2oo.ch')
         # if admin_mail:
             #users = odoo.env['res.users']
             #u = users.search([('id', '=', 1)])
@@ -1553,7 +1517,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             print('---------------------------------------------------')
             for n, url in req:
                 temp_target = os.path.normpath(
-                    '%s/%s/%s/%s_addons/%s' % (BASE_INFO['project_path'], sn, sn, sn, n))
+                    '%s/%s/%s/%s_addons/%s' % (self.base_info['project_path'], sn, sn, sn, n))
                 if os.path.exists(temp_target):
                     print(bcolors.OKBLUE, '    %s %s (devel mode)' %
                           (n, temp_target), bcolors.ENDC)
@@ -1890,7 +1854,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             return
         opts = self.opts
         default_values = self.default_values
-        pp = BASE_INFO['erp_server_data_path']
+        pp = self.base_info['erp_server_data_path']
         oop = BASE_PATH
         marker_start = AMARKER % 'start'
         marker_end = AMARKER % 'end'
@@ -1969,7 +1933,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         """create one alias per siteslist, to easily cd into it
         """
         sitelist_names = []
-        sites_list_path = BASE_INFO.get('sitesinfo_path')
+        sites_list_path = self.base_info.get('sitesinfo_path')
         siteinfos = self.siteinfos
         alias_line = ALIAS_LINE
         sitelist_names = list(siteinfos.keys())
@@ -1986,7 +1950,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         """
         opts = self.opts
         default_values = self.default_values
-        pp = BASE_INFO['project_path']
+        pp = self.base_info['project_path']
         dp = self.data_path
         oop = BASE_PATH
         # shortnamesconstruct
@@ -2015,8 +1979,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
                 }
         # wwb cd to erp_workbench
         result += WWB % BASE_PATH
-        result += WWLI % BASE_INFO['sitesinfo_path']
-        result += WWB % BASE_INFO['erp_server_data_path']
+        result += WWLI % self.base_info['sitesinfo_path']
+        result += WWB % self.base_info['erp_server_data_path']
         result += DOCKER_CLEAN
         result += DOC_ET_ALL % {'user_home': os.path.expanduser("~/")}
         result += ALIASC
@@ -2050,7 +2014,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     def do_rebuild(self):
         # we want to call bin/dosetup.py -f;bin/buildout in the buildout directory
         adir = os.getcwd()
-        pp = BASE_INFO['project_path']
+        pp = self.base_info['project_path']
         f = '%s/%s/%s' % (pp, self.site_name, self.site_name)
         if os.path.exists(f):
             os.chdir(f)

@@ -117,21 +117,17 @@ class DockerHandler(InitHandler, DBUpdater):
         - $MASTER_DOCKERNAME: this is the container name of the master site as found in sites.py.
         """
         name = self.site_name
-        site_info = self.sites[name]
-        #erp_provider  = self.erp_provider
-        docker = site_info.get('docker')
-        if not docker or not docker.get('container_name'):
-            print('the site description for %s has no docker description or no container_name' % opts.name)
-            return
-        # collect info on database container which allways is named 'db'
-        if not self.opts.docker_build_image:
-            self.update_docker_info(self.db_container_name, required=True) 
-            self.update_docker_info(docker['container_name'])
-        # # check whether we are a slave
-        # if self.opts.transferdocker and site_info.get('slave_info'):
-        #     master_site = site_info.get('slave_info').get('master_site')
-        #     if master_site:
-        #         self.update_docker_info(master_site)
+        if name and self.sites.get(name):
+            #erp_provider  = self.erp_provider
+            docker = site_info.get('docker')
+            if self.docker_container_name:
+                print('the site description for %s has no docker description or no container_name' % opts.name)
+                return
+            if self.subparser_name == 'docker':
+                if not self.opts.docker_build_image:
+                    # collect info on database container which normally is named 'db'
+                    self.update_docker_info(self.docker_db_container_name, required=True) 
+                    self.update_docker_info(self.docker_container_name)
 
     # -------------------------------
     # check_and_create_container

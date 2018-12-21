@@ -1,12 +1,11 @@
 import os
 import docker
 from docker import Client
-from config import DOCKER_DEFAULTS
+#from config import DOCKER_DEFAULTS
 
 
 def collect_docker_info(self, site):
     """collect docker info from the site description
-    Store the data in a instance variable _docker_info
     
     Arguments:
         sites {dict} -- site description
@@ -99,14 +98,13 @@ class DockerHandlerMixin(object):
 
     def setup_docker_env(self, site):
         """collect docker info from the site description
-        Store the data in a instance variable _docker_info
         
         Arguments:
             sites {dict} -- site description
         """
         if isinstance(site, str):
             site = self.sites.get(site)
-        self._docker_info = collect_docker_info(self, site)
+        collect_docker_info(self, site)
 
     # ----------------------
     # get the sites container
@@ -162,12 +160,22 @@ class DockerHandlerMixin(object):
     def docker_db_admin_pw(self):
         # by default the odoo docker db user's pw is 'odoo'
         #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        return self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']
+        return self.opts.dockerdbpw or self.docker_defaults.get('dockerdbpw', '')
 
     _docker_registry = {}
     @property
     def docker_registry(self):
         return self._docker_registry
+
+    @property
+    def docker_containers(self):
+        if self.subparser_name == 'docker':
+            # update the docker registry so we get info about the db_container_name 
+            self.update_container_info()
+
+            # get the list of containers
+            return self.docker_client.containers
+        return {}
     
     _cli = {}
     @property
