@@ -4,8 +4,9 @@ import os
 import re
 import sys
 from config import SITES, BASE_INFO, MARKER, ODOO_VERSIONS, MIGRATE_FOLDER, sites_handler
+from scripts.bcolors import bcolors
 from site_desc_handler.sites_handler import UpdateError
-from scripts.create_handler import InitHandler, bcolors
+from scripts.create_handler import InitHandler
 from scripts.messages import *
 import subprocess
 import shlex

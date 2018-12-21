@@ -8,7 +8,7 @@ def collect_docker_info(self, site):
     """collect docker info from the site description
     
     Arguments:
-        sites {dict} -- site description
+        site {dict} -- site description
     """
 
     # old setting
@@ -81,7 +81,9 @@ def collect_docker_info(self, site):
         self._docker_db_container = docker_db_container
     
     if self.subparser_name == 'docker':
-        registry = self.docker_registry.get(self.container_name)
+        # try to read the output of the command docker inspect containername
+        # and collect the ip address of its first network interface
+        registry = self.docker_registry.get(self.docker_container_name)
         try:
             docker_rpc_host = registry['NetworkSettings']['IPAddress']
         except:
@@ -182,7 +184,7 @@ class DockerHandlerMixin(object):
     def docker_client(self):
         if not self._cli:
             from docker import Client
-            cli = Client(base_url=self.url)
+            cli = Client(base_url=self.remote_url)
             self._cli = cli
         return self._cli
 

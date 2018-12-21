@@ -14,7 +14,7 @@ from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, \
     DB_PASSWORD, DOCKER_DEFAULTS
 #from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
-
+from scripts.bcolors import bcolors
 from scripts.name_completer import SimpleCompleter
 import stat
 import shutil
@@ -24,7 +24,6 @@ import urllib.request, urllib.error, urllib.parse
 from pprint import pformat
 from scripts.update_local_db import DBUpdater
 from site_desc_handler.sdesc_utilities import _construct_sa
-from scripts.bcolors import bcolors 
 from scripts.utilities import collect_options, find_addon_names
 from scripts.messages import *
 import shutil
@@ -33,6 +32,7 @@ from docker_handler.docker_mixin import DockerHandlerMixin
 # refactoring 
 from site_desc_handler.sdesc_utilities import flatten_sites
 from site_desc_handler.site_desc_handler import SiteDescHandlerMixin
+from site_desc_handler.handle_remote_data import collect_remote_info
 
 # the templatefile contains placeholder
 # that will be replaced with real values
@@ -219,10 +219,12 @@ class RPC_Mixin(object):
 
         return result, result2
 
+    _rpc_host = ''
     @property
     def rpc_host(self):
         return self._rpc_host
 
+    _rpc_port = ''
     @property
     def rpc_port(self):
         if self.parsername == 'docker':
@@ -233,13 +235,13 @@ class RPC_Mixin(object):
     def rpc_user(self):
         if self.parsername == 'docker':
             return self.docker_rpc_user
-        return self.login_info['rpc_user']
+        return self.login_info.get('rpc_user', '')
 
     @property
     def rpc_pw(self):
         if self.parsername == 'docker':
             return self.docker_rpc_user_pw
-        return self.login_info['rpc_pw']
+        return self.login_info.get('rpc_pw', '')
 
     def install_languages(self, languages):
         """
@@ -278,7 +280,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         else:
             self._sites = SITES
         
-
+        # set up values for proerties dealing with remote data
+        collect_remote_info(self, self.site)
         # call the DockerHandlerMixin to setup the docker environment
         self.setup_docker_env(self.site)
         #self.check_name(no_completion=True, must_match=True)
@@ -308,7 +311,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
         # construct default values like list of target directories
         self.construct_defaults(self.site_name)
         self._default_values['current_user'] = self.user
-        self._default_values['foldernames'] = FOLDERNAMES
+        self._default_values['foldernames'] = self.foldernames
         # construct path to datafolder erp_server_data_path
         if self.need_login_info:
             # this will just return when there is no site name
@@ -441,7 +444,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
                 login_info['remote_docker_db_pw'] = ''
 
     def running_remote(self):
-        # we to replace values that should be different when running remotely
+        # replace values that should be different when running remotely
         # this should be done in a mor systematic way.when I use massmailing, a click to the send button
         remote_info = self.site.get('remote_server', {})
         remote_url = remote_info.get('remote_url')
@@ -524,7 +527,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
 
     @property
     def base_info(self):
-        return self.BASE_INFO
+        return BASE_INFO
 
     @property
     def docker_defaults(self):
@@ -533,6 +536,42 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
     @property
     def project_defaults(self):
         return PROJECT_DEFAULTS
+    
+    @property
+    def foldernames(self):
+        return FOLDERNAMES
+    
+    # -----------------------------------------------------
+    # properties from remote block
+    
+    _remote_url = ''
+    @property
+    def remote_url(self):
+        return self._remote_url
+    
+    _remote_data_path = ''
+    @property
+    def remote_data_path(self):
+        return self._remote_data_path
+    
+    _remote_user = ''
+    @property
+    def remote_user(self):
+        return self._remote_user
+    
+    _remote_sites_home = ''
+    @property
+    def remote_sites_home(self):
+        return self._remote_sites_home
+    
+    _redirect_email_to = ''
+    @property
+    def redirect_email_to(self):
+        return self._redirect_email_to 
+
+    # -----------------------------------------------------
+    # base data read from the yaml files
+
 
     _default_values = {}
     @property

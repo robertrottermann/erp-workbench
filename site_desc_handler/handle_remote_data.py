@@ -10,31 +10,83 @@ def collect_remote_info(self, site):
     """
 
     # old setting
-    if 'docker_hub' in site.keys():
-        docker_hub = site['docker_hub']
-        docker = site.get('docker', {})
-        # docker hub
-        self._docker_hub_user = docker_hub.get('hub_name', '')
-        self._docker_hub_user_pw = docker_hub.get('docker_hub_pw')
-        
-        # docker
-        self._docker_base_image = docker.get('base_image', 'camptocamp/odoo-project:%s-latest' % self.erp_version),
-        erp_image_version = docker.get('erp_image_version', docker.get('odoo_image_version'))
-        if not erp_image_version:
-            erp_image_version = 'no-erp_image_version-defined'
-        self._docker_image_version = erp_image_version
-        self._docker_container_name = docker.get('container_name', self.site_name)
-        self._docker_rpc_port = docker.get(
-            'erp_port', docker.get('odoo_port'))
-        docker_long_polling_port = docker.get('erp_longpoll', docker.get('odoo_longpoll'))
-        if not docker_long_polling_port:
-                long_polling_port = int(self.docker_rpc_port) + 10000
-        self._docker_long_polling_port = docker_long_polling_port     
-        self._docker_external_user_group_id = docker.get('external_user_group_id', '104:107')
-        self._docker_hub_name =  docker.get('docker_hub_name', '')
-        if self.subparser_name == 'docker':
-            self._docker_db_admin = self.opts.dockerdbuser or self.docker_defaults.get('dockerdbuser', '')
-        else:
-            self._docker_db_admin = self.docker_defaults.get('dockerdbuser', '')                                                                                 
+    if 'site_name' in site.keys():
+        remote_server = site['remote_server']
+        self._remote_url = remote_server.get('remote_url', '')
+        self._remote_data_path = remote_server.get('remote_data_path', '')
+        self._remote_user = remote_server.get('remote_user', '')
+        self._remote_sites_home = remote_server.get('remote_sites_home', '')
+        self._redirect_email_to = remote_server.get('redirect_emil_to', '')
     else:
         pass
+
+# =============================================================
+# get server info from site description
+# =============================================================
+def get_remote_server_info(opts, sites, use_name=None):
+    """
+    get server info from site description
+    """
+    import socket
+    serverDic = {}
+    if not use_name:
+        name = opts.name
+    else:
+        # in transfer, we do not want to use the name
+        # provided in opts ..
+        name = use_name
+        if not sites.get(name):
+            print('*' * 80)
+            print('provided use_name=%s is not valid on this server' % use_name)
+            raise ValueError(
+                'provided use_name=%s is not valid on this server' % use_name)
+
+    if opts.use_ip:
+        try:
+            addr = socket.gethostbyname(opts.use_ip)
+        except gaierror:
+            print((bcolors.FAIL))
+            print(('*' * 80))
+            print(('% is not a vali ip' % opts.use_ip))
+            print((bcolors.ENDC))
+            return
+        serverDic = REMOTE_SERVERS.get(addr)
+    else:
+        d = deepcopy(sites[name])
+        serverDic = d.get('remote_server')
+        if not serverDic:
+            print('*' * 80)
+            print('the site description for %s has no remote_server description' % opts.name)
+            print('please add one')
+            print('*' * 80)
+            serverDic = {
+                'remote_url': d['remote_url'],
+                'remote_data_path': d['remote_data_path'],
+                'remote_user': d['remote_user'],
+            }
+    if opts.use_ip_target:
+        try:
+            addr = socket.gethostbyname(opts.use_ip_target)
+        except gaierror:
+            print((bcolors.FAIL))
+            print(('*' * 80))
+            print(('% is not a vali ip' % opts.use_ip_target))
+            print((bcolors.ENDC))
+            return
+        serverDic_target = REMOTE_SERVERS.get(addr)
+    if not serverDic:
+        print('*' * 80)
+        print('the ip %s has no site description' % ip)
+        print('please add one using bin/s support --add-server %s' % ip)
+        print('*' * 80)
+        sys.exit()
+    # if the remote url is overridden, replace it now
+    if opts.use_ip:
+        if not serverDic.get('remote_url_orig'):
+            # do not overwrite if we land here a second time
+            serverDic['remote_url_orig'] = sites[name]['remote_server']['remote_url']
+        serverDic['remote_url'] = opts.use_ip
+    if opts.use_ip_target:
+        serverDic['serverDic_target'] = serverDic_target
+
+    return serverDic

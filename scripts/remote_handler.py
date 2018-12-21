@@ -7,7 +7,8 @@ import logging
 from optparse import OptionParser
 import subprocess
 from subprocess import PIPE
-from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, ACT_USER, MARKER, bcolors
+from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, ACT_USER, MARKER
+from bcolors import bcolors
 from copy import deepcopy
 
 from scripts.create_handler import InitHandler

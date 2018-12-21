@@ -3,6 +3,7 @@ import sys
 import shutil
 import subprocess
 from scripts.update_local_db import DBUpdater
+from scripts.bcolors import bcolors
 from scripts.create_handler import InitHandler
 from config import LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY
 

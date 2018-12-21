@@ -11,7 +11,8 @@ import os
 import re
 import sys
 import shutil
-from scripts.utilities import get_remote_server_info, bcolors
+from site_desc_handler.handle_remote_data import get_remote_server_info
+from scripts.bcolors import bcolors
 from scripts.messages import *
 import docker
 import datetime
@@ -119,9 +120,8 @@ class DockerHandler(InitHandler, DBUpdater):
         name = self.site_name
         if name and self.sites.get(name):
             #erp_provider  = self.erp_provider
-            docker = site_info.get('docker')
-            if self.docker_container_name:
-                print('the site description for %s has no docker description or no container_name' % opts.name)
+            if not self.docker_container_name:
+                print('the site description for %s has no docker description or no container_name' % self.site_name)
                 return
             if self.subparser_name == 'docker':
                 if not self.opts.docker_build_image:
@@ -717,7 +717,7 @@ class DockerHandler(InitHandler, DBUpdater):
         # we need to learn what ip address the local docker db is using
         # if the container does not yet exists, we create them (master and slave)
         self.check_and_create_container()
-        server_dic = get_remote_server_info(self.opts)
+        server_dic = get_remote_server_info(self.opts, self.sites)
         # we have to decide, whether this is a local or remote
         remote_data_path = server_dic['remote_data_path']
         dumper_image = BASE_INFO.get('docker_dumper_image')

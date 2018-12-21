@@ -6,7 +6,7 @@ from config import SITES #, BASE_INFO, DOCKER_DEFAULTS
 from scripts.create_handler import InitHandler
 import os
 import sys
-from scripts.utilities import bcolors
+from scripts.bcolors import bcolors
 from scripts.messages import *
 import datetime
 #from froxlor.wrapper import DatabaseObject, PanelCustomer, PanelDomain

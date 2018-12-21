@@ -28,7 +28,9 @@ PROCESS_NAMES_DIC = {'odoo': 'odoo_bin',
                      'flectra': 'flectra_bin', 'start_openerp': ''}
 PROCESS_NAMES = list(PROCESS_NAMES_DIC.keys())
 #sys.path.insert(0, SITES_HOME)
-from scripts.utilities import get_remote_server_info, bcolors, SITES
+from site_desc_handler.handle_remote_data import get_remote_server_info
+from scripts.bcolors import bcolors
+from config import SITES
 
 # to find executable python
 
@@ -192,7 +194,7 @@ class DBUpdater(object):
                     print(bcolors.ENDC)
                     sys.exit()
                 target_site_name = opts.new_target_site
-            server_dic = get_remote_server_info(opts)
+            server_dic = get_remote_server_info(opts, SITES)
             remote_data_path = server_dic['remote_data_path']
             remote_user = server_dic['remote_user']
             # we have to copy the local filestore to the remote filestore
@@ -674,7 +676,7 @@ class DBUpdater(object):
                 print(bcolors.ENDC)
                 continue
 
-            server_dic = get_remote_server_info(opts)
+            server_dic = get_remote_server_info(opts, SITES)
             # do we need to close all connections first?
             if opts.dataupdate_close_connections:
                 if opts.new_target_site:
@@ -786,7 +788,7 @@ class DBUpdater(object):
             slave_db_data = SITES[site_name]
             # we have to get info about the remote server indirectly
             # as it could be overridden by overrideremote
-            server_dic = get_remote_server_info(opts)
+            server_dic = get_remote_server_info(opts, SITES)
             if not server_dic:
                 return
             if not site_name in self.get_instance_list():
@@ -833,7 +835,7 @@ class DBUpdater(object):
                     continue
                 return
             master_db_data = SITES[master_name]
-            master_server_dic = get_remote_server_info(opts, master_name)
+            master_server_dic = get_remote_server_info(opts, SITES, master_name)
             master_remote_url = 'localhost'  # server_dic.get('remote_url')
             master_remote_user = server_dic.get('remote_user')
             master_remote_data_path = server_dic.get('remote_data_path')

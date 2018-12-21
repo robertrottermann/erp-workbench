@@ -3,7 +3,6 @@ import sys
 import subprocess
 from copy import deepcopy
 from config import BASE_INFO
-from scripts.utilities import find_addon_names
 
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
@@ -113,6 +112,7 @@ def flatten_sites(sites):
 def _construct_sa(site_name, site_addons, skip_list):
     """
     """
+    from scripts.utilities import find_addon_names    # avoid circular import 
     added = []
     name = ''
     for a in (site_addons or []):
