@@ -14,6 +14,11 @@ class SiteCreator(InitHandler, DBUpdater):
     def __init__(self, opts, sites):
         super(SiteCreator, self).__init__(opts, sites)
 
+    _subparser_name = 'create'
+    @property
+    def subparser_name(self):
+        return self._subparser_name     
+
     # ------------------------------------
     # get_value_from_config
     # gets a value from etc/open_erp.conf

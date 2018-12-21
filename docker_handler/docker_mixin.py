@@ -13,10 +13,10 @@ def collect_docker_info(self, site):
 
     # old setting
     if 'docker_hub' in site.keys():
-        docker_hub = site['docker_hub']
+        docker_hub = site['docker_hub']['docker_hub']
         docker = site.get('docker', {})
         # docker hub
-        self._docker_hub_user = docker_hub.get('hub_name', '')
+        self._docker_hub_user = docker_hub.get('user', '')
         self._docker_hub_user_pw = docker_hub.get('docker_hub_pw')
         
         # docker
@@ -33,7 +33,7 @@ def collect_docker_info(self, site):
                 long_polling_port = int(self.docker_rpc_port) + 10000
         self._docker_long_polling_port = docker_long_polling_port     
         self._docker_external_user_group_id = docker.get('external_user_group_id', '104:107')
-        self._docker_hub_name =  docker.get('docker_hub_name', '')
+        self._docker_hub_name =  docker_hub.get('docker_hub_name', '')
         if self.subparser_name == 'docker':
             self._docker_db_admin = self.opts.dockerdbuser or self.docker_defaults.get('dockerdbuser', '')
         else:
@@ -184,7 +184,8 @@ class DockerHandlerMixin(object):
     def docker_client(self):
         if not self._cli:
             from docker import Client
-            cli = Client(base_url=self.remote_url)
+            url='unix://var/run/docker.sock'
+            cli = Client(base_url=url)
             self._cli = cli
         return self._cli
 

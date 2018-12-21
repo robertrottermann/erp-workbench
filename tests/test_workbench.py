@@ -155,7 +155,7 @@ class TestDocker(unittest.TestCase):
         args.skip_name = True
         args.quiet = True
         args.docker_create_container = True
-        args.name = 'demo_global'
+        args.name = 'coobytech'
         #args.erp_image_version = ''
         #self.handler.site_names = ['demo_global']
         self.args = args
@@ -165,7 +165,7 @@ class TestDocker(unittest.TestCase):
         self.handler.check_and_create_container()
         self.handler.check_and_create_container(delete_container=True)
 
-    def XXtest_build_image(self):
+    def test_build_image(self):
         self.handler.build_image()
 
 if __name__ == '__main__':

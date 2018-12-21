@@ -271,7 +271,9 @@ class SitesHandler(object):
             if parts[-1] == 'sites_list':
                 parts = [p for p in parts if p]
                 sites_list_path = '/' + '/'.join(parts[:-1])
-            sys.path.insert(0, os.path.normpath(sites_list_path))
+        sys.path.insert(0, os.path.normpath(sites_list_path))
+        act = os.getcwd()
+        os.chdir(sites_list_path)
         try:
             from sites_list import SITES_G, SITES_L
             #from sites_list.sites_local import SITES_L
@@ -281,6 +283,8 @@ class SitesHandler(object):
             print('could not import sites list')
             print(bcolors.ENDC)
             return {}, {}
+        finally:
+            os.chdir(act)
             
         # -------------------------------------------------------------
         # test code from prakash to set the local sites value to true

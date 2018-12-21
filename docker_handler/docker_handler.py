@@ -42,6 +42,8 @@ class DockerHandler(InitHandler, DBUpdater):
 
         if not self.site:
             return # when we are creating the db container
+        # collect data from the site description
+        self.setup_docker_env(self.site)
         # make sure the registry exists
         self.update_docker_info()
         # ----------------------
@@ -198,7 +200,6 @@ class DockerHandler(InitHandler, DBUpdater):
         
         if not site:
             raise ValueError('%s is not a known site' % name)
-        docker_info = self.docker_info
         if not container_name:
             # get info on the docker container to use
             #'docker' : {
@@ -206,17 +207,17 @@ class DockerHandler(InitHandler, DBUpdater):
                 #'container_name'    : 'afbs',
                 #'erp_port'         : '8070',
             #},        
-            container_name = self.container_name
-            erp_port = self.docker_rpc_port
-            if erp_port == '??':
-                print(DOCKER_INVALID_PORT % (name, name))
-                return()
-            long_polling_port = self.docker_long_polling_port
-            if long_polling_port == '??':
-                print(DOCKER_INVALID_PORT % (name, name))
-                return()
-            #if not long_polling_port:
-            #    long_polling_port = int(erp_port) + 10000
+            container_name = self.docker_container_name
+        erp_port = self.docker_rpc_port
+        if erp_port == '??':
+            print(DOCKER_INVALID_PORT % (name, name))
+            return()
+        long_polling_port = self.docker_long_polling_port
+        if long_polling_port == '??':
+            print(DOCKER_INVALID_PORT % (name, name))
+            return()
+        #if not long_polling_port:
+        #    long_polling_port = int(erp_port) + 10000
             
         if pull_image:
             image = self.erp_image_version
@@ -277,10 +278,10 @@ class DockerHandler(InitHandler, DBUpdater):
         elif delete_container:
             from templates.docker_templates import docker_delete_template
             # make sure the container is stopped
-            self.stop_container(self.container_name)
+            self.stop_container(container_name)
             self._create_container(docker_delete_template, info_dic)
         elif rename_container or self.docker_registry \
-            and self.container_name or (container_name == 'db'):
+            and container_name or (container_name == 'db'):
             if container_name != 'db':
                 from templates.docker_templates import docker_template, flectra_docker_template
                 if self.erp_provider == 'flectra':
@@ -337,7 +338,7 @@ class DockerHandler(InitHandler, DBUpdater):
         site = self.site
         if not site:
             raise ValueError('%s is not a known site' % name)
-        docker_info = self.docker_info
+        #docker_info = self.docker_info
         image = self.erp_image_version
         if image:
             images = [i['RepoTags'] for i in client.images()]
@@ -360,6 +361,7 @@ class DockerHandler(InitHandler, DBUpdater):
     def dockerhub_login(self):
         client = self.docker_client
         site = self.site
+        raise Exeption('need to adapt dockerhub_login')
         docker_info = site['docker']
         hname =  docker_info.get('hub_name', 'docker_hub')
         if hname != 'docker_hub':
@@ -522,7 +524,6 @@ class DockerHandler(InitHandler, DBUpdater):
             for line in block:
                 result.append(pref + line.strip())
             return result
-        docker_info = self.site.get('docker', {})
         # do we have a dockerhub user?
         hub_name  = self.docker_hub_name
         if not hub_name:
