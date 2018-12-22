@@ -1,6 +1,58 @@
 import os
 import docker
+from copy import deepcopy
 from docker import Client
+from socket import gaierror
+from scripts.bcolors import bcolors
+from config import REMOTE_SERVERS
+
+    # @property
+    # def remote_servers(self):
+    #     return REMOTE_SERVERS
+        
+    # @property
+    # def remote_user(self):
+    #     # from the list of remote servers
+    #     return self.remote_servers.get(
+    #         # find as what user we access that remote server
+    #         self.remote_url, {}).get('remote_user', '')
+
+    # @property
+    # def remote_user_pw(self):
+    #     # from the list of remote servers
+    #     return self.remote_servers.get(
+    #         # and finally find what pw to use on the remote server
+    #         # this pw is patched in at runtime
+    #         self.remote_url, {}).get('remote_pw', '')
+
+    # @property
+    # def remote_data_path(self):
+    #     # refacture the following as the above props
+    #     # we first check whether config/localdata.py has an remote path set.
+    #     remote_dic = self.remote_server
+    #     remote_data_path = remote_dic.get(
+    #         'remote_data_path', remote_dic.get('remote_path'))
+    #     if remote_data_path:
+    #         return remote_data_path
+    #     # then we check whether config/localdata.py has an remote path set.
+    #     remote_data_path =  self.remote_servers.get(
+    #         # and finally find what pw to use on the remote server
+    #         # this pw is patched in at runtime
+    #         self.remote_url, {}).get('remote_data_path', '')
+    #     return remote_data_path
+
+    # # was an alias to remote_url
+    # @property
+    # def remote_server(self):
+    #     return self.site.get('remote_server', {})
+
+    # @property
+    # def remote_sites_home(self):
+    #     return self.site.get('sites_home', '/root/erp_workbench')
+
+    # @property
+    # def remote_url(self):
+    #     return self.remote_server.get('remote_url', '')
 
 def collect_remote_info(self, site):
     """collect remote info from the site description
@@ -47,7 +99,7 @@ def get_remote_server_info(opts, sites, use_name=None):
         except gaierror:
             print((bcolors.FAIL))
             print(('*' * 80))
-            print(('% is not a vali ip' % opts.use_ip))
+            print(('% is not a valid ip' % opts.use_ip))
             print((bcolors.ENDC))
             return
         serverDic = REMOTE_SERVERS.get(addr)
@@ -74,12 +126,7 @@ def get_remote_server_info(opts, sites, use_name=None):
             print((bcolors.ENDC))
             return
         serverDic_target = REMOTE_SERVERS.get(addr)
-    if not serverDic:
-        print('*' * 80)
-        print('the ip %s has no site description' % ip)
-        print('please add one using bin/s support --add-server %s' % ip)
-        print('*' * 80)
-        sys.exit()
+
     # if the remote url is overridden, replace it now
     if opts.use_ip:
         if not serverDic.get('remote_url_orig'):

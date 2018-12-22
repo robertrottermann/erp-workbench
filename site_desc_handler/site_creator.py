@@ -6,13 +6,14 @@ from scripts.update_local_db import DBUpdater
 from scripts.bcolors import bcolors
 from scripts.create_handler import InitHandler
 from config import LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY
+from . site_desc_handler import SiteDescHandlerMixin
 
 LOGIN_INFO_TEMPLATE_FILE = '%s/login_info.cfg.in'
 
-class SiteCreator(InitHandler, DBUpdater):
+class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
     
     def __init__(self, opts, sites):
-        super(SiteCreator, self).__init__(opts, sites)
+        super().__init__(opts, sites)
 
     _subparser_name = 'create'
     @property
@@ -65,69 +66,6 @@ class SiteCreator(InitHandler, DBUpdater):
                 '\n'.join(s))  # 25.7.17 robert % self.default_values)
         return existed
 
-    def remove_virtual_env(self, site_name):
-        """remove an existing virtual env
-         
-         Arguments:
-             site_name {string} -- the name of the virtual env to remove
-        """
-        virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
-        commands = """
-        export WORKON_HOME=%(home)s/.virtualenvs\n
-        export PROJECT_HOME=/home/robert/Devel\n
-        source %(virtualenvwrapper)s\n
-        rmvirtualenv  %(site_name)s       
-        """ % {
-            'home': os.path.expanduser("~"),
-            'virtualenvwrapper': str(virtualenvwrapper),
-            'site_name': site_name
-        }
-        p = subprocess.Popen(
-            '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
-        out, err = p.communicate(commands.encode())
-
-    def create_virtual_env(self, target, python_version='python2.7', use_workon=True):
-        """
-        """
-        "create a virtual env within the new project"
-        adir = os.getcwd()
-        os.chdir(target)
-        # here we have to decide whether we run flectra or odoo
-        erp_provider = self.site.get('erp_provider', 'odoo')
-        if 1:  # erp_provider == 'flectra' or use_workon:
-            # need to find virtualenvwrapper.sh
-            virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
-            os.chdir(self.default_values['inner'])
-            cmd_list = [
-                'export WORKON_HOME=%s/.virtualenvs' % os.path.expanduser("~"),
-                'export PROJECT_HOME=/home/robert/Devel',
-                'source %s' % virtualenvwrapper,
-                'mkvirtualenv -a %s -p %s %s' % (
-                    self.default_values['inner'],
-                    python_version,
-                    self.site_name
-                )
-            ]
-            commands = b'$$'.join([e.encode() for e in cmd_list])
-            commands = commands.replace(b'$$', b'\n')
-            #p = subprocess.call(commands, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            p = subprocess.Popen(
-                '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=os.environ.copy())
-            out, err = p.communicate(input=commands)
-            if not self.opts.quiet:
-                print(out)
-                print(err)
-        else:
-            # create virtual env
-            cmd_line = ['virtualenv', '-p', python_version, 'python']
-            p = subprocess.Popen(cmd_line, stdout=PIPE, stderr=PIPE)
-            if self.opts.verbose:
-                print(os.getcwd())
-                print(cmd_line)
-                print(p.communicate())
-            else:
-                p.communicate()
-        os.chdir(adir)
 
     def get_config_info(self):
         """
@@ -148,7 +86,6 @@ class SiteCreator(InitHandler, DBUpdater):
         """
         check if a project exists, if not create it
         """
-        opts = self.opts
         default_values = self.default_values
         existed = True
         # we only create a site, if we have a site_name

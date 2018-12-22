@@ -166,7 +166,7 @@ def main(opts, parsername, need_names_dic):
                 'project_path' : handler.default_values['inner'],
                 'erp_version': BASE_INFO.get('erp_version', BASE_INFO.get('odoo_version')),
                 'site_name' : handler.site_name,
-                'project_type' : PROJECT_DEFAULTS.get('project_type'),
+                'erp_provider' : PROJECT_DEFAULTS.get('erp_provider'),
             }
             if opts.create:
                 existed = handler.create_or_update_site()
@@ -553,14 +553,6 @@ def parse_args():
         else:
             args.name = ''
     return args, sub_parser, need_names_dic
-    
-    
-    opts = OptsWrapper(args)
-    opts.command_line = command_line # so we can reexecute
-    if not opts.name and unknownargs:
-        unknownargs = [a for a in unknownargs if a and a[0] != '-']
-        if unknownargs:
-            opts._o.__dict__['name'] = unknownargs[0]
 
 
 if __name__ == '__main__':

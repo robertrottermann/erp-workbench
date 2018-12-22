@@ -48,3 +48,4 @@ pyyaml
 argcomplete
 # deasy # a odoo handler to handle databases
 reload
+autopep8

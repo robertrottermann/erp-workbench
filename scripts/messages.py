@@ -27,8 +27,8 @@ In a %snew%s shell you can execute
 %%(site_name)sw
 To create the new site execute the following commands:
 cd %%(project_path)s
-bin/build_%%(project_type)s.py
-bin/dosetup_%%(project_type)s
+bin/build_%%(erp_provider)s.py
+bin/dosetup_%%(erp_provider)s
 ------------------------------------------------
 """ % (bcolors.WARNING, bcolors.ENDC)
 

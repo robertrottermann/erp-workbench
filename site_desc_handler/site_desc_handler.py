@@ -3,6 +3,8 @@ from copy import deepcopy
 from config import BASE_PATH, PROJECT_DEFAULTS, BASE_INFO, DOCKER_DEFAULTS
 from site_desc_handler.sdesc_utilities import _construct_sa
 import re
+import shutil
+import subprocess
 
 class SiteDescHandlerMixin(object):
     """This class holds the site descriptions and
@@ -119,3 +121,67 @@ class SiteDescHandlerMixin(object):
             else:
                 erp_version = PROJECT_DEFAULTS.get('erp_version', '12.0')
             self.default_values['erp_version'] = erp_version
+
+    def remove_virtual_env(self, site_name):
+        """remove an existing virtual env
+         
+         Arguments:
+             site_name {string} -- the name of the virtual env to remove
+        """
+        virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
+        commands = """
+        export WORKON_HOME=%(home)s/.virtualenvs\n
+        export PROJECT_HOME=/home/robert/Devel\n
+        source %(virtualenvwrapper)s\n
+        rmvirtualenv  %(site_name)s       
+        """ % {
+            'home': os.path.expanduser("~"),
+            'virtualenvwrapper': str(virtualenvwrapper),
+            'site_name': site_name
+        }
+        p = subprocess.Popen(
+            '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, shell=True)
+        out, err = p.communicate(commands.encode())
+
+    def create_virtual_env(self, target, python_version='python2.7', use_workon=True):
+        """
+        """
+        "create a virtual env within the new project"
+        adir = os.getcwd()
+        os.chdir(target)
+        # here we have to decide whether we run flectra or odoo
+        erp_provider = self.site.get('erp_provider', 'odoo')
+        if 1:  # erp_provider == 'flectra' or use_workon:
+            # need to find virtualenvwrapper.sh
+            virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
+            os.chdir(self.default_values['inner'])
+            cmd_list = [
+                'export WORKON_HOME=%s/.virtualenvs' % os.path.expanduser("~"),
+                'export PROJECT_HOME=/home/robert/Devel',
+                'source %s' % virtualenvwrapper,
+                'mkvirtualenv -a %s -p %s %s' % (
+                    self.default_values['inner'],
+                    python_version,
+                    self.site_name
+                )
+            ]
+            commands = b'$$'.join([e.encode() for e in cmd_list])
+            commands = commands.replace(b'$$', b'\n')
+            #p = subprocess.call(commands, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+            p = subprocess.Popen(
+                '/bin/bash', stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=os.environ.copy())
+            out, err = p.communicate(input=commands)
+            if not self.opts.quiet:
+                print(out)
+                print(err)
+        else:
+            # create virtual env
+            cmd_line = ['virtualenv', '-p', python_version, 'python']
+            p = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if self.opts.verbose:
+                print(os.getcwd())
+                print(cmd_line)
+                print(p.communicate())
+            else:
+                p.communicate()
+        os.chdir(adir)

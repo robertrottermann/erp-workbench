@@ -31,7 +31,7 @@ def collect_docker_info(self, site):
             'erp_port', docker.get('odoo_port'))
         docker_long_polling_port = docker.get('erp_longpoll', docker.get('odoo_longpoll'))
         if not docker_long_polling_port:
-                long_polling_port = int(self.docker_rpc_port) + 10000
+                docker_long_polling_port = int(self.docker_rpc_port) + 10000
         self._docker_long_polling_port = docker_long_polling_port     
         self._docker_external_user_group_id = docker.get('external_user_group_id', '104:107')
         if self.subparser_name == 'docker':
@@ -76,8 +76,7 @@ def collect_docker_info(self, site):
         if db_container_list:
             docker_db_container = db_container_list[0]
         else:
-            xxx # provide error
-            return # either db container was missing or some other problem
+            raise Exception('either db container was missing or some other problem') # provide error
         self._docker_db_container = docker_db_container
     
     if self.subparser_name == 'docker':
@@ -96,7 +95,6 @@ def collect_docker_info(self, site):
 
 
 class DockerHandlerMixin(object):
-    docker_registry = None
 
     def setup_docker_env(self, site):
         """collect docker info from the site description
@@ -114,7 +112,7 @@ class DockerHandlerMixin(object):
     _docker_db_container = ''
     @property
     def docker_db_container(self):
-        return _docker_db_container
+        return self._docker_db_container
         
     @property
     def docker_db_ip(self):
