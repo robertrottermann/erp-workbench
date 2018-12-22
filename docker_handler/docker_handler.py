@@ -13,10 +13,16 @@ import sys
 import shutil
 from site_desc_handler.handle_remote_data import get_remote_server_info
 from scripts.bcolors import bcolors
-from scripts.messages import *
 import docker
 import datetime
 from datetime import date
+
+from scripts.messages import DOCKER_DB_MISSING, DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
+      DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
+      DOCKER_IMAGE_PUSH_MISING_HUB_INFO, SITE_NOT_EXISTING, DOCKER_IMAGE_CREATE_ERROR, \
+      DOCKER_IMAGE_CREATE_MISING_HUB_INFO, DOCKER_IMAGE_CREATE_MISING_HUB_USER, ERP_VERSION_BAD, \
+      DOCKER_IMAGE_CREATE_MISING_HUB_USER, DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, \
+      DOCKER_IMAGE_CREATE_DONE
 
 # DOCKER_APT_PIP_HEAD is used when constructing docker and either pip or 
 # apt libraries needs to be merged in
@@ -38,7 +44,6 @@ class DockerHandler(InitHandler, DBUpdater):
             print('please run bin/pip install -r install/requirements.txt')
             return
         self.url = url
-        cli = self.docker_client # self.default_values.get('docker_client')
 
         if not self.site:
             return # when we are creating the db container
@@ -361,7 +366,7 @@ class DockerHandler(InitHandler, DBUpdater):
     def dockerhub_login(self):
         client = self.docker_client
         site = self.site
-        raise Exeption('need to adapt dockerhub_login')
+        raise Exception('need to adapt dockerhub_login')
         docker_info = site['docker']
         hname =  docker_info.get('hub_name', 'docker_hub')
         if hname != 'docker_hub':
@@ -595,7 +600,6 @@ class DockerHandler(InitHandler, DBUpdater):
             else:
                 print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
         # check out odoo source
-        act = os.getcwd()
         os.chdir(docker_target_path)
         # construct a valid version
         version = self.version
@@ -617,18 +621,6 @@ class DockerHandler(InitHandler, DBUpdater):
             'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
         ]
         self.run_commands(cmd_lines=cmd_lines)
-        #for line in open( '%sDockerfile' % docker_source_path, 'r' ):
-            #if line_matcher.match(line):
-                #pip_line = line
-                #pref = ' ' * 8
-                ## write out all librarieds needed for the new python libraries to be
-                ## installed by pip
-                #for line in apt_lines(apt_list):
-                    #result.write( pref + line + " \\\n")
-                ## finally add the pip line embellished with our own list
-                #result.write( pref + pip_line.strip() + ' '  + ' '.join([p.strip() for p in pip_list]) + '\n')
-            #else:
-                #result.write( line ) 
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
         tag = self.erp_image_version
         return_info = []
@@ -665,7 +657,7 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         if not name:
-            name = self.container_name
+            name = self.docker_container_name
         try:
             print('stoping container %s' % name)
             self.docker_client.stop(name)
@@ -696,7 +688,7 @@ class DockerHandler(InitHandler, DBUpdater):
     def doTransfer(self):
         """
         """
-        super(dockerHandler, self).doTransfer()
+        super().doTransfer()
 
     def checkImage(self, image_name):
         """
@@ -721,9 +713,8 @@ class DockerHandler(InitHandler, DBUpdater):
         # we need to learn what ip address the local docker db is using
         # if the container does not yet exists, we create them (master and slave)
         self.check_and_create_container()
-        server_dic = get_remote_server_info(self.opts, self.sites)
+        get_remote_server_info(self.opts, self.sites)
         # we have to decide, whether this is a local or remote
-        remote_data_path = server_dic['remote_data_path']
         dumper_image = BASE_INFO.get('docker_dumper_image')
         if not dumper_image:
             print(bcolors.FAIL + \
@@ -761,9 +752,8 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         if list_only:
-            return install_own_modules(self.opts, self.default_values, list_only, quiet)
+            return self.install_own_modules(self.default_values, list_only, quiet)
         # get_module_obj
-        docker_info = self.docker_registry.get(self.site_name)
         db_info = self.docker_registry.get(self.site_name)
         if not db_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
