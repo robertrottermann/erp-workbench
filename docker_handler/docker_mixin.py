@@ -1,6 +1,8 @@
 import os
 import docker
 from docker import Client
+from scripts.properties_mixin import PropertiesMixin
+
 #from config import DOCKER_DEFAULTS
 
 
@@ -49,7 +51,7 @@ def collect_docker_info(self, site):
         docker_rpc_user = self.opts.drpcuser
     if not docker_rpc_user:
         docker_rpc_user = self.docker_defaults.get('dockerrpcuser', '')
-
+    self._docker_rpc_user = docker_rpc_user
     self._docker_rpc_user_pw = docker_rpc_user
     docker_rpc_user_pw = ''
     if self.subparser_name == 'docker':
@@ -93,8 +95,8 @@ def collect_docker_info(self, site):
     self._docker_path_map =  (os.path.expanduser('~/'), '/root/')
     
 
-
-class DockerHandlerMixin(object):
+class DockerHandlerMixin(PropertiesMixin):
+    #----------------------------------------------
 
     def setup_docker_env(self, site):
         """collect docker info from the site description
@@ -105,148 +107,4 @@ class DockerHandlerMixin(object):
         if isinstance(site, str):
             site = self.sites.get(site)
         collect_docker_info(self, site)
-
-    # ----------------------
-    # get the sites container
-    # ----------------------
-    _docker_db_container = ''
-    @property
-    def docker_db_container(self):
-        return self._docker_db_container
         
-    @property
-    def docker_db_ip(self):
-        # the ip address to access the db container
-        return self.db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
-        
-    _docker_rpc_host = 'localhost'
-    @property
-    def docker_rpc_host(self):
-        return self._docker_rpc_host
-          
-    _docker_path_map = ''       
-    @property
-    def docker_path_map(self):
-        return self._docker_path_map
-          
-    # --------------------------------------------------
-    # get the credential to log into the sites container
-    # --------------------------------------------------
-    _docker_rpc_user = ''
-    @property
-    def docker_rpc_user(self):
-        return self._docker_rpc_user
-        
-    _docker_rpc_user_pw = ''    
-    @property
-    def docker_rpc_user_pw(self):
-        return self._docker_rpc_user_pw
-        
-    _db_container_name = ''    
-    @property
-    def docker_db_container_name(self):
-        return self._docker_db_container_name
-      
-    # --------------------------------------------------
-    # get the credential to log into the db container
-    # --------------------------------------------------
-    # by default the odoo docker user db is 'odoo'
-    _docker_db_admin = ''
-    @property
-    def docker_db_admin(self):
-        return self._docker_db_admin
-
-    @property
-    def docker_db_admin_pw(self):
-        # by default the odoo docker db user's pw is 'odoo'
-        #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        return self.opts.dockerdbpw or self.docker_defaults.get('dockerdbpw', '')
-
-    _docker_registry = {}
-    @property
-    def docker_registry(self):
-        return self._docker_registry
-
-    @property
-    def docker_containers(self):
-        if self.subparser_name == 'docker':
-            # update the docker registry so we get info about the db_container_name 
-            self.update_container_info()
-
-            # get the list of containers
-            return self.docker_client.containers
-        return {}
-    
-    _cli = {}
-    @property
-    def docker_client(self):
-        if not self._cli:
-            from docker import Client
-            url='unix://var/run/docker.sock'
-            cli = Client(base_url=url)
-            self._cli = cli
-        return self._cli
-
-    _docker_container_name = ''
-    @property
-    def docker_container_name(self):
-        return self._docker_container_name
-
-    _docker_image_version = ''
-    @property
-    def docker_image_version(self):
-        return self._docker_image_version
-    erp_image_version = docker_image_version
-        
-    @property
-    def db_container_ip(self):
-        if self.parsername == 'docker':
-            return self.db_ip
-        # does it make sense to return a default at all??
-        return 'localhost'
-    
-    @property
-    def docker_default_port(self):
-        # must be defined in the parent class
-        return self.project_defaults.get('docker_default_port', 9000)
-
-    #@property
-    #def docker_info(self):
-        #return self.site.get('docker', {})
-    
-    _docker_base_image = ''
-    @property
-    def docker_base_image(self):
-        return self._docker_base_image 
-
-    _docker_hub_name = ''
-    @property
-    def docker_hub_name(self):
-        if not self._docker_hub_name:
-            return self.docker_defaults.get('docker_hub_name')
-        return self._docker_hub_name 
-        
-    # _docker_hub_user = ''
-    # @property
-    # def docker_hub_user(self):
-    #     return self._docker_hub_user 
-        
-    _docker_external_user_group_id = ''
-    @property
-    def docker_external_user_group_id(self):
-        return self._docker_external_user_group_id 
-        
-    # _docker_hub_user_pw = ''
-    # @property
-    # def docker_hub_user_pw(self):
-    #     return self._docker_hub_user_pw 
-        
-    _docker_rpc_port = ''
-    @property
-    def docker_rpc_port(self):
-        return self._docker_rpc_port 
-
-    _docker_long_polling_port = ''
-    @property
-    def docker_long_polling_port(self):
-        return self._docker_long_polling_port

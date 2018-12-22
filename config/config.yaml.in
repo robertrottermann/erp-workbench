@@ -97,3 +97,8 @@ BASE_DEFAULTS:
   # print_banner:
   # should the (beautiful) erp-workbench banner be printed?
   print_banner: True
+
+  # postgres_port:
+  # this is the default password, if it not is defined in the
+  # server description file from the sites.yaml file
+  postgres_port: 5432

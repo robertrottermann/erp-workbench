@@ -5,14 +5,23 @@ from site_desc_handler.sdesc_utilities import _construct_sa
 import re
 import shutil
 import subprocess
+from scripts.properties_mixin import PropertiesMixin
 
-class SiteDescHandlerMixin(object):
+class SiteDescHandlerMixin(PropertiesMixin):
     """This class holds the site descriptions and
     knows how to handle them
     
     Arguments:
         object {[type]} -- [description]
     """
+    def _parse_site(self, site):
+        self._erp_minor = site.get('erp_minor', self.project_defaults.get('erp_minor', '12'))
+        self._erp_nightly = site.get(
+            'erp_nightly', self.project_defaults.get('erp_nightly', '12'))
+        self._erp_version = site.get('erp_version', self.project_defaults.get(
+            'erp_version', self.project_defaults.get('odoo_version', '12')))
+        self._erp_provider = site.get('erp_provider', self.project_defaults.get(
+            'erp_provider', self.project_defaults.get('erp_provider', '12')))
 
     # ----------------------------------
     # construct_defaults
@@ -31,7 +40,6 @@ class SiteDescHandlerMixin(object):
         # construct a dictonary with default values
         # some of the values in the imported default_values are to be replaced
         # make sure we can do this more than once
-        opts = self.opts
         from templates.default_values import default_values as d_v
         self._default_values = deepcopy(d_v)
         default_values = self.default_values
@@ -150,7 +158,6 @@ class SiteDescHandlerMixin(object):
         adir = os.getcwd()
         os.chdir(target)
         # here we have to decide whether we run flectra or odoo
-        erp_provider = self.site.get('erp_provider', 'odoo')
         if 1:  # erp_provider == 'flectra' or use_workon:
             # need to find virtualenvwrapper.sh
             virtualenvwrapper = shutil.which('virtualenvwrapper.sh')

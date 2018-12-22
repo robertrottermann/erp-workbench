@@ -6,7 +6,7 @@ from scripts.update_local_db import DBUpdater
 from scripts.bcolors import bcolors
 from scripts.create_handler import InitHandler
 from config import LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY
-from . site_desc_handler import SiteDescHandlerMixin
+from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
 
 LOGIN_INFO_TEMPLATE_FILE = '%s/login_info.cfg.in'
 
@@ -121,10 +121,8 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             - a virtual environment (done by the calling method)
         """
 
-        opts = self.opts
         default_values = self.default_values
         "ask for project info, create the structure and copy the files"
-        skeleton = default_values['skeleton']
         outer = default_values['outer']
         inner = default_values['inner']
         # create project folders
@@ -150,7 +148,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         # reate_virtual_env(inner)
 
     def do_copy(self, source, outer_target, inner_target):
-        opts = self.opts
         # now copy files
         if not(self.site and self.version):
             print(bcolors.WARNING)
