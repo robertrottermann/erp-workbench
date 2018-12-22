@@ -165,7 +165,7 @@ class TestDocker(unittest.TestCase):
         self.handler.check_and_create_container()
         self.handler.check_and_create_container(delete_container=True)
 
-    def test_build_image(self):
+    def XXtest_build_image(self):
         self.handler.build_image()
 
 if __name__ == '__main__':

@@ -1840,7 +1840,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin):
             if p.returncode:
                 print(bcolors.FAIL)
                 print('*' * 80)
-                print('%s resulted in an error/warning' % cmd_line)
+                print(cmd_line)
+                print('resulted in an error or warning')
                 print(errors.decode('utf8'))
                 print('*' * 80)
                 print(bcolors.ENDC)          

@@ -369,8 +369,8 @@ class DockerHandler(InitHandler, DBUpdater):
         hub_info = site['docker_hub'].get(hname)
         if not hub_info:
             print(DOCKER_IMAGE_PUSH_MISING_HUB_INFO % self.site_name)
-        user = self.docker_hub_user
-        pw = hub_info.get('docker_hub_user_pw')
+        user = self.docker_hub_name
+        pw = hub_info.get('docker_hub_pw')
         try:
             client.login(username=user, password=pw)
         except:
@@ -544,7 +544,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if not erp_version in list(ODOO_VERSIONS.keys()):
             print(ERP_VERSION_BAD % (self.site_name, self.site.get('erp_version', self.site.get('odoo_version'))))
             return
-        docker_source_path = '%s/docker/docker/%s/' % (self.default_values['erp_server_data_path'], erp_version)
+        #docker_source_path = '%s/docker/docker/%s/' % (self.default_values['erp_server_data_path'], erp_version)
         # get path to where we want to write the docker file
         docker_target_path = '%s/docker/' % self.default_values['data_dir']
         if not os.path.exists(docker_target_path):
@@ -644,9 +644,12 @@ class DockerHandler(InitHandler, DBUpdater):
         except docker.errors.NotFound:
             print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
         else:
+            result = return_info[0].split(' ')[-1]
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_IMAGE_CREATE_DONE % (dockerhub_user, return_info[0].split(' ')[-1], tag, tag))                
+            print(DOCKER_IMAGE_CREATE_DONE % (
+                self.site_name,result, dockerhub_user or 'YOUR_DOCKERHUB_ACCOUNT', 
+                result, self.site_name))
 
     def rename_container(self, name, new_name):
         """
