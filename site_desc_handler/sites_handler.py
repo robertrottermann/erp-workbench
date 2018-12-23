@@ -12,11 +12,14 @@ from subprocess import PIPE
 from config import BASE_INFO
 from config import ACT_USER
 from config.config_data.servers_info import REMOTE_SERVERS
-from scripts.messages import *
 from scripts.bcolors import bcolors
 from importlib import reload
 from config import BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS
 from .sdesc_utilities import AttrDict, UpdateError
+
+from scripts.messages import LOCALSITESLIST_BASEPATH_MISSING, SITES_GLOBAL_TEMPLATE, SITES_GLOBAL_TEMPLATE, \
+    LOCALSITESLIST_CREATED,LOCALSITESLIST_CLONED, MARKER, SITE_ADDED_NO_DOT, SITES_GLOBAL_TEMPLATE
+
 
 # --------------------------------------
 # sites_handler.py maintains two set of data

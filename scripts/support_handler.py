@@ -7,7 +7,7 @@ from config import SITES, BASE_INFO, MARKER, ODOO_VERSIONS, MIGRATE_FOLDER, site
 from scripts.bcolors import bcolors
 from site_desc_handler.sites_handler import UpdateError
 from scripts.create_handler import InitHandler
-from scripts.messages import *
+from scripts.messages import SITE_CREATED_SERVER, SITE_CREATED_SERVER_BAD_IP, LOCALSITESLIST_MARKER_MISSING, VCS_OK
 import subprocess
 import shlex
 import stat
@@ -31,6 +31,10 @@ BLOCK_WITH_NEW_SERVER = """
         # to use public keys.
         remote_pw: ''
         local_user_email: 'user_to_use@please set in local data'
+        # http_server: either apache or nginx
+        http_server: nginx
+        # filesystem path to the http server config folder
+        http_server_fs_path: /etc/nginx
 """
 class SupportHandler(InitHandler):
     # _preset_handler will be imported and instantiated on demand
@@ -47,9 +51,10 @@ class SupportHandler(InitHandler):
     
     @property
     def preset_handler(self):
-        if not self._preset_handler:
-            import scripts.preset_handler
-        return _preset_handler
+        pass
+        # if not self._preset_handler:
+        #     import scripts.preset_handler
+        # return self._preset_handler
 
     @property
     def editor(self):
@@ -203,31 +208,32 @@ class SupportHandler(InitHandler):
             }
             # before we can construct a site description we need a file with site values
             if opts.use_preset:
-                pvals = {}  # dict to get link to the preset-vals-file
-                preset_values = self.get_preset_values.get_preset_values(pvals)
-                if preset_values:
-                    result = sites_handler.add_site_global(
-                        handler=self,
-                        template_name=template,
-                        preset_values=preset_values)
-                else:
-                    if pvals.get('pvals_path'):
-                        print((bcolors.WARNING))
-                        print(('*' * 80))
-                        print('a file with values for the new site was created')
-                        print((pvals.get('pvals_path')))
-                        print(
-                            'please edit and adapt it. It will be incorporated in the site description')
-                        print('and will be used to set the site values')
-                        print(('*' * 80))
-                        print((bcolors.ENDC))
-                    else:
-                        print((bcolors.FAIL))
-                        print(('*' * 80))
-                        print('could not read or generate a file with default values')
-                        print(('*' * 80))
-                        print((bcolors.ENDC))
-                    return {'pvals' : 'still ??'}
+                pass
+                # pvals = {}  # dict to get link to the preset-vals-file
+                # preset_values = self.get_preset_values.get_preset_values(pvals)
+                # if preset_values:
+                #     result = sites_handler.add_site_global(
+                #         handler=self,
+                #         template_name=template,
+                #         preset_values=preset_values)
+                # else:
+                #     if pvals.get('pvals_path'):
+                #         print((bcolors.WARNING))
+                #         print(('*' * 80))
+                #         print('a file with values for the new site was created')
+                #         print((pvals.get('pvals_path')))
+                #         print(
+                #             'please edit and adapt it. It will be incorporated in the site description')
+                #         print('and will be used to set the site values')
+                #         print(('*' * 80))
+                #         print((bcolors.ENDC))
+                #     else:
+                #         print((bcolors.FAIL))
+                #         print(('*' * 80))
+                #         print('could not read or generate a file with default values')
+                #         print(('*' * 80))
+                #         print((bcolors.ENDC))
+                #     return {'pvals' : 'still ??'}
             else:
                 result = sites_handler.add_site_global(
                     handler=self,
@@ -245,10 +251,11 @@ class SupportHandler(InitHandler):
             # we read untill we find an empty }
             # before we can construct a site description we need a a file with site values
             if opts.__dict__.get('use_preset'):
-                pvals = {}  # dict to get link to the preset-vals-file
-                preset_values = self.preset_handler.get_preset_values(pvals, is_local=True)
-                result = sites_handler.add_site_local(
-                    handler=self, template_name=template, preset_values=preset_values)
+                pass
+                # pvals = {}  # dict to get link to the preset-vals-file
+                # preset_values = self.preset_handler.get_preset_values(pvals, is_local=True)
+                # result = sites_handler.add_site_local(
+                #     handler=self, template_name=template, preset_values=preset_values)
             else:
                 result = sites_handler.add_site_local(
                     handler=self, template_name=template) #, preset_values=preset_values)
@@ -275,7 +282,7 @@ class SupportHandler(InitHandler):
         opts = self.opts
         server_info = opts.add_server.strip().split('@')
         print(bcolors.WARNING)
-        print("this method is not yet adated to erp-workbench")
+        print("this method is not yet adapted to erp-workbench")
         print("please add a block to the file %s/config/server.yaml with info simmilar to the following" % self.sites_home )
         print(BLOCK_WITH_NEW_SERVER % {'remote_ip' : server_info and server_info[-1], 'BASE_PATH' :'/root/erp_workbench'})      
         print(bcolors.ENDC)
@@ -345,14 +352,12 @@ class SupportHandler(InitHandler):
         pul site descriptions from their repository
         """
         try:
-            sites_handler.pull(auto=False)
+            sites_handler.check_pull(auto=False)
             print(VCS_OK % ('sites_global', BASE_INFO['sitesinfo_url']))
         except UpdateError as e:
-            print(VCS_ERROR % target)
             print(bcolors.WARNING)
             print(str(e))
             print(bcolors.ENDC)
-            print(VCS_ERROR_END)
 
     def edit_site_or_server(self):
         # first we get the editor

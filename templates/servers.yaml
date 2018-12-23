@@ -15,3 +15,7 @@ REMOTE_SERVERS:
         # to use public keys.
         remote_pw: ''
         local_user_email: 'user_to_use@please set in local data'
+        # http_server: either apache or nginx
+        http_server: nginx
+        # filesystem path to the http server config folder
+        http_server_fs_path: /etc/nginx

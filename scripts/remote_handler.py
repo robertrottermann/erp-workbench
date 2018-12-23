@@ -102,7 +102,6 @@ class RemoteHandler(InitHandler):
         @opts             : option instance
         @default_values   : dictionary with default values
         """
-        raise ValueError('add_site_to_nginx needs to learn where nginx comes from')
         opts = self.opts
         default_values = self.default_values
         default_values['marker'] = MARKER
@@ -112,46 +111,19 @@ class RemoteHandler(InitHandler):
             print('%s is not known in sites.py' % site_name)
             return
 
-        df = deepcopy(default_values)
-        docker_info = self.site['docker']
-        df['odoo_port'] = docker_info['odoo_port']
-        long_polling_port = docker_info.get('odoo_longpoll')
-        if not long_polling_port:
-            long_polling_port = int(docker_info['odoo_port']) + 10000
-        df['odoo_longpoll'] = long_polling_port
-        site_info = self.flatten_site_dic(site_name)
-        df['vservername'] = site_info.get('vservername', '    www.%s.ch' % site_name)
-        lets_encrypt = site_info.get('letsencrypt')
-        if not lets_encrypt:
-            print(bcolors.WARNING + '*' * 80)
-            print('could not read lets_encrypt_path the site description')
-            print('this is needed to add the site to nginx')
-            print('you can fix this by executing: bin/e %s ' % site_name)
-            print("and addinga stanza like")
-            print("""
-            'letsencrypt' : {
-                'path' :'/etc/letsencrypt/live/'
-            },
-            """)
-            print('*' * 80 + bcolors.ENDC)
-            return
+        values = {
+            'docker_rpc_port' : self.docker_rpc_port,
+            'docker_long_polling_port' : self.docker_long_polling_port,
+            'site_name' : self.site_name,
+            'remote_http_url' : self.remote_http_url           
+        }
         
-        lets_encrypt_path = lets_encrypt['path']
-        df['lets_encrypt_path'] = lets_encrypt_path
-        df.update(site_info)
-        template_80 = open('%s/templates/nginx.conf.80' % default_values['sites_home'], 'r').read() % df
-        #template_443 = open('%s/templates/nginx.conf.443' % default_values['sites_home'], 'r').read() % df
-        #template = template % d
-    
-        print(template_80)
-        #print template_443
-        apa_80 = '%s/sites-available/%s-80' % (NGINX_PATH, site_name )
-        ape_80 = '%s/sites-enabled/%s-80' % (NGINX_PATH, site_name )
-        #apa_443 = '%s/sites-available/%s-443' % (NGINX_PATH, site_name )
-        #ape_443 = '%s/sites-enabled/%s-443' % (NGINX_PATH, site_name )
+        template_80 = open('%s/templates/nginx.conf.80' % default_values['sites_home'], 'r').read() % values
+        apa_80 = '%s/sites-available/%s-80' % (self.http_server_fs_path, site_name )
+        ape_80 = '%s/sites-enabled/%s-80' % (self.http_server_fs_path, site_name )
         try:
-            open(apa_80, 'w').write(template_80)
-            #open(apa_443, 'w').write(template_443)
+            with open(apa_80, 'w') as f:
+                f.write(template_80)
             if os.path.exists(ape_80):
                 try:
                     os.unlink(ape_80)
@@ -161,15 +133,6 @@ class RemoteHandler(InitHandler):
                 os.symlink(apa_80, ape_80)
             except:
                 pass
-            #if os.path.exists(ape_443):
-                #try:
-                    #os.unlink(ape_443)
-                #except:
-                    #pass # exists ??
-            #try:
-                #os.symlink(apa_443, ape_443)
-            #except:
-                #pass
             print("%s added to nginx" % site_name)
             print('restart nginx to activate')
         except:

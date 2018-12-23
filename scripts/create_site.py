@@ -502,7 +502,35 @@ def main(opts, parsername, need_names_dic):
             handler.add_server_to_server_list()
             did_run_a_command = True
             return
+ 
+        if not did_run_a_command:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('The selected support option is either invalid or not yet implemented')
+            print(bcolors.ENDC)
+        return
+   
+    # ----------------------
+    # remote commands
+    # ----------------------
+    if parsername == 'remote':
+        if opts.add_apache:
+            handler.add_site_to_apache()
+            did_run_a_command = True
+            return
     
+        if opts.add_nginx:
+            handler.add_site_to_nginx()
+            did_run_a_command = True
+            return
+
+        if not did_run_a_command:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('The selected remote option is either invalid or not yet implemented')
+            print(bcolors.ENDC)
+        return
+
 def parse_args():
     print_banner = True
     print_banner = BASE_DEFAULTS.get('print_banner', True)
