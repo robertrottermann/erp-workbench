@@ -8,7 +8,6 @@ import re
 from pprint import pformat
 import subprocess
 from subprocess import PIPE
-from copy import deepcopy
 #from config.config_data.base_info import base_info as BASE_INFO
 from config import BASE_INFO
 from config import ACT_USER
@@ -17,10 +16,7 @@ from scripts.messages import *
 from scripts.bcolors import bcolors
 from importlib import reload
 from config import BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS
-
-class UpdateError(subprocess.CalledProcessError):
-    """Specific class for errors occurring during updates of existing repos.
-    """
+from .sdesc_utilities import AttrDict, UpdateError
 
 # --------------------------------------
 # sites_handler.py maintains two set of data
@@ -67,6 +63,39 @@ class SitesHandler(object):
         self.template_name = template_name
         self.preset_values = preset_values
 
+    @property
+    def docker_hub_name(self):
+        # her we only know about the default hub name
+        return DOCKER_DEFAULTS.get('docker_hub_name', 'no docker hub-name set in docker.yaml')
+        
+    @property
+    def erp_image_version(self):
+        return DOCKER_DEFAULTS.get('erp_image_version', '')
+
+    @property
+    def erp_version(self):
+        return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
+
+    @property
+    def erp_minor(self):
+        return PROJECT_DEFAULTS.get('erp_minor', '12')
+    
+    @property
+    def erp_nightly(self):
+        return PROJECT_DEFAULTS.get('erp_nightly', '12')
+
+    @property
+    def erp_provider(self):
+        return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
+
+    @property
+    def remote_servers(self):
+        return REMOTE_SERVERS
+    
+    @property
+    def user(self):
+        return ACT_USER
+
     def _create_sites_rep(self, running_path):
         """
         create sites_list structure
@@ -99,18 +128,18 @@ class SitesHandler(object):
             defaults = {
                 'site_name' : 'demo_global', 
                 'marker' : self.marker,
-                'base_sites_home' : '/home/%s/erp_workbench' % ACT_USER,
-                'erp_provider' : PROJECT_DEFAULTS.get('erp_provider', 'odoo'),
-                'erp_version': PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12')),
-                'erp_minor' : PROJECT_DEFAULTS.get('erp_minor', '12'),
-                'erp_nightly' : PROJECT_DEFAULTS.get('erp_nightly', '12'),
+                'base_sites_home' : '/home/%s/erp_workbench' % self.user,
+                'erp_provider' : self.erp_provider,
+                'erp_version': self.erp_version,
+                'erp_minor' : self.erp_minor,
+                'erp_nightly' : self.erp_nightly,
                 'base_url' : 'demo_global',
                 'local_user_mail' : 'mail@localhost.com',
                 'remote_server' : 'localhost',
                 'docker_port' : 8800,
                 'docker_long_poll_port' : 18800,
-                'docker_hub_name' : DOCKER_DEFAULTS.get('docker_hub_name', ''),
-                'erp_image_version' : DOCKER_DEFAULTS.get('erp_image_version', ''),
+                'docker_hub_name' : self.docker_hub_name,
+                'erp_image_version' : self.erp_image_version,
             }                
             # create global sites
             global_dir = '%s/sites_global' % p1
@@ -139,6 +168,7 @@ class SitesHandler(object):
                 open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
                 if is_localhost:
                     defaults['site_name'] = 'demo_local'
+                    defaults['base_url'] = 'demo_local'
                     open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
                         'demo_local', template % defaults))
             else:
@@ -241,7 +271,9 @@ class SitesHandler(object):
             if parts[-1] == 'sites_list':
                 parts = [p for p in parts if p]
                 sites_list_path = '/' + '/'.join(parts[:-1])
-            sys.path.insert(0, os.path.normpath(sites_list_path))
+        sys.path.insert(0, os.path.normpath(sites_list_path))
+        act = os.getcwd()
+        os.chdir(sites_list_path)
         try:
             from sites_list import SITES_G, SITES_L
             #from sites_list.sites_local import SITES_L
@@ -251,6 +283,8 @@ class SitesHandler(object):
             print('could not import sites list')
             print(bcolors.ENDC)
             return {}, {}
+        finally:
+            os.chdir(act)
             
         # -------------------------------------------------------------
         # test code from prakash to set the local sites value to true
@@ -298,6 +332,12 @@ class SitesHandler(object):
                         docker_hub_pw = kdic_hub_info.get(hub_user, {}).get('docker_hub_pw', '')
                         if docker_hub_pw:
                             SITES[key]['docker_hub'][hub_name]['docker_hub_pw'] = docker_hub_pw
+
+        for k,v in SITES.items():
+            SITES[k] = AttrDict(v)
+
+        for k,v in SITES_L.items():
+            SITES_L[k] = AttrDict(v)
 
         return SITES, SITES_L
     
@@ -364,7 +404,7 @@ class SitesHandler(object):
         self.handler = handler
         remote_url = handler.opts.use_ip or '127.0.0.1'
         # look up what remote url we need to use
-        remote_server_info = REMOTE_SERVERS.get(remote_url)
+        remote_server_info = self.remote_servers.get(remote_url)
         if not remote_server_info:
             print(bcolors.FAIL)
             print('*' * 80)

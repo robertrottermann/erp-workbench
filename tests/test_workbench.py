@@ -3,23 +3,19 @@ import random
 import string
 import sys
 import unittest
-from argparse import Namespace
 from importlib import reload
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, '.')
+
+from tests.name_space import MyNamespace
+from tests.sites_list_killer import SitesListKiller
 
 """
 run it with:
 bin/python -m unittest discover tests
 """
-class MyNamespace(Namespace):
-    # we need a namespace that just ignores unknow options
-    def __getattr__(self, key):
-        if key in self.__dict__.keys():
-            return self.__dict__[key]
-        return None
-
 class TestCreate(unittest.TestCase):
 
     def setUp(self):
@@ -75,7 +71,7 @@ class TestCreate(unittest.TestCase):
         from scripts.create_site import parse_args
         parse_args()
 
-class TestSupportNewSites(unittest.TestCase):
+class TestSupportNewSites(SitesListKiller):
 
     def setUp(self):
         super().setUp()
@@ -92,34 +88,6 @@ class TestSupportNewSites(unittest.TestCase):
         self.args = args
         self.handler = SupportHandler(args, {})
 
-    def _get_sites(self):
-        # old_exit = sys.exit
-        # monkey patch sys.exit not 
-        # def exit(arg=0):
-        #     print('monkey patched sys exit executed')
-        # sys.exit = exit
-        try:
-            # if the sites_list does not exist yet
-            # the following import will create it
-            # but call exit afterwards, which we have monkeypatched
-            from config import sites_list
-            self.sites_list_path = os.path.dirname(sites_list.__file__)
-            self.SITES_G = sites_list.SITES_G
-            self.SITES_L = sites_list.SITES_L
-        except:
-            # 
-            try:
-                from config import BASE_INFO
-                sys.path.append(os.path.dirname(BASE_INFO.get('sitesinfo_path')))
-                import sites_list
-                self.sites_list_path = os.path.dirname(sites_list.__file__)
-                self.SITES_G = sites_list.SITES_G
-                self.SITES_L = sites_list.SITES_L
-            except:
-                raise
-        finally:
-            # sys.exit = old_exit
-            pass
 
     def tearDown(self):
         super().tearDown()
@@ -155,13 +123,9 @@ class TestSupportNewSites(unittest.TestCase):
         reload(sites_list.localhost.sites_global)
         from sites_list.localhost.sites_global import SITES_G as S_XX
         self.assertTrue(new_name in list(S_XX.keys()))
+        # un-import the sites list
+        self.kill_sites_list()
         # now delete the site again
-        # we have to reload all modules that where tainted by creating the module
-        keys = list(sys.modules.keys())
-        for key in keys:
-            if key.startswith('config') or key.startswith('sites_list'):
-                del sys.modules[key]
-        import config
         result = self.handler.drop_site()
         self.assertTrue(result)
 
@@ -191,15 +155,17 @@ class TestDocker(unittest.TestCase):
         args.skip_name = True
         args.quiet = True
         args.docker_create_container = True
-        args.name = 'demo_global'
+        args.name = 'coobytech'
+        #args.erp_image_version = ''
         #self.handler.site_names = ['demo_global']
         self.args = args
         self.handler = DockerHandler(args)
    
     def test_check_and_create_container(self):
         self.handler.check_and_create_container()
+        self.handler.check_and_create_container(delete_container=True)
 
-    def test_build_image(self):
+    def XXtest_build_image(self):
         self.handler.build_image()
 
 if __name__ == '__main__':

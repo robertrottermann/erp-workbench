@@ -16,8 +16,13 @@ DOCKER_DEFAULTS:
     # server the site is running
     docker_port: 9000
 
-    # the name of the containe in which all database are created
+    # dockerdb_container_name
+    # the name of the container in which all database are created
     dockerdb_container_name: 'db'
+
+    # docker_postgres_port
+    # port at which the db container exports its port
+    docker_postgres_port: 55432
 
     # dockerdbuser is used to access the database  in the database container
     dockerdbuser: 'odoo'

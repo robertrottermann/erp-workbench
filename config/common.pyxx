@@ -4,12 +4,6 @@ import sys
 import getpass
 from scripts.bcolors import bcolors
 
-"""
-rename files config/localdata.py -> confid/local_data/servers_info.py
-    GLOBALDEFAULTS --> docker_info.DOCKER_DEFAULTS
-
-"""
-
 # ACT_USER is the actualy logged in user
 ACT_USER = getpass.getuser()
 # BASE_PATH is the home directory of erp_workbench
@@ -96,124 +90,9 @@ if must_reload and construct_result[yaml_dic['project'][0]]:
     PROJECT_DEFAULTS = construct_result[yaml_dic['project'][0]]['PROJECT_DEFAULTS']
 else:
     from config.config_data.project_info import PROJECT_DEFAULTS
-# load servers
-if must_reload and construct_result[yaml_dic['servers'][0]]:
-    REMOTE_SERVERS = construct_result[yaml_dic['servers'][0]]['REMOTE_SERVERS']
-else:
-    from config.config_data.servers_info import REMOTE_SERVERS
-    
-from site_desc_handler.sdesc_utilities import AttrDict
-BASE_INFO = AttrDict(BASE_INFO)
-DOCKER_DEFAULTS = AttrDict(DOCKER_DEFAULTS)
-PROJECT_DEFAULTS = AttrDict(PROJECT_DEFAULTS)
-REMOTE_SERVERS = AttrDict(REMOTE_SERVERS)
 
 # sites is a combination created from "regular" sites listed in sites.py
 # an a list of localsites listed in local_sites.py
 #from sites import SITES, SITES_L as SITES_LOCAL
 # start with checking whether installation is finished
 sites_handler = None
-
-try:
-    pwd = os.getcwd()
-    from site_desc_handler.sites_handler import SitesHandler
-    sites_handler = SitesHandler(BASE_PATH) # will exit when installation not yet finished
-    SITES, SITES_LOCAL = sites_handler.get_sites()
-    # MARKER is used to mark the position in sites.py to add a new site description
-    MARKER = sites_handler.marker # from messages.py
-    os.chdir(pwd)
-except ImportError as e:
-    print(str(e))
-except OSError:
-    # we probably runing from within docker
-    BASE_INFO['erp_server_data_path'] = '/mnt/sites'
-    if os.getcwd() == '/mnt/sites':
-        print('------------------------------')
-        raise ImportError()
-
-# file to which site configuration will be written
-LOGIN_INFO_FILE_TEMPLATE = '%s/login_info.cfg.in'
-
-# file to which pip requirements will be written
-REQUIREMENTS_FILE_TEMPLATE = '%s/install/requirements.txt'
-# elements we add with pip install when we are in a local environment
-MODULES_TO_ADD_LOCALLY = ['pytest-odoo']
-
-try:
-    from .version_info import *
-except:
-    version_info = None
-
-
-# need name and target 
-NEED_TARGET = [
-    'copy_admin_pw',
-]
-
-# is know IP to remote server needed
-NO_NEED_SERVER_IP = [
-    'edit_site',
-]
-FLECTRA_VERSIONS = {
-    '1.0' : {
-        'python_ver' : 'python3', 
-        'python_path' : '/usr/bin/python3',
-        'branch' : '1.0',
-        'tag' : 'v1.0.0',
-    },
-    '1.1.0' : {
-        'python_ver' : 'python3', 
-        'python_path' : '/usr/bin/python3',
-        'branch' : '1.0',
-        'tag' : 'v1.1.0',
-    },
-    '1.2.0' : {
-        'python_ver' : 'python3', 
-        'python_path' : '/usr/bin/python3',
-        'branch' : '1.0',
-        'tag' : 'v1.2.0',
-        'pip' : [
-            'phonenumbers',
-            ''
-        ]
-
-    },
-}
-
-ODOO_VERSIONS_ = {
-    '7.0' : { # elfero
-        'python_ver' : 'python2',
-        'python_path' : '/usr/bin/python2',
-    },
-    '9.0' : {
-        'python_ver' : 'python2',
-        'python_path' : '/usr/bin/python2',
-    },
-    '10.0' : {
-        'python_ver' : 'python2',
-        'python_path' : '/usr/bin/python2',
-    },
-    '11.0' : {
-        'python_ver' : 'python3',
-        'python_path' : '/usr/bin/python3',
-    },
-}
-
-ODOO_VERSIONS = {
-    '7.0' : ODOO_VERSIONS_['7.0'],
-    '9.0' : ODOO_VERSIONS_['9.0'],
-    '10.0' : ODOO_VERSIONS_['10.0'],
-    '11.0' : ODOO_VERSIONS_['11.0'],
-    '7' : ODOO_VERSIONS_['7.0'],
-    '9' : ODOO_VERSIONS_['9.0'],
-    '10' : ODOO_VERSIONS_['10.0'],
-    '11' : ODOO_VERSIONS_['11.0'],
-    '12' : {
-        'python_ver' : 'python3',
-        'python_path' : '/usr/bin/python3',
-    },
-}
-
-# commands to use within a dockerfile to pull aditional libraries
-APT_COMMAND = 'apt'
-PIP_COMMAND = 'pip'

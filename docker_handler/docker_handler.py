@@ -11,11 +11,19 @@ import os
 import re
 import sys
 import shutil
-from scripts.utilities import get_remote_server_info, bcolors
-from scripts.messages import *
+from site_desc_handler.handle_remote_data import get_remote_server_info
+from scripts.bcolors import bcolors
 import docker
 import datetime
 from datetime import date
+from requests.exceptions import HTTPError
+
+from scripts.messages import DOCKER_DB_MISSING, DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
+      DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
+      DOCKER_IMAGE_PUSH_MISING_HUB_INFO, SITE_NOT_EXISTING, DOCKER_IMAGE_CREATE_ERROR, \
+      DOCKER_IMAGE_CREATE_MISING_HUB_INFO, DOCKER_IMAGE_CREATE_MISING_HUB_USER, ERP_VERSION_BAD, \
+      DOCKER_IMAGE_CREATE_MISING_HUB_USER, DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, \
+      DOCKER_IMAGE_CREATE_DONE
 
 # DOCKER_APT_PIP_HEAD is used when constructing docker and either pip or 
 # apt libraries needs to be merged in
@@ -28,9 +36,7 @@ class DockerHandler(InitHandler, DBUpdater):
     def __init__(self, opts, sites=SITES, url='unix://var/run/docker.sock', use_tunnel=False):
         """
         """
-        self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        self.docker_db_admin = DOCKER_DEFAULTS['dockerdbuser']
-        super(DockerHandler, self).__init__(opts, sites)
+        super().__init__(opts, sites)
         try:
             from docker import Client
         except ImportError:
@@ -38,104 +44,27 @@ class DockerHandler(InitHandler, DBUpdater):
             print('could not import docker')
             print('please run bin/pip install -r install/requirements.txt')
             return
-        cli = self.default_values.get('docker_client')
         self.url = url
-        if not cli:
-            from docker import Client
-            cli = Client(base_url=self.url)
-            self.default_values['docker_client'] = cli
 
         if not self.site:
             return # when we are creating the db container
+        # collect data from the site description
+        self.setup_docker_env(self.site)
         # make sure the registry exists
         self.update_docker_info()
         # ----------------------
         # get the db container
         # ----------------------
         # the name of the database container is by default db
-        docker_info = self.site['docker']
-        self.docker_db_admin_pw = docker_info.get('db_admin_pw', DOCKER_DEFAULTS['dockerdbpw'])
-        if not self.opts.dockerdbname:
-            db_container_name = docker_info.get('db_container_name', DOCKER_DEFAULTS['dockerdb_container_name'])
-        self.db_container_name = db_container_name
-        
-        # update the docker registry so we get info about the db_container_name 
+
+        # update the docker registry so we get info about the db_container_name
         self.update_container_info()
-
-        # get the dbcontainer
-        db_container_list = cli.containers(filters = {'name' : db_container_name})
-        if db_container_list:
-            db_container = db_container_list[0]
-        else:
-            return # either db container was missing or some other problem
-        # the ip address to access the db container
-        self.docker_db_ip = db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
-        # the db container allows access to the postgres server running within
-        # trough a port that has been defined when the container has been created
-        self.postgres_port = BASE_INFO.get('docker_postgres_port')
-        # todo should we check whether the postgres port is accessible??
         
-        # ----------------------
-        # get the sites container
-        # ----------------------
-        container_name = docker_info['container_name']
-        self.docker_rpc_port = docker_info.get('erp_port', docker_info.get('odoo_port'))
-        long_polling_port = docker_info.get('erp_longpoll', docker_info.get('odoo_longpoll'))
-        if not long_polling_port:
-            long_polling_port = int(self.docker_rpc_port) + 10000
-        self.docker_long_polling_port = long_polling_port
-        self.registry = self.default_values['docker_registry'].get(container_name)
-        try:
-            self.docker_rpc_host = self.registry['NetworkSettings']['IPAddress']
-        except:
-            self.docker_rpc_host = 'localhost'
-        
-        # --------------------------------------------------
-        # get the credential to log into the db container
-        # --------------------------------------------------
-        # by default the odoo docker user db is 'odoo'
-        self.docker_db_admin = docker_info.get('db_admin', 'odoo')
-        if self.opts.dockerdbuser:
-            self.docker_db_admin = self.opts.dockerdbuser or DOCKER_DEFAULTS['dockerdbuser']        
-        # by default the odoo docker db user's pw is 'odoo'
-        #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        if self.opts.dockerdbpw:
-            self.docker_db_admin_pw = self.opts.dockerdbpw or DOCKER_DEFAULTS['dockerdbpw']  
-          
-        # --------------------------------------------------
-        # get the credential to log into the sites container
-        # --------------------------------------------------
-        docker_rpc_user = self.opts.drpcuser
-        if not docker_rpc_user:
-            docker_rpc_user = DOCKER_DEFAULTS['dockerrpcuser']
-        self.docker_rpc_user = docker_rpc_user
-        
-        docker_rpc_user_pw = self.opts.drpcuserpw
-        if not docker_rpc_user_pw:
-            # no password was provided by an option
-            # we try whether we can learn it from the site itself
-            docker_rpc_user_pw = self.site.get('erp_admin_pw')
-            if not docker_rpc_user_pw:
-                docker_rpc_user_pw = DOCKER_DEFAULTS['dockerrpcuserpw']
-        self.docker_rpc_user_pw = docker_rpc_user_pw
-        
-        #dbhost = self.db_host 
-        #info = {
-            #'rpchost' : 'localhost',
-            #'port' : ports[0].get("HostPort", '8069'),
-            #'rpcuser' : 'admin',
-            #'rpcpw' : self.sites[self.site_name]['erp_admin_pw'],
-            #'dbuser' : 'odoo', # should be configurable
-            #'dbpw' : 'odoo', # should be configurable
-            #'dbhost' : dbhost,
-            #'docker_postgres_port' : self.default_values.get('docker_postgres_port'),
-        #}
-        # install_own_modules(self, list_only=False, quiet=False)
-
+    _subparser_name = 'docker'
     @property
-    def use_postgres_version(self):
-        return DOCKER_DEFAULTS.get('use_postgres_version')
-    
+    def subparser_name(self):
+        return self._subparser_name     
+
     def update_docker_info(self, name='', required=False, start=True):
         """
         update_docker_info checks if a docker exists and is started.
@@ -145,10 +74,9 @@ class DockerHandler(InitHandler, DBUpdater):
         If it does exist and is stoped and start is False, nothing happens.
 
         In all cases, status info read from the docker engine is saved into the registry
-        maintained in self.default_values['docker_registry']
         """
-        registry = self.default_values.get('docker_registry', {})
-        cli = self.default_values.get('docker_client')
+        registry = self.docker_registry
+        cli = self.docker_client
         if name:
             # check whether a container with the requested name exists.
             # similar to docker ps -a, we need to also consider the stoped containers
@@ -183,7 +111,6 @@ class DockerHandler(InitHandler, DBUpdater):
                         print(DOCKER_DB_MISSING)
                         return
                     raise ValueError('required container:%s does not exist' % name)
-        self.default_values['docker_registry'] = registry
 
     def update_container_info(self):
         """
@@ -199,21 +126,16 @@ class DockerHandler(InitHandler, DBUpdater):
         - $MASTER_DOCKERNAME: this is the container name of the master site as found in sites.py.
         """
         name = self.site_name
-        site_info = self.sites[name]
-        erp_provider  = site_info.get('erp_provider')
-        docker = site_info.get('docker')
-        if not docker or not docker.get('container_name'):
-            print('the site description for %s has no docker description or no container_name' % opts.name)
-            return
-        # collect info on database container which allways is named 'db'
-        if not self.opts.docker_build_image:
-            self.update_docker_info(self.db_container_name, required=True) 
-            self.update_docker_info(docker['container_name'])
-        # # check whether we are a slave
-        # if self.opts.transferdocker and site_info.get('slave_info'):
-        #     master_site = site_info.get('slave_info').get('master_site')
-        #     if master_site:
-        #         self.update_docker_info(master_site)
+        if name and self.sites.get(name):
+            #erp_provider  = self.erp_provider
+            if not self.docker_container_name:
+                print('the site description for %s has no docker description or no container_name' % self.site_name)
+                return
+            if self.subparser_name == 'docker':
+                if not self.opts.docker_build_image:
+                    # collect info on database container which normally is named 'db'
+                    self.update_docker_info(self.docker_db_container_name, required=True) 
+                    self.update_docker_info(self.docker_container_name)
 
     # -------------------------------
     # check_and_create_container
@@ -242,7 +164,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'docker_command' : shutil.which('docker'),
         }
         docker_template = docker_template % docker_info
-        mp = self.default_values.get('docker_path_map')
+        mp = self.docker_path_map
         if mp and self.user != 'root':
             try:
                 t, s = mp
@@ -251,7 +173,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 pass
         self.run_commands([docker_template], self.user, pw='')
 
-    def check_and_create_container(self, container_name='', rename_container = False, pull_image = False, update_container=False):
+    def check_and_create_container(self, container_name='', recreate_container = False, rename_container = False, pull_image = False, update_container=False, delete_container=False):
         """create a new docker container or manage an existing one
         
         Keyword Arguments:
@@ -284,7 +206,6 @@ class DockerHandler(InitHandler, DBUpdater):
         
         if not site:
             raise ValueError('%s is not a known site' % name)
-        docker_info = site['docker']
         if not container_name:
             # get info on the docker container to use
             #'docker' : {
@@ -292,20 +213,20 @@ class DockerHandler(InitHandler, DBUpdater):
                 #'container_name'    : 'afbs',
                 #'erp_port'         : '8070',
             #},        
-            container_name = docker_info['container_name']
-            erp_port = docker_info['erp_port']
-            if erp_port == '??':
-                print(DOCKER_INVALID_PORT % (name, name))
-                return()
-            long_polling_port = docker_info.get('erp_longpoll')
-            if long_polling_port == '??':
-                print(DOCKER_INVALID_PORT % (name, name))
-                return()
-            if not long_polling_port:
-                long_polling_port = int(erp_port) + 10000
+            container_name = self.docker_container_name
+        erp_port = self.docker_rpc_port
+        if erp_port == '??':
+            print(DOCKER_INVALID_PORT % (name, name))
+            return()
+        long_polling_port = self.docker_long_polling_port
+        if long_polling_port == '??':
+            print(DOCKER_INVALID_PORT % (name, name))
+            return()
+        #if not long_polling_port:
+        #    long_polling_port = int(erp_port) + 10000
             
         if pull_image:
-            image = docker_info['erp_image_version']
+            image = self.erp_image_version
             if image:
                 self.pull_image(image)
             return
@@ -313,6 +234,26 @@ class DockerHandler(InitHandler, DBUpdater):
             self.stop_container(container_name)
             n = str(datetime.datetime.now()).replace(':', '_').replace('.', '_').replace(' ', '_').replace('-', '_')
             self.rename_container(container_name, '%s.%s' % (container_name, n))
+        
+        # the docker registry was created by update_docker_info
+        # if this registry does not contain a description for container_name
+        # we have to create it
+        info_dic = {
+            'erp_port' : erp_port,
+            'erp_longpoll' : long_polling_port,
+            'site_name' : name,
+            'container_name' : container_name,
+            'remote_data_path' : self.remote_data_path,
+            'erp_image_version' : self.erp_image_version,
+            'erp_server_data_path' : self.erp_server_data_path,           
+        }
+        
+        if recreate_container:
+            # make sure the container is stopped
+            from templates.docker_templates import docker_delete_template
+            self.stop_container(container_name)
+            self._create_container(docker_delete_template, info_dic)                    
+            
         # if we are running as user root, we make sure that the 
         # folders that are accessed from within odoo belong to the respective 
         # we do that before we start the container, so it has immediat access
@@ -322,7 +263,7 @@ class DockerHandler(InitHandler, DBUpdater):
             t_folder = os.path.normpath('%s/%s' % (BASE_INFO['erp_server_data_path'], name))
             try:
                 os.chdir(t_folder)
-                user_and_group =  docker_info.get('external_user_group_id', '104:107')
+                user_and_group = self.docker_external_user_group_id
                 cmdlines = [
                     ['/bin/chown', user_and_group, 'log'],
                     ['/bin/chown', user_and_group, 'filestore', '-R'],
@@ -333,18 +274,6 @@ class DockerHandler(InitHandler, DBUpdater):
                 os.chdir(act_pwd)
             except OSError:
                 pass # no such folder
-        # the docker registry was created by update_docker_info
-        # if this registry does not contain a description for container_name
-        # we have to create it
-        info_dic = {
-            'erp_port' : erp_port,
-            'erp_longpoll' : long_polling_port,
-            'site_name' : name,
-            'container_name' : container_name,
-            'remote_data_path' : self.site and self.site.get('remote_server', {}).get('remote_data_path', '') or '',
-            'erp_image_version' : docker_info.get('erp_image_version', docker_info.get('odoo_image_version')),
-            'erp_server_data_path' : BASE_INFO.get('erp_server_data_path', docker_info.get('odoo_server_data_path')),           
-        }
         # make sure we have valid elements
         for k,v in info_dic.items():
             if k == 'erp_image_version':
@@ -359,14 +288,20 @@ class DockerHandler(InitHandler, DBUpdater):
         if update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
             from templates.docker_templates import docker_template_update
-            self._create_container(docker_template_update, info_dic)    
-        elif rename_container or self.default_values.get('docker_registry') \
-            and not self.default_values['docker_registry'].get(container_name) or (container_name == 'db'):
+            self._create_container(docker_template_update, info_dic)
+        elif delete_container:
+            from templates.docker_templates import docker_delete_template
+            # make sure the container is stopped
+            self.stop_container(container_name)
+            self._create_container(docker_delete_template, info_dic)
+        elif recreate_container or rename_container or self.docker_registry \
+            and container_name or (container_name == 'db'):
             if container_name != 'db':
                 from templates.docker_templates import docker_template, flectra_docker_template
-                if site.get('erp_provider', 'odoo') == 'flectra':
+                if self.erp_provider == 'flectra':
                     docker_template = flectra_docker_template
                 self._create_container(docker_template, info_dic)
+                print('created container %s' % name)                
             else:
                 # we need a postgres version
                 pg_version = self.use_postgres_version
@@ -379,7 +314,7 @@ class DockerHandler(InitHandler, DBUpdater):
                     sys.exit()
                 
                 # here we need to decide , whether we run flectra or odoo
-                if site.get('erp_provider') == 'flectra':
+                if self.erp_provider == 'flectra':
                     from templates.docker_templates import flectra_docker_template
                 else:
                     from templates.docker_templates import docker_db_template
@@ -387,6 +322,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 docker_template = docker_db_template % BASE_INFO
                 try:
                     self.run_commands([docker_template], user=self.user, pw='')
+                    print('created container: %s' % name)
                 except:
                     pass # did exist allready ??
             if self.opts.verbose:
@@ -402,7 +338,7 @@ class DockerHandler(InitHandler, DBUpdater):
         docker push robertredcor/afbs
         """
         try:
-            self.default_values['docker_client'].pull(imagename)
+            self.docker_client.pull(imagename)
             print(DOCKER_IMAGE_PULLED % (imagename, self.site_name))
         except docker.errors.NotFound:
             print(DOCKER_IMAGE_PULL_FAILED % (imagename, self.site_name))
@@ -413,13 +349,13 @@ class DockerHandler(InitHandler, DBUpdater):
         docker tag e6861e4e5151 robertredcor/afbs:9.0
         docker push robertredcor/afbs
         """
-        client = self.default_values['docker_client']
+        client = self.docker_client
         name = self.site_name
         site = self.site
         if not site:
             raise ValueError('%s is not a known site' % name)
-        docker_info = site['docker']
-        image = docker_info['erp_image_version']
+        #docker_info = self.docker_info
+        image = self.erp_image_version
         if image:
             images = [i['RepoTags'] for i in client.images()]
             found = False
@@ -439,8 +375,9 @@ class DockerHandler(InitHandler, DBUpdater):
         
 
     def dockerhub_login(self):
-        client = self.default_values['docker_client']
+        client = self.docker_client
         site = self.site
+        raise Exception('need to adapt dockerhub_login')
         docker_info = site['docker']
         hname =  docker_info.get('hub_name', 'docker_hub')
         if hname != 'docker_hub':
@@ -448,7 +385,7 @@ class DockerHandler(InitHandler, DBUpdater):
         hub_info = site['docker_hub'].get(hname)
         if not hub_info:
             print(DOCKER_IMAGE_PUSH_MISING_HUB_INFO % self.site_name)
-        user = hub_info.get('user')
+        user = self.docker_hub_name
         pw = hub_info.get('docker_hub_pw')
         try:
             client.login(username=user, password=pw)
@@ -519,7 +456,7 @@ class DockerHandler(InitHandler, DBUpdater):
             f.write(template)
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.default_values['docker_client'].build(
+            result = self.docker_client.build(
                 docker_target_path, 
                 tag='dbdumper',
                 dockerfile=docker_file)
@@ -603,9 +540,8 @@ class DockerHandler(InitHandler, DBUpdater):
             for line in block:
                 result.append(pref + line.strip())
             return result
-        docker_info = self.site.get('docker', {})
         # do we have a dockerhub user?
-        hub_name  = docker_info.get('hub_name', '')
+        hub_name  = self.docker_hub_name
         if not hub_name:
             print(DOCKER_IMAGE_CREATE_MISING_HUB_INFO % self.site_name)
             return
@@ -624,7 +560,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if not erp_version in list(ODOO_VERSIONS.keys()):
             print(ERP_VERSION_BAD % (self.site_name, self.site.get('erp_version', self.site.get('odoo_version'))))
             return
-        docker_source_path = '%s/docker/docker/%s/' % (self.default_values['erp_server_data_path'], erp_version)
+        #docker_source_path = '%s/docker/docker/%s/' % (self.default_values['erp_server_data_path'], erp_version)
         # get path to where we want to write the docker file
         docker_target_path = '%s/docker/' % self.default_values['data_dir']
         if not os.path.exists(docker_target_path):
@@ -637,7 +573,7 @@ class DockerHandler(InitHandler, DBUpdater):
         #line_matcher = re.compile(r'\s+&& pip install.+')
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
             data_dic = {
-               'erp_image_version'  : docker_info.get('base_image', 'camptocamp/odoo-project:%s-latest' % erp_version),
+               'erp_image_version'  : self.docker_base_image
             }
             data_str = DOCKER_APT_PIP_HEAD
             if apt_list or pip_list:
@@ -675,11 +611,10 @@ class DockerHandler(InitHandler, DBUpdater):
             else:
                 print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
         # check out odoo source
-        act = os.getcwd()
         os.chdir(docker_target_path)
         # construct a valid version
         version = self.version
-        minor = self.minor
+        minor = self.erp_minor
         try:
             version = str(int(float(version)))
         except:
@@ -697,24 +632,12 @@ class DockerHandler(InitHandler, DBUpdater):
             'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
         ]
         self.run_commands(cmd_lines=cmd_lines)
-        #for line in open( '%sDockerfile' % docker_source_path, 'r' ):
-            #if line_matcher.match(line):
-                #pip_line = line
-                #pref = ' ' * 8
-                ## write out all librarieds needed for the new python libraries to be
-                ## installed by pip
-                #for line in apt_lines(apt_list):
-                    #result.write( pref + line + " \\\n")
-                ## finally add the pip line embellished with our own list
-                #result.write( pref + pip_line.strip() + ' '  + ' '.join([p.strip() for p in pip_list]) + '\n')
-            #else:
-                #result.write( line ) 
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
-        tag = docker_info.get('erp_image_version', docker_info.get('odoo_image_version'))
+        tag = self.erp_image_version
         return_info = []
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.default_values['docker_client'].build(
+            result = self.docker_client.build(
                 docker_target_path, 
                 tag = tag, 
                 dockerfile=docker_file)
@@ -724,17 +647,20 @@ class DockerHandler(InitHandler, DBUpdater):
         except docker.errors.NotFound:
             print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
         else:
+            result = return_info[0].split(' ')[-1]
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_IMAGE_CREATE_DONE % (dockerhub_user, return_info[0].split(' ')[-1], tag, tag))                
+            print(DOCKER_IMAGE_CREATE_DONE % (
+                self.site_name,result, dockerhub_user or 'YOUR_DOCKERHUB_ACCOUNT', 
+                result, self.site_name))
 
     def rename_container(self, name, new_name):
         """
         """
         try:
-            self.default_values['docker_client'].stop(name)
-            self.default_values['docker_client'].rename(name, new_name)
-            print('rename %s to %s' % (name, new_name))
+            self.docker_client.stop(name)
+            self.docker_client.rename(name, new_name)
+            print('renamed %s to %s' % (name, new_name))
         except:
             print('container %s nicht gefunden' % name)
 
@@ -742,10 +668,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         if not name:
-            name = self.site_name
+            name = self.docker_container_name
         try:
             print('stoping container %s' % name)
-            self.default_values['docker_client'].stop(name)
+            self.docker_client.stop(name)
             print('stopped %s' % name)
         except docker.errors.NotFound:
             print('container %s nicht gefunden' % name)
@@ -757,29 +683,35 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         if not name:
             name = self.site_name
-        print('starting container %s' % name)
-        self.default_values['docker_client'].start(name)
-        print('started %s' % name)
+        try:
+            print('starting container %s' % name)
+            self.docker_client.start(name)
+            print('started %s' % name)
+        except docker.errors.NotFound:
+            print('container %s nicht gefunden' % name)
 
     def restart_container(self, name=''):
         """
         """
         if not name:
             name = self.site_name
-        print('restarting container %s' % name)
-        self.default_values['docker_client'].restart(name)
-        print('restarted %s' % name)
+        try:
+            print('restarting container %s' % name)
+            self.docker_client.restart(name)
+            print('restarted %s' % name)
+        except docker.errors.NotFound:
+            print('container %s nicht gefunden' % name)
 
     def doTransfer(self):
         """
         """
-        super(dockerHandler, self).doTransfer()
+        super().doTransfer()
 
     def checkImage(self, image_name):
         """
         """
         # todo should also check remotely
-        return self.default_values['docker_client'].images(image_name)
+        return self.docker_client.images(image_name)
 
     def createDumperImage(self):
         """
@@ -798,9 +730,8 @@ class DockerHandler(InitHandler, DBUpdater):
         # we need to learn what ip address the local docker db is using
         # if the container does not yet exists, we create them (master and slave)
         self.check_and_create_container()
-        server_dic = get_remote_server_info(self.opts)
+        get_remote_server_info(self.opts, self.sites)
         # we have to decide, whether this is a local or remote
-        remote_data_path = server_dic['remote_data_path']
         dumper_image = BASE_INFO.get('docker_dumper_image')
         if not dumper_image:
             print(bcolors.FAIL + \
@@ -838,10 +769,9 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         if list_only:
-            return install_own_modules(self.opts, self.default_values, list_only, quiet)
+            return self.install_own_modules(self.default_values, list_only, quiet)
         # get_module_obj
-        docker_info = self.default_values['docker_registry'].get(self.site_name)
-        db_info = self.default_values['docker_registry'].get(self.site_name)
+        db_info = self.docker_registry.get(self.site_name)
         if not db_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
             if self.opts.docker_start_container:
@@ -882,14 +812,14 @@ class DockerHandler(InitHandler, DBUpdater):
         # make sure container is up and running
         self.check_and_create_container()
         # this places info about the running container into the default_values
-        docker_info = self.default_values['docker_registry'].get(self.site_name)
+        docker_info = self.docker_registry.get(self.site_name)
         if not docker_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
             return
         # the docker id is used to access the running container
         container_id = docker_info['Id']
         # we need an interface to the docker engine
-        cli = self.default_values.get('docker_client')
+        cli = self.docker_client
 
         for cmds in cmd_lines:
             exe = cli.exec_create(container=container_id, cmd=cmds, tty=True, privileged=True)
@@ -960,7 +890,7 @@ class DockerHandler(InitHandler, DBUpdater):
         # make sure container is up and running
         self.check_and_create_container()
         # this places info about the running container into the default_values
-        docker_info = self.default_values['docker_registry'].get(self.site_name)
+        docker_info = self.docker_registry.get(self.site_name)
         if not docker_info:
             print(bcolors.FAIL + 'no docker container %s running' % self.site_name + bcolors.ENDC)
             return
@@ -991,8 +921,6 @@ class DockerHandler(InitHandler, DBUpdater):
             for v in docker_info['Mounts']:
                 print(indent, v['Destination'])
                 print(indent * 2, v['Source'])
-                
-
         else:
             if what != 'all':
                 what = what.split[',']

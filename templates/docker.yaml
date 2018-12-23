@@ -26,6 +26,7 @@ DOCKER_DEFAULTS:
     # this is in most cases NOT 'admin'
     # you can overrule it with -ddbpw
     dockerrpcuserpw: 'admin'
+
     # dumper_image:
     # when dumping a container based erp site site to its backup structure
     # a docker container is used that has access to databse container
@@ -39,3 +40,16 @@ DOCKER_DEFAULTS:
     # use_postgres_version
     # is used when creating the db image to define what postgres version to use
     use_postgres_version: '10.0'
+
+    # docker_image
+    # values to be set while image creation
+    docker_image:
+        # base_image_values
+        # these are values set when the base image is created
+        # be carefull that they do not conflict with values from the Dockerfile
+        base_image_values:
+            envrion_variables:
+                dummy_env_var:
+                    77
+
+

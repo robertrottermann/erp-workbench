@@ -19,7 +19,7 @@ try:
 except ImportError as e:
     print(MODULE_MISSING % 'git')
     sys.exit()
-from config import BASE_PATH, BASE_INFO, SITES, SITES_LOCAL
+from config import SITES, SITES_LOCAL
 import git
 import socket
 from socket import gaierror
@@ -31,12 +31,6 @@ create a new odoo project so we can easily maintain a local and a remote
 set of configuration files and keep them in sync.
 
 It knows enough about odoo to be able to treat some special values correctly
-
-# last setting contains all the setting used for the last project
-from scripts.create_new_project import create_new_project, \
-    check_project_exists, get_base_info, set_base_info, \
-    BASE_DEFAULTS, base_info, LOGIN_INFO_TEMPLATE_FILE, get_user_info
-
 
 """
 
@@ -75,23 +69,6 @@ def get_process_id(name, path):
             # ['/home/robert/projects/eplusp11/eplusp11/bin/python', 'bin/start_openerp']
             result.append([p.pid, cmdline])
     return result
-
-# check if needed links are set
-
-
-def check_links():
-    # there is only one link that must be set
-    # if 'erp_server_data_path' and BASE_PATH differ
-    # we must set a link to the dumper folder, so that
-    # the dumper docker container finds its content
-    return  # not used ...
-    if BASE_INFO['erp_server_data_path'] != BASE_PATH:
-        actual = os.getcwd()
-        os.chdir(BASE_PATH)
-        if not os.path.exists('dumper'):
-            os.symlink('%s/dumper' % BASE_PATH, 'dumper')
-        os.chdir(actual)
-
 
 def collect_options(opts):
     """
@@ -185,7 +162,8 @@ def create_server_config(handler):
     erp_type = handler.site.get('erp_type', 'odoo')
     config_name = CONFIG_NAME[erp_type]['config']
     erp_admin_pw = handler.site.get('erp_admin_pw', '')
-    p = os.path.normpath('%s/%s' % (BASE_INFO['erp_server_data_path'], name))
+    base_info = handler.base_info 
+    p = os.path.normpath('%s/%s' % (base_info['erp_server_data_path'], name))
     collect_addon_paths(handler)
     # now copy a template openerp-server.conf
     handler.default_values['erp_admin_pw'] = erp_admin_pw
@@ -250,6 +228,7 @@ def set_base_info(info_dic, filename):
 
 
 def get_base_info(base_info, base_defaults):
+    from config import BASE_INFO # avoid circular import
     "collect base info from user, update base_info"
     for k, v in list(base_defaults.items()):
         name, explanation, default = v
@@ -328,6 +307,7 @@ def module_add(opts, default_values, site_values, module_name):
     @site_values      : values for this site as found in systes.py
     @module_name      : name of the new module
     """
+    from config import BASE_INFO # avoid circular import
     # we start opening the sites.py as text file
     if default_values['is_local']:
         sites_path = '%s/sites_local' % BASE_INFO['sitesinfo_path']
@@ -431,36 +411,6 @@ def find_addon_names(addon):
         input('hit enter to continue')
 
     return [n.strip() for n in names if n]
-
-# --------------------------------------------
-# _construct_sa
-# return list of urls to download addons from
-# --------------------------------------------
-
-
-def _construct_sa(site_name, site_addons, skip_list):
-    """
-    """
-    added = []
-    name = ''
-    for a in (site_addons or []):
-        names = find_addon_names(a)
-        for name in names:
-            if not name:
-                continue
-            if name and name in skip_list:
-                continue
-            ap = a.get('add_path')
-            if ap:
-                p = os.path.normpath(
-                    '%s/%s/addons/%s' % (BASE_INFO['erp_server_data_path'], site_name, ap))
-            else:
-                p = os.path.normpath(
-                    '%s/%s/addons' % (BASE_INFO['erp_server_data_path'], site_name))
-            if p not in added:
-                added.append(p)
-    return '\n'.join(['    local %s' % a for a in added])
-
 
 # ----------------------------------
 # checkout_sa
@@ -615,6 +565,7 @@ def checkout_sa(opts):
     get addons from repository
     @opts   : options as entered by the user
     """
+    from config import BASE_INFO # avoid circular import    
     if not opts.name:
         # need a  site_name to do anythin sensible
         return
@@ -827,8 +778,8 @@ def checkout_sa(opts):
         print((bcolors.ENDC))     
     return result
 
-
-def update_docker_info(default_values, name, url='unix://var/run/docker.sock', required=False, start=True):
+# docker_handler ??
+def XXupdate_docker_info(default_values, name, url='unix://var/run/docker.sock', required=False, start=True):
     """
     """
     cli = default_values.get('docker_client')
@@ -857,7 +808,8 @@ def update_docker_info(default_values, name, url='unix://var/run/docker.sock', r
     default_values['docker_registry'] = registry
 
 
-def update_container_info(default_values, opts):
+# docker_handler ??
+def XXupdate_container_info(default_values, opts):
     """
     """
     sys.path.insert(0, '..')
@@ -884,73 +836,3 @@ def update_container_info(default_values, opts):
             update_docker_info(default_values, master_site)
 
 
-# =============================================================
-# get server info from site description
-# =============================================================
-def get_remote_server_info(opts, use_name=None):
-    """
-    get server info from site description
-    """
-    import socket
-    serverDic = {}
-    if not use_name:
-        name = opts.name
-    else:
-        # in transfer, we do not want to use the name
-        # provided in opts ..
-        name = use_name
-        if not SITES.get(name):
-            print('*' * 80)
-            print('provided use_name=%s is not valid on this server' % use_name)
-            raise ValueError(
-                'provided use_name=%s is not valid on this server' % use_name)
-
-    if opts.use_ip:
-        try:
-            addr = socket.gethostbyname(opts.use_ip)
-        except gaierror:
-            print((bcolors.FAIL))
-            print(('*' * 80))
-            print(('% is not a vali ip' % opts.use_ip))
-            print((bcolors.ENDC))
-            return
-        serverDic = REMOTE_SERVERS.get(addr)
-    else:
-        d = deepcopy(SITES[name])
-        serverDic = d.get('remote_server')
-        if not serverDic:
-            print('*' * 80)
-            print('the site description for %s has no remote_server description' % opts.name)
-            print('please add one')
-            print('*' * 80)
-            serverDic = {
-                'remote_url': d['remote_url'],
-                'remote_data_path': d['remote_data_path'],
-                'remote_user': d['remote_user'],
-            }
-    if opts.use_ip_target:
-        try:
-            addr = socket.gethostbyname(opts.use_ip_target)
-        except gaierror:
-            print((bcolors.FAIL))
-            print(('*' * 80))
-            print(('% is not a vali ip' % opts.use_ip_target))
-            print((bcolors.ENDC))
-            return
-        serverDic_target = REMOTE_SERVERS.get(addr)
-    if not serverDic:
-        print('*' * 80)
-        print('the ip %s has no site description' % ip)
-        print('please add one using bin/s support --add-server %s' % ip)
-        print('*' * 80)
-        sys.exit()
-    # if the remote url is overridden, replace it now
-    if opts.use_ip:
-        if not serverDic.get('remote_url_orig'):
-            # do not overwrite if we land here a second time
-            serverDic['remote_url_orig'] = SITES[name]['remote_server']['remote_url']
-        serverDic['remote_url'] = opts.use_ip
-    if opts.use_ip_target:
-        serverDic['serverDic_target'] = serverDic_target
-
-    return serverDic

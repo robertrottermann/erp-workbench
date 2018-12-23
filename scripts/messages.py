@@ -27,8 +27,8 @@ In a %snew%s shell you can execute
 %%(site_name)sw
 To create the new site execute the following commands:
 cd %%(project_path)s
-bin/build_%%(project_type)s.py
-bin/dosetup_%%(project_type)s
+bin/build_%%(erp_provider)s.py
+bin/dosetup_%%(erp_provider)s
 ------------------------------------------------
 """ % (bcolors.WARNING, bcolors.ENDC)
 
@@ -366,7 +366,7 @@ bin/d -dcdb
 DOCKER_IMAGE_PULLED = """
 %s--------------------------------------------
 a new image %%s for container %%s was pulled
-please stop and recreate all container using it
+please stop and recreate all containers using it
 you can do so by executing:
 bin/d -dr SITENAME
 ---------------------------------------------%s
@@ -427,9 +427,11 @@ docker build .
 DOCKER_IMAGE_CREATE_MISING_HUB_INFO = """
 %s--------------------------------------------
 a new image for container %%s could not be created
-since there is no docker hub info
+since there is no docker hub info provided!
+You can set it either in the site description or 
+in the config/docker.yaml file.
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (bcolors.WARNING,bcolors.ENDC)
 
 DOCKER_IMAGE_CREATE_MISING_HUB_USER = """
 %s--------------------------------------------
@@ -457,16 +459,27 @@ will be provided until it is done.
 
 DOCKER_IMAGE_CREATE_DONE = """
 %s--------------------------------------------
-Finished to create docker image.
-Now it is the appropriate time to tag and upload it to
-your docker hub account.
-Todo so, make sure that you computer is logged into
-your docker hub account and then 
-please execute the following commands:
+Finished to create docker image for site 
 
-docker login -u %%s
-docker tag %%s %%s
-docker push %%s
+    %%s
+
+it is tagged:
+    %%s
+
+Now you can upload it to your docker hub account.
+Todo so, make sure that your computer is logged into
+your docker hub account executing:
+
+    docker login -u %%s
+
+and then:
+
+    docker push %%s
+
+to create a docker container using the new image
+execute:
+
+    bin/d -dc %%s
 ---------------------------------------------%s
 """ % (bcolors.OKGREEN, bcolors.ENDC)
 

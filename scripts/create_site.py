@@ -120,6 +120,7 @@ def main(opts, parsername, need_names_dic):
         handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
+       # _subparser_name = 'docker'
 
     # ckeck whether the used option needs a name to work
     handler.check_name(need_names_dic=need_names_dic)
@@ -131,7 +132,7 @@ def main(opts, parsername, need_names_dic):
     sites_handler.fix_sites_list()
     # ckeck wheter the the sites-list has to be autoloaded
     sites_handler.check_pull()
-
+    did_run_a_command = False
     # ----------------------
     # create commands
     # ----------------------
@@ -165,7 +166,7 @@ def main(opts, parsername, need_names_dic):
                 'project_path' : handler.default_values['inner'],
                 'erp_version': BASE_INFO.get('erp_version', BASE_INFO.get('odoo_version')),
                 'site_name' : handler.site_name,
-                'project_type' : PROJECT_DEFAULTS.get('project_type'),
+                'erp_provider' : PROJECT_DEFAULTS.get('erp_provider'),
             }
             if opts.create:
                 existed = handler.create_or_update_site()
@@ -348,11 +349,30 @@ def main(opts, parsername, need_names_dic):
             # "docker -dcu", "--create_update_container",
             handler.check_and_create_container(update_container=True)
             did_run_a_command = True
+        if opts.docker_delete_container:
+            handler.check_and_create_container(delete_container=True)
+            did_run_a_command = True
         if opts.docker_create_db_container:
             # "docker -dcdb", "--create_db_container",
             handler.check_and_create_container(container_name='db')
             did_run_a_command = True
 
+        # recreate container
+        # ------------------
+        # recreate a conainer
+        if opts.docker_recreate_container:
+            handler.check_and_create_container(recreate_container = True)
+            did_run_a_command = True
+            return
+        
+        # rename container
+        # ----------------
+        # recreate a conainer
+        if opts.docker_rename_container:
+            handler.check_and_create_container(rename_container = True)
+            did_run_a_command = True
+            return
+        
         # build image
         # ----------
         # build docker image used by a site
@@ -363,8 +383,24 @@ def main(opts, parsername, need_names_dic):
         if opts.build_dumper_image:
             handler.build_dumper_image()
             did_run_a_command = True
-            return           
+            return
 
+        # pull image
+        # ----------
+        # pull an actual docker image used by a site
+        if opts.docker_pull_image:
+            handler.check_and_create_container(pull_image = True)
+            did_run_a_command = True
+            return
+    
+        # push image
+        # ----------
+        # push docker image used by a site
+        if opts.docker_push_image:
+            handler.push_image()
+            did_run_a_command = True
+            return
+        
         # installown or updateown or removeown
         # ------------------------------------
         # installown install all modules declared in the selected site
@@ -408,8 +444,23 @@ def main(opts, parsername, need_names_dic):
                 handler.stop_container()
             did_run_a_command = True
 
-
-
+        # docker_show
+        # --------------
+        # show some info about a containe
+        if opts.docker_show or opts.docker_show_all:
+            if opts.docker_show_all:
+                handler.docker_show('all')
+            else:
+                handler.docker_show()
+            did_run_a_command = True
+        
+        if not did_run_a_command:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('The selected docker option is either invalid or not yet implemented')
+            print(bcolors.ENDC)
+        return
+    
     # ----------------------
     # support commands
     # ----------------------
@@ -549,14 +600,6 @@ def parse_args():
         else:
             args.name = ''
     return args, sub_parser, need_names_dic
-    
-    
-    opts = OptsWrapper(args)
-    opts.command_line = command_line # so we can reexecute
-    if not opts.name and unknownargs:
-        unknownargs = [a for a in unknownargs if a and a[0] != '-']
-        if unknownargs:
-            opts._o.__dict__['name'] = unknownargs[0]
 
 
 if __name__ == '__main__':

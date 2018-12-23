@@ -6,7 +6,7 @@ from config import SITES #, BASE_INFO, DOCKER_DEFAULTS
 from scripts.create_handler import InitHandler
 import os
 import sys
-from scripts.utilities import bcolors
+from scripts.bcolors import bcolors
 from scripts.messages import *
 import datetime
 #from froxlor.wrapper import DatabaseObject, PanelCustomer, PanelDomain
@@ -231,6 +231,11 @@ class MailHandler(InitHandler):
         self.MailuserFroxlor = MailuserFroxlor
         self.MailvirtualFroxlor = MailvirtualFroxlor
 
+    _subparser_name = 'mail'
+    @property
+    def subparser_name(self):
+        return self._subparser_name 
+    
     def get_tables(self):
         if not self.tables:
             session = self.get_session()

@@ -7,7 +7,8 @@ import logging
 from optparse import OptionParser
 import subprocess
 from subprocess import PIPE
-from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, ACT_USER, MARKER, bcolors
+from config import FOLDERNAMES, SITES, SITES_LOCAL, BASE_PATH, BASE_INFO, ACT_USER, MARKER
+from scripts.bcolors import bcolors
 from copy import deepcopy
 
 from scripts.create_handler import InitHandler
@@ -30,6 +31,12 @@ class RemoteHandler(InitHandler):
         # @opts             : option instance
         # @default_values   : dictionary with default values
         # ----------------------------------
+        
+    _subparser_name = 'remote'
+    @property
+    def subparser_name(self):
+        return self._subparser_name     
+        
     def add_site_to_apache(self):
         """
         create virtual host entry for apache
