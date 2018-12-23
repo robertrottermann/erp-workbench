@@ -39,11 +39,31 @@ def add_options_docker(parser, result_dic):
         name_valid = True,
     )
     parser_docker.add_argument(
+        "-dp", "--docker-pull-image",
+        action="store_true", dest="docker_pull_image", default=False,
+        help='pull actual image used by a docker container. Name must be provided,'
+    )
+    parser_docker.add_argument(
+        "-dpi", "--push_image",
+        action="store_true", dest="docker_push_image", default=False,
+        help='push a docker image. Name of site must be provided'
+    )
+    parser_docker.add_argument(
         "-dc", "--create_container",
         action="store_true", dest="docker_create_container", default=False,
         help = 'create a docker container. Name must be provided',
         need_name = True,
         name_valid = True,
+    )
+    parser_docker.add_argument(
+        "-dr", "--recreate-container",
+        action="store_true", dest="docker_recreate_container", default=False,
+        help='recreate docker container. Name must be provided,'
+    )
+    parser_docker.add_argument(
+        "-dR", "--rename-container",
+        action="store_true", dest="docker_rename_container", default=False,
+        help='rename container to have actual date in its name and recreate docker container. Name must be provided,'
     )
     parser_docker.add_argument(
         "-dcdb", "--create_db_container",
@@ -67,11 +87,6 @@ def add_options_docker(parser, result_dic):
         action="store_true", dest="docker_list_db", default=False,
         help='list databases in db docker container.',
     )
-    # parser_docker.add_argument(
-    #     "-dcdbPG", "--set-postgers-version",
-    #     action="store", dest="use_postgres_version",
-    #     help='define postgres version to be used. Something like 9.6 or 10.0'
-    # )
     parser_docker.add_argument(
         "-dcu", "--create_update_container",
         action="store_true", dest="docker_create_update_container", default=False,

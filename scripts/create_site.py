@@ -120,7 +120,7 @@ def main(opts, parsername, need_names_dic):
         handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
-        _subparser_name = 'docker'
+       # _subparser_name = 'docker'
 
     # ckeck whether the used option needs a name to work
     handler.check_name(need_names_dic=need_names_dic)
@@ -132,7 +132,7 @@ def main(opts, parsername, need_names_dic):
     sites_handler.fix_sites_list()
     # ckeck wheter the the sites-list has to be autoloaded
     sites_handler.check_pull()
-
+    did_run_a_command = False
     # ----------------------
     # create commands
     # ----------------------
@@ -357,6 +357,22 @@ def main(opts, parsername, need_names_dic):
             handler.check_and_create_container(container_name='db')
             did_run_a_command = True
 
+        # recreate container
+        # ------------------
+        # recreate a conainer
+        if opts.docker_recreate_container:
+            handler.check_and_create_container(recreate_container = True)
+            did_run_a_command = True
+            return
+        
+        # rename container
+        # ----------------
+        # recreate a conainer
+        if opts.docker_rename_container:
+            handler.check_and_create_container(rename_container = True)
+            did_run_a_command = True
+            return
+        
         # build image
         # ----------
         # build docker image used by a site
@@ -367,8 +383,24 @@ def main(opts, parsername, need_names_dic):
         if opts.build_dumper_image:
             handler.build_dumper_image()
             did_run_a_command = True
-            return           
+            return
 
+        # pull image
+        # ----------
+        # pull an actual docker image used by a site
+        if opts.docker_pull_image:
+            handler.check_and_create_container(pull_image = True)
+            did_run_a_command = True
+            return
+    
+        # push image
+        # ----------
+        # push docker image used by a site
+        if opts.docker_push_image:
+            handler.push_image()
+            did_run_a_command = True
+            return
+        
         # installown or updateown or removeown
         # ------------------------------------
         # installown install all modules declared in the selected site
@@ -412,8 +444,23 @@ def main(opts, parsername, need_names_dic):
                 handler.stop_container()
             did_run_a_command = True
 
-
-
+        # docker_show
+        # --------------
+        # show some info about a containe
+        if opts.docker_show or opts.docker_show_all:
+            if opts.docker_show_all:
+                handler.docker_show('all')
+            else:
+                handler.docker_show()
+            did_run_a_command = True
+        
+        if not did_run_a_command:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('The selected docker option is either invalid or not yet implemented')
+            print(bcolors.ENDC)
+        return
+    
     # ----------------------
     # support commands
     # ----------------------

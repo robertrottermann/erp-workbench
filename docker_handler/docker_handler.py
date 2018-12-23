@@ -16,6 +16,7 @@ from scripts.bcolors import bcolors
 import docker
 import datetime
 from datetime import date
+from requests.exceptions import HTTPError
 
 from scripts.messages import DOCKER_DB_MISSING, DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
       DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
@@ -172,7 +173,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 pass
         self.run_commands([docker_template], self.user, pw='')
 
-    def check_and_create_container(self, container_name='', rename_container = False, pull_image = False, update_container=False, delete_container=False):
+    def check_and_create_container(self, container_name='', recreate_container = False, rename_container = False, pull_image = False, update_container=False, delete_container=False):
         """create a new docker container or manage an existing one
         
         Keyword Arguments:
@@ -233,6 +234,26 @@ class DockerHandler(InitHandler, DBUpdater):
             self.stop_container(container_name)
             n = str(datetime.datetime.now()).replace(':', '_').replace('.', '_').replace(' ', '_').replace('-', '_')
             self.rename_container(container_name, '%s.%s' % (container_name, n))
+        
+        # the docker registry was created by update_docker_info
+        # if this registry does not contain a description for container_name
+        # we have to create it
+        info_dic = {
+            'erp_port' : erp_port,
+            'erp_longpoll' : long_polling_port,
+            'site_name' : name,
+            'container_name' : container_name,
+            'remote_data_path' : self.remote_data_path,
+            'erp_image_version' : self.erp_image_version,
+            'erp_server_data_path' : self.erp_server_data_path,           
+        }
+        
+        if recreate_container:
+            # make sure the container is stopped
+            from templates.docker_templates import docker_delete_template
+            self.stop_container(container_name)
+            self._create_container(docker_delete_template, info_dic)                    
+            
         # if we are running as user root, we make sure that the 
         # folders that are accessed from within odoo belong to the respective 
         # we do that before we start the container, so it has immediat access
@@ -253,18 +274,6 @@ class DockerHandler(InitHandler, DBUpdater):
                 os.chdir(act_pwd)
             except OSError:
                 pass # no such folder
-        # the docker registry was created by update_docker_info
-        # if this registry does not contain a description for container_name
-        # we have to create it
-        info_dic = {
-            'erp_port' : erp_port,
-            'erp_longpoll' : long_polling_port,
-            'site_name' : name,
-            'container_name' : container_name,
-            'remote_data_path' : self.remote_data_path,
-            'erp_image_version' : self.erp_image_version,
-            'erp_server_data_path' : self.erp_server_data_path,           
-        }
         # make sure we have valid elements
         for k,v in info_dic.items():
             if k == 'erp_image_version':
@@ -285,13 +294,14 @@ class DockerHandler(InitHandler, DBUpdater):
             # make sure the container is stopped
             self.stop_container(container_name)
             self._create_container(docker_delete_template, info_dic)
-        elif rename_container or self.docker_registry \
+        elif recreate_container or rename_container or self.docker_registry \
             and container_name or (container_name == 'db'):
             if container_name != 'db':
                 from templates.docker_templates import docker_template, flectra_docker_template
                 if self.erp_provider == 'flectra':
                     docker_template = flectra_docker_template
                 self._create_container(docker_template, info_dic)
+                print('created container %s' % name)                
             else:
                 # we need a postgres version
                 pg_version = self.use_postgres_version
@@ -312,6 +322,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 docker_template = docker_db_template % BASE_INFO
                 try:
                     self.run_commands([docker_template], user=self.user, pw='')
+                    print('created container: %s' % name)
                 except:
                     pass # did exist allready ??
             if self.opts.verbose:
@@ -649,7 +660,7 @@ class DockerHandler(InitHandler, DBUpdater):
         try:
             self.docker_client.stop(name)
             self.docker_client.rename(name, new_name)
-            print('rename %s to %s' % (name, new_name))
+            print('renamed %s to %s' % (name, new_name))
         except:
             print('container %s nicht gefunden' % name)
 
@@ -672,18 +683,24 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         if not name:
             name = self.site_name
-        print('starting container %s' % name)
-        self.docker_client.start(name)
-        print('started %s' % name)
+        try:
+            print('starting container %s' % name)
+            self.docker_client.start(name)
+            print('started %s' % name)
+        except docker.errors.NotFound:
+            print('container %s nicht gefunden' % name)
 
     def restart_container(self, name=''):
         """
         """
         if not name:
             name = self.site_name
-        print('restarting container %s' % name)
-        self.docker_client.restart(name)
-        print('restarted %s' % name)
+        try:
+            print('restarting container %s' % name)
+            self.docker_client.restart(name)
+            print('restarted %s' % name)
+        except docker.errors.NotFound:
+            print('container %s nicht gefunden' % name)
 
     def doTransfer(self):
         """
@@ -904,8 +921,6 @@ class DockerHandler(InitHandler, DBUpdater):
             for v in docker_info['Mounts']:
                 print(indent, v['Destination'])
                 print(indent * 2, v['Source'])
-                
-
         else:
             if what != 'all':
                 what = what.split[',']

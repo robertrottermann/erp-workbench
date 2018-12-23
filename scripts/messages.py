@@ -366,7 +366,7 @@ bin/d -dcdb
 DOCKER_IMAGE_PULLED = """
 %s--------------------------------------------
 a new image %%s for container %%s was pulled
-please stop and recreate all container using it
+please stop and recreate all containers using it
 you can do so by executing:
 bin/d -dr SITENAME
 ---------------------------------------------%s
