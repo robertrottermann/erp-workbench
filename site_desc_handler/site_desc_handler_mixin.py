@@ -34,6 +34,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             kDic = SITES_PW.get(key, DEFAULT_PWS)
             for k in list(DEFAULT_PWS.keys()):
                 self.sites[key][k] = kDic.get(k, '')
+            pass # so we can stop the debugger here
 
     def _parse_site(self, site):
         self._erp_minor = site.get('erp_minor', self.project_defaults.get('erp_minor', '12'))

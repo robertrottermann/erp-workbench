@@ -33,6 +33,7 @@ class TesGetDockerData(SitesListKiller):
     Arguments:
         unittest {[type]} -- [description]
     """
+    _use_site_name = 'demo_global'
 
     def setUp(self):
         super().setUp()
@@ -43,15 +44,9 @@ class TesGetDockerData(SitesListKiller):
         args.subparser_name = 'docker'
         args.skip_name = True
         args.quiet = True
+        args.name = self._use_site_name
         self.args = args
-        self.dHandler = DockerHandler(args, {})
-        self.sHandler = SupportHandler(args, {})
-        r_string = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-        self.new_name = 'new_site_' + r_string
-        self.args.add_site = True
-        self.args.name = self.new_name + ':localhost'
-        result = self.sHandler.add_site_to_sitelist()
-        self.kill_sites_list()
+        self.dHandler = DockerHandler(args, sites_list.SITES_G)
 
     def tearDown(self):
         super().tearDown()
@@ -70,4 +65,5 @@ class TesGetDockerData(SitesListKiller):
         print(docker_info)
 
     def test_get_docker_erp_image_version(self):
-        pass
+        # make sure the sites_pw.py provides the following pw for the new site
+        self.assertTrue(self.dHandler.erp_admin_pw == 'demo_global$odoo_admin_pw')

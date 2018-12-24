@@ -59,7 +59,7 @@ def collect_docker_info(self, site):
     if not docker_rpc_user_pw:
         # no password was provided by an option
         # we try whether we can learn it from the site itself
-        docker_rpc_user_pw = self.site.get('docker_erp_admin_pw', '')
+        docker_rpc_user_pw = self.site.get('erp_admin_pw', '')
         if not docker_rpc_user_pw:
             docker_rpc_user_pw = self.docker_defaults.get('dockerrpcuserpw', '')
     self._docker_rpc_user_pw = docker_rpc_user_pw
