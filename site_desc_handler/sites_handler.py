@@ -20,6 +20,7 @@ from .sdesc_utilities import AttrDict, UpdateError
 from scripts.messages import LOCALSITESLIST_BASEPATH_MISSING, SITES_GLOBAL_TEMPLATE, SITES_GLOBAL_TEMPLATE, \
     LOCALSITESLIST_CREATED,LOCALSITESLIST_CLONED, MARKER, SITE_ADDED_NO_DOT, SITES_GLOBAL_TEMPLATE
 
+from scripts.properties_mixin import PropertiesMixin
 
 # --------------------------------------
 # sites_handler.py maintains two set of data
@@ -59,7 +60,7 @@ set_orig(SL_%(file_name)s, '%(file_name)s')
 SITES_L.update(SL_%(file_name)s)
 """
 
-class SitesHandler(object):
+class SitesHandler(PropertiesMixin):
     def __init__(self, base_path, template_name='', preset_values=''):
         self.base_path = base_path
         #self.check_and_copy_local_data()

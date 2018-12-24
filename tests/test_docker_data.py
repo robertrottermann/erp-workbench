@@ -68,3 +68,6 @@ class TesGetDockerData(SitesListKiller):
         docker_info = self.dHandler.docker_container_name
         self.assertTrue(docker_info==self.new_name)
         print(docker_info)
+
+    def test_get_docker_erp_image_version(self):
+        pass
