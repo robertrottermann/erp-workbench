@@ -387,9 +387,9 @@ since there is no docker hub info
 
 DOCKER_IMAGE_NOT_FOUND = """
 %s--------------------------------------------
-image %%s coud not be found
+image %%s could not be found
 ---------------------------------------------%s
-""" % (bcolors.OKGREEN,bcolors.ENDC)
+""" % (bcolors.WARNING,bcolors.ENDC)
 
 DOCKER_IMAGE_PULL_FAILED = """
 %s--------------------------------------------

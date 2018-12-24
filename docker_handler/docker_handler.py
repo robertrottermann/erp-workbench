@@ -205,6 +205,11 @@ class DockerHandler(InitHandler, DBUpdater):
             site = self.site
         
         if not site:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('%s is not a known site' % name)
+            print(bcolors.ENDC)
+            return
             raise ValueError('%s is not a known site' % name)
         if not container_name:
             # get info on the docker container to use
@@ -359,13 +364,16 @@ class DockerHandler(InitHandler, DBUpdater):
         if image:
             images = [i['RepoTags'] for i in client.images()]
             found = False
-            for tags in images:
-                for tag in tags:
-                    if tag == image:
-                        found = True
+            if images:
+                for tags in images:
+                    if not tags:
                         break
-                if found:
-                    break
+                    for tag in tags:
+                        if tag == image:
+                            found = True
+                            break
+                    if found:
+                        break
         if not found:
             print(DOCKER_IMAGE_NOT_FOUND % image)
         self.dockerhub_login()
@@ -377,6 +385,11 @@ class DockerHandler(InitHandler, DBUpdater):
     def dockerhub_login(self):
         client = self.docker_client
         site = self.site
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print('dockerhub_login needs to be reimplemented')
+        print(bcolors.ENDC)
+        return
         raise Exception('need to adapt dockerhub_login')
         docker_info = site['docker']
         hname =  docker_info.get('hub_name', 'docker_hub')

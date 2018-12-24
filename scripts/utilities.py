@@ -161,32 +161,33 @@ def create_server_config(handler):
         return
     erp_type = handler.site.get('erp_type', 'odoo')
     config_name = CONFIG_NAME[erp_type]['config']
-    erp_admin_pw = handler.site.get('erp_admin_pw', '')
+    # FIX: must NOT be read from site
+    erp_admin_pw = handler.site.get('odoo_admin_pw', '')
     base_info = handler.base_info 
     p = os.path.normpath('%s/%s' % (base_info['erp_server_data_path'], name))
     collect_addon_paths(handler)
     # now copy a template openerp-server.conf
     handler.default_values['erp_admin_pw'] = erp_admin_pw
-    template = open(
-        '%s/templates/%s' % (handler.default_values['sites_home'], config_name), 'r').read()
+    with open(
+        '%s/templates/%s' % (handler.default_values['sites_home'], config_name), 'r') as f:
+        template = f.read()
     if os.path.exists('%s/etc/' % p):
-        f = open('%s/etc/%s' % (p, config_name), 'w')
-        f.write(template % handler.default_values)
-        # write rest of the values to the config file
-        # get them either from site description site_settings.server_config stanza
-        # or CONFIG_DEFAULTS
-        server_config = handler.site.get(
-            'site_settings', {}).get('server_config', {})
-        def_dic = {}
-        def_dic.update(handler.default_values)
-        def_dic.update(CONFIG_NAME[erp_type]['val_dic'])
-        for k, v in list(CONFIG_DEFAULTS.items()):
-            vv = server_config.get(k, v)
-            if isinstance(vv, str):
-                vv = vv % def_dic
-            line = '%s = %s\n' % (k,  vv)
-            f.write(line)
-        f.close()
+        with open('%s/etc/%s' % (p, config_name), 'w') as f:
+            f.write(template % handler.default_values)
+            # write rest of the values to the config file
+            # get them either from site description site_settings.server_config stanza
+            # or CONFIG_DEFAULTS
+            server_config = handler.site.get(
+                'site_settings', {}).get('server_config', {})
+            def_dic = {}
+            def_dic.update(handler.default_values)
+            def_dic.update(CONFIG_NAME[erp_type]['val_dic'])
+            for k, v in list(CONFIG_DEFAULTS.items()):
+                vv = server_config.get(k, v)
+                if isinstance(vv, str):
+                    vv = vv % def_dic
+                line = '%s = %s\n' % (k,  vv)
+                f.write(line)
     else:
         # should never happen
         print(bcolors.FAIL + 'ERROR: folder %s does not exist' % p + bcolors.ENDC)
