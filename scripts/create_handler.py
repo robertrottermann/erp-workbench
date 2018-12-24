@@ -175,6 +175,7 @@ class RPC_Mixin(object):
                     print('about to open connection to:')
                     print('host:%s, port:%s, timeout: %s' %
                           (rpchost, rpcport, 1200))
+        rpchost und rpcort sind nich von docker!!!!!
                 odoo = odoorpc.ODOO(rpchost, port=rpcport, timeout=1200)
                 if not no_db:  # used when creating db
                     if verbose:

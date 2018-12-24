@@ -204,8 +204,12 @@ class PropertiesMixin(object):
     # we must have parsed the site description at least once
     _site_parsed = False
     _docker_parsed = False
+    _pw_parsed = False
     @property
     def _check_parsed(self):
+        if not self._pw_parsed:
+            self._pw_parsed = True
+            self._merge_pw(self.site)
         if not self._site_parsed:
             self._site_parsed = True
             self._parse_site(self.site)

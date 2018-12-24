@@ -66,38 +66,38 @@ class SitesHandler(object):
         self.template_name = template_name
         self.preset_values = preset_values
 
-    @property
-    def docker_hub_name(self):
-        # her we only know about the default hub name
-        return DOCKER_DEFAULTS.get('docker_hub_name', 'no docker hub-name set in docker.yaml')
+    # @property
+    # def docker_hub_name(self):
+    #     # her we only know about the default hub name
+    #     return DOCKER_DEFAULTS.get('docker_hub_name', 'no docker hub-name set in docker.yaml')
         
-    @property
-    def erp_image_version(self):
-        return DOCKER_DEFAULTS.get('erp_image_version', '')
+    # @property
+    # def erp_image_version(self):
+    #     return DOCKER_DEFAULTS.get('erp_image_version', '')
 
-    @property
-    def erp_version(self):
-        return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
+    # @property
+    # def erp_version(self):
+    #     return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
 
-    @property
-    def erp_minor(self):
-        return PROJECT_DEFAULTS.get('erp_minor', '12')
+    # @property
+    # def erp_minor(self):
+    #     return PROJECT_DEFAULTS.get('erp_minor', '12')
     
-    @property
-    def erp_nightly(self):
-        return PROJECT_DEFAULTS.get('erp_nightly', '12')
+    # @property
+    # def erp_nightly(self):
+    #     return PROJECT_DEFAULTS.get('erp_nightly', '12')
 
-    @property
-    def erp_provider(self):
-        return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
+    # @property
+    # def erp_provider(self):
+    #     return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
 
-    @property
-    def remote_servers(self):
-        return REMOTE_SERVERS
+    # @property
+    # def remote_servers(self):
+    #     return REMOTE_SERVERS
     
-    @property
-    def user(self):
-        return ACT_USER
+    # @property
+    # def user(self):
+    #     return ACT_USER
 
     def _create_sites_rep(self, running_path):
         """
@@ -300,42 +300,6 @@ class SitesHandler(object):
         SITES.update(SITES_L)
 
         # -------------------------------------------------------------
-        # merge passwords
-        # -------------------------------------------------------------
-        DEFAULT_PWS = {
-            'erp_admin_pw' : '',
-            #'email_pw_incomming' : '',
-            #'email_pw_outgoing' : '',
-        }
-        # read passwords
-        SITES_PW = {}
-        try:
-            from sites_pw import SITES_PW
-        except ImportError:
-            pass
-        # merge them
-        for key in list(SITES.keys()):
-            kDic = SITES_PW.get(key, DEFAULT_PWS)
-            for k in list(DEFAULT_PWS.keys()):
-                SITES[key][k] = kDic.get(k, '')
-            # get dockerhub password if available
-            docker_info = SITES[key].get('docker', {})
-            docker_hub_info = SITES[key].get('docker_hub', {})
-            hub_name  = docker_info.get('hub_name', '')
-            if hub_name:
-                # docker hub passwords are a separte block
-                kDic_hub = SITES_PW.get('docker_hub', {})
-                if kDic_hub:
-                    # get docker_hub block from pw struct
-                    kdic_hub_info = kDic_hub.get(
-                        hub_name, {} # get image repository for this site
-                    )
-                    hub_user = docker_hub_info.get(hub_name, {}).get('user')
-                    if hub_user:
-                        docker_hub_pw = kdic_hub_info.get(hub_user, {}).get('docker_hub_pw', '')
-                        if docker_hub_pw:
-                            SITES[key]['docker_hub'][hub_name]['docker_hub_pw'] = docker_hub_pw
-
         for k,v in SITES.items():
             SITES[k] = AttrDict(v)
 

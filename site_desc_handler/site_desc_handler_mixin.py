@@ -14,6 +14,27 @@ class SiteDescHandlerMixin(PropertiesMixin):
     Arguments:
         object {[type]} -- [description]
     """
+
+    def _merge_pw(self, site):
+        # merge passwords
+        # -------------------------------------------------------------
+        DEFAULT_PWS = {
+            'odoo_admin_pw': '',
+            #'email_pw_incomming' : '',
+            #'email_pw_outgoing' : '',
+        }
+        # read passwords
+        SITES_PW = {}
+        try:
+            from sites_pw import SITES_PW
+        except ImportError:
+            pass
+        # merge them
+        for key in list(self.sites.keys()):
+            kDic = SITES_PW.get(key, DEFAULT_PWS)
+            for k in list(DEFAULT_PWS.keys()):
+                self.sites[key][k] = kDic.get(k, '')
+
     def _parse_site(self, site):
         self._erp_minor = site.get('erp_minor', self.project_defaults.get('erp_minor', '12'))
         self._erp_nightly = site.get(

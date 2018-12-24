@@ -52,7 +52,7 @@ def collect_docker_info(self, site):
     if not docker_rpc_user:
         docker_rpc_user = self.docker_defaults.get('dockerrpcuser', '')
     self._docker_rpc_user = docker_rpc_user
-    self._docker_rpc_user_pw = docker_rpc_user
+#    self._docker_rpc_user_pw = docker_rpc_user
     docker_rpc_user_pw = ''
     if self.subparser_name == 'docker':
         docker_rpc_user_pw = self.opts.drpcuserpw
