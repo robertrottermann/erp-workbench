@@ -57,3 +57,8 @@ DOCKER_DEFAULTS:
     # use_postgres_version
     # is used when creating the db image to define what postgres version to use
     use_postgres_version: '10.0'
+
+    # docker_local_user_id
+    # the user id assigned to the odoo user within the running docker container
+    # normally just leave it at its default
+    docker_local_user_id: 999

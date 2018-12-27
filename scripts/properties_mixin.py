@@ -216,6 +216,10 @@ class PropertiesMixin(object):
         if self.subparser_name == 'docker' and not self._docker_parsed:
             self._docker_parsed = True
             self.setup_docker_env(self.site)
+        if not self._did_run_create_login:
+            # _did_run_create_login is set by create_login()
+            self._create_login_info(self.login_info)
+
             
     _cp = _check_parsed
 
@@ -261,6 +265,146 @@ class PropertiesMixin(object):
         if self.parsername == 'docker':
             return self.docker_rpc_user
         return self.login_info.get('rpc_user', '')
+
+    _docker_local_user_id = ''
+    @property
+    def docker_local_user_id(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_local_user_id', 999)
+        return self._docker_local_user_id
+
+    _docker_db_maxcon = ''
+    @property
+    def docker_db_maxcon(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_db_maxcon', 999)
+        return self._docker_db_maxcon
+
+    _docker_limit_memory_hard = ''
+    @property
+    def docker_limit_memory_hard(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_limit_memory_hard', 999)
+        return self._docker_limit_memory_hard
+
+    _docker_limit_memory_soft = ''
+    @property
+    def docker_limit_memory_soft(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_limit_memory_soft', 999)
+        return self._docker_limit_memory_soft
+
+    _docker_limit_request = ''
+    @property
+    def docker_limit_request(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_limit_request', 999)
+        return self._docker_limit_request
+
+    _docker_limit_time_cpu = ''
+    @property
+    def docker_limit_time_cpu(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_limit_time_cpu', 999)
+        return self._docker_limit_time_cpu
+
+    _docker_limit_time_real = ''
+    @property
+    def docker_limit_time_real(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_limit_time_real', 999)
+        return self._docker_limit_time_real
+
+    _docker_limit_time_real_cron = ''
+    @property
+    def docker_limit_time_real_cron(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_limit_time_real_cron', 999)
+        return self._docker_limit_time_real_cron
+
+    _docker_log_handler = ''
+    @property
+    def docker_log_handler(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_log_handler', ':INFO')
+        return self._docker_log_handler
+
+    _docker_log_level = ''
+    @property
+    def docker_log_level(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_log_level', 'info')
+        return self._docker_log_level
+
+    _docker_logfile = ''
+    @property
+    def docker_logfile(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_logfile', None)
+        return self._docker_logfile
+
+    _docker_logfile = ''
+    @property
+    def docker_syslog(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_syslog', False)
+        return self._docker_logfile
+
+    _docker_log_db = ''
+    @property
+    def docker_log_db(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_log_db', 999)
+        return self._docker_log_db
+
+    _docker_max_cron_threads = ''
+    @property
+    def docker_max_cron_threads(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_max_cron_threads', 999)
+        return self._docker_max_cron_threads
+
+    _docker_workers = ''
+    @property
+    def docker_workers(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_workers', 999)
+        return self._docker_workers
+
+    _docker_running_env = ''
+    @property
+    def docker_running_env(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_running_env', 'productive')
+        return self._docker_running_env
+
+    _docker_without_demo = True
+    @property
+    def docker_without_demo(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_without_demo', True)
+        return self._docker_without_demo
+
+    _docker_server_wide_modules = ''
+    @property
+    def docker_server_wide_modules(self):
+        self._cp
+        self._docker_local_user_id = self.docker_defaults.get('docker_server_wide_modules', '')
+        return self._docker_server_wide_modules
+
+    _docker_db_sslmode = ''
+    @property
+    def docker_db_sslmode(self):        
+        self._cp
+        self._docker_db_sslmode = self.docker_defaults.get('docker_db_sslmode', False)
+        return self._docker_db_sslmode
+
+    _docker_list_db = False
+    @property
+    def docker_list_db(self):        
+        self._cp
+        self._docker_list_db = self.docker_defaults.get('docker_list_db', False)
+        return self._docker_list_db
 
     @property
     def rpc_pw(self):

@@ -83,7 +83,8 @@ class SiteDescHandlerMixin(PropertiesMixin):
             tmp_dic.update(td)
         for k,v in self.default_values.items():
             try:
-                self.default_values[k] = v % tmp_dic
+                if v: # if empty or noe, there is nothing to replace
+                    self.default_values[k] = v % tmp_dic
             except:
                 pass
         # we need nightly to construct an url to download the software 

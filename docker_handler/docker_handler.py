@@ -336,6 +336,45 @@ class DockerHandler(InitHandler, DBUpdater):
             if self.opts.verbose:
                 print('container %s allready running' % name)
 
+    def create_docker_compose_file(self):
+        
+        composer_dict = {    
+            'erp_server_data_path' : self.erp_server_data_path,
+            'site_name' : self.site_name,
+            'container_name': self.docker_container_name,
+            'erp_image_version' : self.erp_image_version,
+            'docker_db_container_name' : self.docker_db_container_name,
+            'erp_port': self.docker_rpc_port,
+            'erp_longpoll': self.docker_long_polling_port,
+            'docker_local_user_id' : self.docker_local_user_id,
+            'db_host' : self.db_host,
+            'db_name' : self.db_name,
+            'db_user' : self.db_user,
+            'db_password' : self.db_password,
+            'db_sslmode' : self.docker_db_sslmode,
+            'list_db' : self.docker_list_db,
+            'dbfilter': '^%s$' % self.site_name,
+            'admin_passwd' : self.docker_rpc_user_pw,
+            'db_maxconn' : self.docker_db_maxcon,
+            'limit_memory_soft' : self.docker_limit_memory_soft,
+            'limit_memory_hard' : self.docker_limit_memory_hard,
+            'limit_request' : self.docker_limit_request,
+            'limit_time_cpu' : self.docker_limit_time_cpu,
+            'limit_time_real' : self.docker_limit_time_real,
+            'limit_time_real_cron' : self.docker_limit_time_real_cron,
+            'log_handler' : self.docker_log_handler,
+            'log_level' : self.docker_log_level,
+            'max_cron_threads' : self.docker_max_cron_threads,
+            'workers' : self.docker_workers,
+            'logfile' : self.docker_logfile,
+            'log_db' : self.docker_log_db,
+            'running_env' : self.docker_running_env,
+            'without_demo' : self.docker_without_demo,
+            'server_wide_modules' : self.docker_server_wide_modules,
+        }
+        return composer_dict
+        
+
     def pull_image(self, imagename):
         """
         docker login

@@ -210,6 +210,8 @@ class RPC_Mixin(object):
     def get_erp_modules(self):
         from odoorpc.error import RPCError
         modules = self.get_module_obj()
+        if not modules:
+            return
         mlist = modules.search([('application', '=', True)])
         result = {}
         for mid in mlist:
@@ -263,6 +265,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         else:
             self._sites = SITES
         
+        #the following init stuff should be called from PropertiesMixin
+        #what about flatten site?
         # set up values for proerties dealing with remote data
         collect_remote_info(self, self.site)
         # call the DockerHandlerMixin to setup the docker environment
@@ -330,7 +334,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 else:
                     raise
                     
-
+    _did_run_create_login = False
     def _create_login_info(self, login_info):
         # ----------------------------------
         # what login do we need
@@ -358,7 +362,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # actual user
         if self.opts.__dict__.get('delete_site_local') or self.opts.__dict__.get('drop_site'):
             return
-        if self.site:
+        if self.site and not self._did_run_create_login:
             p = '%s/sites_global/%s.py' % (
                 self.base_info['sitesinfo_path'], self.site_name)
             if not self.site.get('remote_server'):
@@ -426,6 +430,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 login_info['remote_docker_db_user'] = ''
                 login_info['remote_docker_db_pw'] = ''
 
+            _did_run_create_login = True
+            
     def running_remote(self):
         # replace values that should be different when running remotely
         # this should be done in a mor systematic way.when I use massmailing, a click to the send button
@@ -1245,7 +1251,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
         # do we want to install odoo modules
         if (is_docker and opts.dinstall_erp_modules) or (is_create and opts.install_erp_modules):
-            from templates.install_blocks import INSTALL_BLOCKS
+            #from templates.install_blocks import INSTALL_BLOCKS
             erp_apps_info, erp_modules_info = self.get_erp_modules()
 
             erp_apps = list(erp_apps_info.keys())
@@ -1261,14 +1267,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 erp_module_map[v] = k
             for o in (erp_addons or []):
                 o = str(o)
-                if (o not in erp_apps) and (o not in erp_apps_names) \
-                   and (o not in erp_modules) and (o not in erp_module_names):
-                    print('!' * 80)
-                    print('%s is not a known install block' % o)
-                    print(
-                        'check in templates/install_blocks.py what blocks are available')
-                    print('-' * 80)
-                    # sys.exit()
+                # if (o not in erp_apps) and (o not in erp_apps_names) \
+                #    and (o not in erp_modules) and (o not in erp_module_names):
+                #     print('!' * 80)
+                #     print('%s is not a known install block' % o)
+                #     print(
+                #         'check in templates/install_blocks.py what blocks are available')
+                #     print('-' * 80)
+                #     # sys.exit()
                 if o in erp_apps_names:
                     name = erp_module_map[o]
                     if name not in req:
