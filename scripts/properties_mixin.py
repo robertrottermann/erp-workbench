@@ -1,5 +1,24 @@
 from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS
 class PropertiesMixin(object):
+    _login_info = {}
+
+    # login_info
+    # dict with values about local and remote login credentials
+    # {'db_password': 'admin',
+    #  'db_user': 'robert',
+    #  'remote_db_password': 'admin',
+    #  'remote_db_user': 'robert',
+    #  'remote_docker_db_pw': None,
+    #  'remote_docker_db_user': None,
+    #  'remote_user': 'robert',
+    #  'remote_user_pw': '',
+    #  'rpc_pw': 'admin',
+    #  'rpc_user': 'robert',
+    #  'user': 'robert'}    
+    @property
+    def login_info(self):
+        return self._login_info
+
     @property
     def docker_db_user(self):
         return self.login_info.get('docker_db_user') or self.opts.db_user
@@ -219,8 +238,6 @@ class PropertiesMixin(object):
         if not self._did_run_create_login:
             # _did_run_create_login is set by create_login()
             self._create_login_info(self.login_info)
-
-            
     _cp = _check_parsed
 
     _erp_nightly = ''
@@ -277,119 +294,126 @@ class PropertiesMixin(object):
     @property
     def docker_db_maxcon(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_db_maxcon', 999)
+        self._docker_db_maxcon = self.docker_defaults.get('docker_db_maxcon', 64)
         return self._docker_db_maxcon
 
     _docker_limit_memory_hard = ''
     @property
     def docker_limit_memory_hard(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_limit_memory_hard', 999)
+        self._docker_limit_memory_hard = self.docker_defaults.get('docker_limit_memory_hard', 2684354560)
         return self._docker_limit_memory_hard
 
     _docker_limit_memory_soft = ''
     @property
     def docker_limit_memory_soft(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_limit_memory_soft', 999)
+        self._docker_limit_memory_soft = self.docker_defaults.get('docker_limit_memory_soft', 2147483648)
         return self._docker_limit_memory_soft
 
     _docker_limit_request = ''
     @property
     def docker_limit_request(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_limit_request', 999)
+        self._docker_limit_request = self.docker_defaults.get('docker_limit_request', 8192)
         return self._docker_limit_request
 
     _docker_limit_time_cpu = ''
     @property
     def docker_limit_time_cpu(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_limit_time_cpu', 999)
+        self._docker_limit_time_cpu = self.docker_defaults.get('docker_limit_time_cpu', 60)
         return self._docker_limit_time_cpu
 
     _docker_limit_time_real = ''
     @property
     def docker_limit_time_real(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_limit_time_real', 999)
+        self._docker_limit_time_real = self.docker_defaults.get('docker_limit_time_real', 120)
         return self._docker_limit_time_real
 
     _docker_limit_time_real_cron = ''
     @property
     def docker_limit_time_real_cron(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_limit_time_real_cron', 999)
+        self._docker_limit_time_real_cron = self.docker_defaults.get('docker_limit_time_real_cron', 120)
         return self._docker_limit_time_real_cron
 
     _docker_log_handler = ''
     @property
     def docker_log_handler(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_log_handler', ':INFO')
+        self._docker_log_handler = self.docker_defaults.get('docker_log_handler', ':INFO')
         return self._docker_log_handler
 
     _docker_log_level = ''
     @property
     def docker_log_level(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_log_level', 'info')
+        self._docker_log_level = self.docker_defaults.get('docker_log_level', 'info')
         return self._docker_log_level
 
     _docker_logfile = ''
     @property
     def docker_logfile(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_logfile', None)
+        self._docker_logfile = self.docker_defaults.get('docker_logfile', None)
         return self._docker_logfile
 
-    _docker_logfile = ''
+    _docker_syslog = ''
     @property
     def docker_syslog(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_syslog', False)
-        return self._docker_logfile
+        self._docker_syslog = self.docker_defaults.get('docker_syslog', False)
+        return self._docker_syslog
+
+    _docker_logrotate = ''
+    @property
+    def docker_logrotate(self):
+        self._cp
+        self._docker_logrotate = self.docker_defaults.get('docker_logrotate', False)
+        return self._docker_logrotate
 
     _docker_log_db = ''
     @property
     def docker_log_db(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_log_db', 999)
+        self._docker_log_db = self.docker_defaults.get('docker_log_db', False)
         return self._docker_log_db
 
     _docker_max_cron_threads = ''
     @property
     def docker_max_cron_threads(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_max_cron_threads', 999)
+        self._docker_max_cron_threads = self.docker_defaults.get('docker_max_cron_threads', 2)
         return self._docker_max_cron_threads
 
     _docker_workers = ''
     @property
     def docker_workers(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_workers', 999)
+        self._docker_workers = self.docker_defaults.get('docker_workers', 4)
         return self._docker_workers
 
     _docker_running_env = ''
     @property
     def docker_running_env(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_running_env', 'productive')
+        self._docker_running_env = self.docker_defaults.get('docker_running_env', 'production')
         return self._docker_running_env
 
     _docker_without_demo = True
     @property
     def docker_without_demo(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_without_demo', True)
+        self._docker_without_demo = self.docker_defaults.get('docker_without_demo', True)
         return self._docker_without_demo
 
     _docker_server_wide_modules = ''
     @property
     def docker_server_wide_modules(self):
         self._cp
-        self._docker_local_user_id = self.docker_defaults.get('docker_server_wide_modules', '')
+        self._docker_server_wide_modules = self.docker_defaults.get('docker_server_wide_modules', '')
         return self._docker_server_wide_modules
 
     _docker_db_sslmode = ''
@@ -488,6 +512,8 @@ class PropertiesMixin(object):
 
     _remote_sites_home = ''
 
+    # remote_sites_home
+    # remote aequivalent to self.sites_home
     @property
     def remote_sites_home(self):
         if not self._remote_sites_home:
@@ -500,10 +526,12 @@ class PropertiesMixin(object):
         return self._remote_sites_home
  
     # both of the following is used 
-    # but it does not make sense to didtinguish it on remote servers
+    # but it does not make sense to distinguish them on remote servers
     remote_data_path = remote_sites_home
     _redirect_email_to = ''
 
+    # redirect_email_to
+    # is used in testing environment, together with red_override_email_recipients
     @property
     def redirect_email_to(self):
         return self._redirect_email_to
@@ -517,50 +545,67 @@ class PropertiesMixin(object):
     def default_values(self):
         return self._default_values
 
-    _login_info = {}
-
-    @property
-    def login_info(self):
-        return self._login_info
-
+    # projectname
+    # is used to construct the foldernames of the project
+    # it is set to the value of the site_name
     @property
     def projectname(self):
         return self.site.get('projectname', self.site.get('site_name', ''))
 
+    # project_type
+    # tells whether site is of type odoo or flectra
     @property
     def project_type(self):
         return self.project_defaults.get('erp_provider', 'odoo')
     erp_provider = project_type
 
+    # sites_home is constructed of the fs path of the config/__init__.py file
+    # it points to the erp-workbench installation folder
     @property
-    def is_local(self):
-        return self.default_values.get('is_local')
+    def sites_home(self):
+        return BASE_PATH
 
+    # erp_server_data_path
+    # points to the rp-workbench home directory
+    # should be identical to sites_home
     @property
     def erp_server_data_path(self):
         return self.base_info['erp_server_data_path']
     data_path = erp_server_data_path
 
+    # sitesinfo_path
+    # path to the structure where the sites descriptions are kept
     @property
     def sitesinfo_path(self):
         return self.base_info['sitesinfo_path']
 
-    _sites_local = {}
-
-    @property
-    def sites_local(self):
-        return self._sites_local
-
     _sites = {}
-
+    # sites is a dict of all sites-descriptions known
     @property
     def sites(self):
         return self._sites
 
+    _sites_local = {}
+    # sites_local is a dict of all sites-descriptions with the local flag set
+    @property
+    def sites_local(self):
+        return self._sites_local
+
+    # is_local
+    # flags a site description to be used only locally
+    @property
+    def is_local(self):
+        return self.default_values.get('is_local')
+
+    # siteinfos is the list of folders withing the sites_list structure
+    # it is constructed from config/config/yaml: siteinfos
+    # it defaults to localhost
     @property
     def siteinfos(self):
         return self.base_info.get('siteinfos')
 
+    # site is the actively "running" site on which we opperate
+    # it is constructed by looking up self.site_name from the self.sites dict
     @property
     def site(self, site_name=''):
         """return a dictonary with a site description
@@ -581,6 +626,8 @@ class PropertiesMixin(object):
         else:
             return {}
 
+    # site_name is the name of the site we are acting on
+    # its value has been passed as a command line option when executing a wp command
     @property
     def site_name(self):
         return self.site_names and self.site_names[0] or ''
@@ -588,10 +635,6 @@ class PropertiesMixin(object):
     @site_name.setter
     def site_name(self, v):
         self.site_names = [v]
-
-    @property
-    def sites_home(self):
-        return BASE_PATH
 
     @property
     def use_postgres_version(self):

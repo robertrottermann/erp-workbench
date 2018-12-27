@@ -3,16 +3,15 @@
 # -------------------- odoo ------------------------
 # --------------------------------------------------
 docker_template = """
-%(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \
-    -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \
-    -v %(erp_server_data_path)s/%(site_name)s/start-entrypoint.d:/opt/odoo/start-entrypoint.d \
-    -v %(erp_server_data_path)s/%(site_name)s/addons:/mnt/extra-addons \
-    -v %(erp_server_data_path)s/%(site_name)s/dump:/mnt/dump \
-    -v %(erp_server_data_path)s/%(site_name)s/filestore:/var/lib/odoo/filestore \
-    -v %(erp_server_data_path)s/%(site_name)s/:/var/lib/odoo/ \
-    -v %(erp_server_data_path)s/%(site_name)s/log:/var/log/odoo \
-    -e LOCAL_USER_ID=1000 -e DB_NAME=%(site_name)s \
-    -e PYTHONIOENCODING=utf-8 \
+%(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \\
+    -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \\
+    -v %(erp_server_data_path)s/%(site_name)s/start-entrypoint.d:/opt/odoo/start-entrypoint.d \\
+    -v %(erp_server_data_path)s/%(site_name)s/addons:/mnt/extra-addons \\
+    -v %(erp_server_data_path)s/%(site_name)s/dump:/mnt/dump \\
+    -v %(erp_server_data_path)s/%(site_name)s/filestore:/var/lib/odoo/filestore \\
+    -v %(erp_server_data_path)s/%(site_name)s/:/var/lib/odoo/ \\
+    -v %(erp_server_data_path)s/%(site_name)s/log:/var/log/odoo \\
+    %(docker_common)s \\
     --name %(container_name)s -d --link db:db -t %(erp_image_version)s
 """
 docker_delete_template = """
@@ -32,13 +31,12 @@ docker_template_update = """
     -v %(erp_server_data_path)s/%(site_name)s/filestore:/var/lib/odoo/filestore \
     -v %(erp_server_data_path)s/%(site_name)s/:/var/lib/odoo/ \
     -v %(erp_server_data_path)s/%(site_name)s/log:/var/log/odoo \
-    -e LOCAL_USER_ID=1000 -e DB_NAME=%(site_name)s \
-    -e PYTHONIOENCODING=utf-8 \
+    %(docker_common)s \
     --name %(container_name)s_tmp --link db:db -t %(erp_image_version)s
 """
 
 docker_db_template = """
-    %(docker_command)s run -d -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo \
+    %(docker_command)s run -d -e  POSTGRES_USER=odoo -e  POSTGRES_PASSWORD=odoo \
     -v %(erp_server_data_path)s/database/data:/var/lib/postgresql/data --name db --restart always \
     -p 55432:5432 postgres:%(postgres_version)s
 """
@@ -89,8 +87,8 @@ COPY ./songs /odoo/songs
 COPY ./setup.py /odoo/
 COPY ./VERSION /odoo/
 COPY ./migration.yml /odoo/
-RUN pip install --cache-dir=.pip -e /odoo
-RUN pip install --cache-dir=.pip -e /odoo/src
+RUN pip install --cache-dir=.pip -e  /odoo
+RUN pip install --cache-dir=.pip -e  /odoo/src
 
 %(run_block)s
 
@@ -152,8 +150,8 @@ docker run -p 127.0.0.1:%(erp_port)s:7073 -p 127.0.0.1:%(erp_longpoll)s:7072 --r
     -v %(erp_server_data_path)s/%(site_name)s/filestore:/var/lib/flectra/filestore \
     -v %(erp_server_data_path)s/%(site_name)s/:/var/lib/flectra/ \
     -v %(erp_server_data_path)s/%(site_name)s/log:/var/log/flectra \
-    -e LOCAL_USER_ID=1000 -e DB_NAME=%(site_name)s \
-    -e PYTHONIOENCODING=utf-8 \
+    -e  LOCAL_USER_ID=1000 -e  DB_NAME=%(site_name)s \
+    -e  PYTHONIOENCODING=utf-8 \
     --name %(container_name)s -d --link db:db -t %(erp_image_version)s
 """
 
@@ -168,3 +166,34 @@ RUN apt-get update &&  apt-get install postgresql-client-%(postgres_version)s vi
 
 ENTRYPOINT ["/usr/bin/python", "/mnt/sites/dumper/dumper.py"]
 """
+
+docker_common = """-e  LOCAL_USER_ID=1000 \\
+    -e DB_NAME=%(site_name)s \\
+    -e PYTHONIOENCODING=utf-8 \\
+    -e PYTHONIOENCODING=utf-8 \\
+    -e DB_HOST = %(db_host)s \\
+    -e DB_NAME = %(db_name)s \\
+    -e DB_USER = %(db_user)s \\
+    -e DB_PASSWORD=%(db_password)s \\
+    -e DB_SSLMODE=%(db_sslmode)s \\
+    -e DBFILTER=%(dbfilter)s \\
+    -e LIST_DB=%(list_db)s \\
+    -e ADMIN_PASSWD=%(admin_passwd)s \\
+    -e DB_MAXCONN=%(db_maxconn)s \\
+    -e LIMIT_MEMORY_SOFT=%(limit_memory_soft)s \\
+    -e LIMIT_MEMORY_HARD=%(limit_memory_hard)s \\
+    -e LIMIT_REQUEST=%(limit_request)s \\
+    -e LIMIT_TIME_CPU=%(limit_time_cpu)s \\
+    -e LIMIT_TIME_REAL=%(limit_time_real)s \\
+    -e LIMIT_TIME_REAL_CRON=%(limit_time_real_cron)s \\
+    -e LOG_HANDLER=%(log_handler)s \\
+    -e LOG_LEVEL=%(log_level)s \\
+    -e MAX_CRON_THREADS=%(max_cron_threads)s \\
+    -e WORKERS=%(workers)s \\
+    -e LOGFILE=%(logfile)s \\
+    -e LOG_DB=%(log_db)s \\
+    -e LOGROTATE=%(logrotate)s \\
+    -e SYSLOG=%(syslog)s \\
+    -e RUNNING_ENV=%(running_env)s \\
+    -e WITHOUT_DEMO=%(without_demo)s \\
+    -e SERVER_WIDE_MODULES=%(server_wide_modules)s"""

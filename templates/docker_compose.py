@@ -49,8 +49,8 @@ services:
         - WITHOUT_DEMO=%(without_demo)s
         - SERVER_WIDE_MODULES=%(server_wide_modules)s
 
-   %(docker_db_container_name)s:
-        image: postgres: 10
+  %(docker_db_container_name)s:
+        image: postgres:10
         environment:
             - POSTGRES_PASSWORD = %(db_password)s
             - POSTGRES_USER = %(db_user)s

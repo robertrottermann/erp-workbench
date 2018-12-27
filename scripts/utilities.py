@@ -739,7 +739,19 @@ def checkout_sa(opts):
             if action_needed:
                 # what action is needed we find in return_counts
                 if return_counts.get('to_pull'):
-                    gr(branch)
+                    try:
+                        gr(branch)
+                    except Exception as e:
+                        print(bcolors.FAIL)
+                        print('*' * 80)
+                        print('an error occured')
+                        print('target:', real_target)
+                        print('actual_branch:', actual_branch)
+                        print('target branch:', branch)
+                        print(str(e))
+                        print('*' * 80)
+                        print(bcolors.ENDC)
+
 
         for name in names:            
             # we have to download all modules, also the ones in the skiplist

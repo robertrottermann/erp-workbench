@@ -155,7 +155,7 @@ class TestDocker(unittest.TestCase):
         args.skip_name = True
         args.quiet = True
         args.docker_create_container = True
-        args.name = 'coobytech'
+        args.name = 'demo_global'
         #args.erp_image_version = ''
         #self.handler.site_names = ['demo_global']
         self.args = args

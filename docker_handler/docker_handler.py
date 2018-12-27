@@ -161,6 +161,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'remote_data_path' : info_dic['remote_data_path'],
             'erp_image_version' : info_dic['erp_image_version'],
             'erp_server_data_path' : info_dic['erp_server_data_path'],
+            'docker_common' : info_dic['docker_common'], # values for the docker config
             'docker_command' : shutil.which('docker'),
         }
         docker_template = docker_template % docker_info
@@ -171,9 +172,16 @@ class DockerHandler(InitHandler, DBUpdater):
                 docker_template = docker_template.replace(s, t)
             except:
                 pass
+        docker_template = re.sub(' *= *', '=', docker_template)
         self.run_commands([docker_template], self.user, pw='')
 
-    def check_and_create_container(self, container_name='', recreate_container = False, rename_container = False, pull_image = False, update_container=False, delete_container=False):
+    def check_and_create_container(self, 
+        container_name='', 
+        recreate_container = False, 
+        rename_container = False, 
+        pull_image = False, 
+        update_container=False, 
+        delete_container=False):
         """create a new docker container or manage an existing one
         
         Keyword Arguments:
@@ -243,16 +251,20 @@ class DockerHandler(InitHandler, DBUpdater):
         # the docker registry was created by update_docker_info
         # if this registry does not contain a description for container_name
         # we have to create it
-        info_dic = {
-            'erp_port' : erp_port,
-            'erp_longpoll' : long_polling_port,
-            'site_name' : name,
-            'container_name' : container_name,
-            'remote_data_path' : self.remote_data_path,
-            'erp_image_version' : self.erp_image_version,
-            'erp_server_data_path' : self.erp_server_data_path,           
-        }
-        
+        # info_dic = {
+        #     'erp_port' : erp_port,
+        #     'erp_longpoll' : long_polling_port,
+        #     'site_name' : name,
+        #     'container_name' : container_name,
+        #     'remote_data_path' : self.remote_data_path,
+        #     'erp_image_version' : self.erp_image_version,
+        #     'erp_server_data_path' : self.erp_server_data_path,           
+        # }
+        info_dic = self.create_docker_composer_dict()
+        # some of the docker templates have many elements in common, get them
+        from templates.docker_templates import docker_common as DC
+        docker_common = DC % info_dic
+        info_dic['docker_common'] = docker_common  # values for the docker config
         if recreate_container:
             # make sure the container is stopped
             from templates.docker_templates import docker_delete_template
@@ -280,15 +292,17 @@ class DockerHandler(InitHandler, DBUpdater):
             except OSError:
                 pass # no such folder
         # make sure we have valid elements
+        allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog']
         for k,v in info_dic.items():
             if k == 'erp_image_version':
                 v = v.split(':')[0] # avoid empty image version with only tag
-            if not v:
+            if not v and k not in allow_empty:
                 print(bcolors.FAIL)
                 print('*' * 80)
                 print('the value for %s is not set but is needed to create a docker container.' % k)
                 print('*' * 80)
                 print(bcolors.ENDC)
+                print(info_dic)
                 sys.exit()                
         if update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
@@ -336,7 +350,20 @@ class DockerHandler(InitHandler, DBUpdater):
             if self.opts.verbose:
                 print('container %s allready running' % name)
 
-    def create_docker_compose_file(self):
+    def create_docker_composer_file(self):
+        from templates.docker_compose import composer_template
+        template = composer_template % self.create_docker_composer_dict()
+        docker_target_path = '%s/%s/docker' % (self.erp_server_data_path, self.site_name)
+        with open('%s/docker-compose.yml' % docker_target_path, 'w') as f:
+            status = f.write(template)
+        return status
+
+    def create_docker_composer_dict(self):
+        """constructs a dictionary with values to patch the docker files with
+        
+        Returns:
+            dict -- dictionary with needed values
+        """
         
         composer_dict = {    
             'erp_server_data_path' : self.erp_server_data_path,
@@ -353,7 +380,8 @@ class DockerHandler(InitHandler, DBUpdater):
             'db_password' : self.db_password,
             'db_sslmode' : self.docker_db_sslmode,
             'list_db' : self.docker_list_db,
-            'dbfilter': '^%s$' % self.site_name,
+            # in the following line, the $ needs to be escaped with a second $
+            'dbfilter': '^%s$$' % self.site_name,
             'admin_passwd' : self.docker_rpc_user_pw,
             'db_maxconn' : self.docker_db_maxcon,
             'limit_memory_soft' : self.docker_limit_memory_soft,
@@ -371,6 +399,12 @@ class DockerHandler(InitHandler, DBUpdater):
             'running_env' : self.docker_running_env,
             'without_demo' : self.docker_without_demo,
             'server_wide_modules' : self.docker_server_wide_modules,
+            # elements to contruct volum paths
+            'remote_data_path' : self.remote_data_path,
+            'erp_image_version' : self.erp_image_version,
+            'erp_server_data_path' : self.erp_server_data_path,
+            'logrotate' : self.docker_logrotate,
+            'syslog' : self.docker_syslog,
         }
         return composer_dict
         

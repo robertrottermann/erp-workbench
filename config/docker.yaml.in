@@ -64,11 +64,8 @@ DOCKER_DEFAULTS:
     docker_local_user_id: 999
 
     # values to be added to the config file
-    docker_logrotate': self.logrotate,
+    docker_logrotate': True
     docker_syslog':  False
-    docker_running_env': self.running_env,
-    docker_without_demo': self.without_demo,
-    docker_server_wide_modules': self.server_wide_modules,
     docker_db_sslmode: 'prefer'
     #docker_dbfilter: self.dbfilter
     docker_list_db: False
@@ -81,7 +78,7 @@ DOCKER_DEFAULTS:
     docker_limit_time_real_cron: 120
     docker_log_handler: ':INFO'
     docker_log_level: 'info'
-    docker_logfile: None
+    docker_logfile: False
     docker_log_db: False
     docker_max_cron_threads: 2
     docker_workers: 4
