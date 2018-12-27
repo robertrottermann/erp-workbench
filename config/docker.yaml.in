@@ -62,3 +62,29 @@ DOCKER_DEFAULTS:
     # the user id assigned to the odoo user within the running docker container
     # normally just leave it at its default
     docker_local_user_id: 999
+
+    # values to be added to the config file
+    docker_logrotate': self.logrotate,
+    docker_syslog':  False
+    docker_running_env': self.running_env,
+    docker_without_demo': self.without_demo,
+    docker_server_wide_modules': self.server_wide_modules,
+    docker_db_sslmode: 'prefer'
+    #docker_dbfilter: self.dbfilter
+    docker_list_db: False
+    docker_db_maxconn: 64
+    docker_limit_memory_soft: 2147483648
+    docker_limit_memory_hard: 2684354560
+    docker_limit_request: 8192
+    docker_limit_time_cpu: 60
+    docker_limit_time_real: 120
+    docker_limit_time_real_cron: 120
+    docker_log_handler: ':INFO'
+    docker_log_level: 'info'
+    docker_logfile: None
+    docker_log_db: False
+    docker_max_cron_threads: 2
+    docker_workers: 4
+    docker_running_env: 'production'
+    docker_without_demo: True
+    docker_server_wide_modules': ''
