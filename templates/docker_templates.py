@@ -95,11 +95,12 @@ RUN pip install --cache-dir=.pip -e  /odoo/src
 COPY ./requirements.txt /odoo/
 RUN cd /odoo && pip install --cache-dir=.pip -r requirements.txt
 
-ENV ADDONS_PATH=/odoo/local-src,/odoo/src/addons
-#ENV DB_NAME=afbsdemo
+# ENV ADDONS_PATH=/odoo/local-src,/odoo/src/addons
+# ENV DB_NAME=afbsdemo
 ENV MIGRATE=False
 # Set the default config file
 ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
+%(env_vars)s
 """
 docker_erp_setup_version = """
 %s.0
@@ -178,7 +179,7 @@ docker_common = """-e  LOCAL_USER_ID=1000 \\
     -e DB_SSLMODE=%(db_sslmode)s \\
     -e DBFILTER=%(dbfilter)s \\
     -e LIST_DB=%(list_db)s \\
-    -e ADMIN_PASSWD=%(admin_passwd)s \\
+    -e ADMIN_PASSWD='%(admin_passwd)s' \\
     -e DB_MAXCONN=%(db_maxconn)s \\
     -e LIMIT_MEMORY_SOFT=%(limit_memory_soft)s \\
     -e LIMIT_MEMORY_HARD=%(limit_memory_hard)s \\
@@ -196,4 +197,5 @@ docker_common = """-e  LOCAL_USER_ID=1000 \\
     -e SYSLOG=%(syslog)s \\
     -e RUNNING_ENV=%(running_env)s \\
     -e WITHOUT_DEMO=%(without_demo)s \\
-    -e SERVER_WIDE_MODULES=%(server_wide_modules)s"""
+    -e SERVER_WIDE_MODULES=%(server_wide_modules)s\\
+    -e DOCKER_EXTRA_ADDONS=%(docker_extra_addons)s"""

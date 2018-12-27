@@ -1,4 +1,6 @@
 from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS
+
+
 class PropertiesMixin(object):
     _login_info = {}
 
@@ -224,8 +226,10 @@ class PropertiesMixin(object):
     _site_parsed = False
     _docker_parsed = False
     _pw_parsed = False
+    _addpath_collected = False
     @property
     def _check_parsed(self):
+        first create_global_vars oder so 
         if not self._pw_parsed:
             self._pw_parsed = True
             self._merge_pw(self.site)
@@ -238,6 +242,11 @@ class PropertiesMixin(object):
         if not self._did_run_create_login:
             # _did_run_create_login is set by create_login()
             self._create_login_info(self.login_info)
+        if not self._addpath_collected:
+            from scripts.utilities import collect_addon_paths
+            self._addpath_collected = True
+            collect_addon_paths(self)
+            
     _cp = _check_parsed
 
     _erp_nightly = ''
@@ -636,20 +645,32 @@ class PropertiesMixin(object):
     def site_name(self, v):
         self.site_names = [v]
 
+    # site_data_dir
+    # where the data files for this site are to be found
+    @property
+    def site_data_dir(self):
+        self._cp
+        return self.default_values['data_dir']
+      
+    @property  
+    def site_addons_path(self):
+        self._cp
+        return self.default_values['add_path']
+        
     @property
     def use_postgres_version(self):
         return self.docker_defaults.get('use_postgres_version')
-
-    @property
-    def version(self):
-        """return the value of the version key of the site description
+    
+    #@property
+    #def version(self):
+        #"""return the value of the version key of the site description
         
-        Returns:
-            string -- version of the erp system
-        """
+        #Returns:
+            #string -- version of the erp system
+        #"""
 
-        if self.site:
-            return self.erp_version
+        #if self.site:
+            #return self.erp_version
 
     @property
     def remote_servers(self):

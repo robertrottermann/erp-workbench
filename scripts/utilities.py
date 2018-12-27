@@ -11,7 +11,6 @@ from io import StringIO
 from copy import deepcopy
 import psutil
 from scripts.messages import *
-from scripts.bcolors import bcolors
 from scripts.vcs.git import GitRepo, BUILDOUT_ORIGIN, logging
 from scripts.vcs.base import UpdateError
 try:
@@ -19,7 +18,7 @@ try:
 except ImportError as e:
     print(MODULE_MISSING % 'git')
     sys.exit()
-from config import SITES, SITES_LOCAL
+from config import bcolors, BASE_PATH, BASE_INFO, SITES, SITES_LOCAL
 import git
 import socket
 from socket import gaierror
@@ -70,6 +69,23 @@ def get_process_id(name, path):
             result.append([p.pid, cmdline])
     return result
 
+# check if needed links are set
+
+
+def check_links():
+    # there is only one link that must be set
+    # if 'erp_server_data_path' and BASE_PATH differ
+    # we must set a link to the dumper folder, so that
+    # the dumper docker container finds its content
+    return  # not used ...
+    if BASE_INFO['erp_server_data_path'] != BASE_PATH:
+        actual = os.getcwd()
+        os.chdir(BASE_PATH)
+        if not os.path.exists('dumper'):
+            os.symlink('%s/dumper' % BASE_PATH, 'dumper')
+        os.chdir(actual)
+
+
 def collect_options(opts):
     """
     """
@@ -116,6 +132,8 @@ def collect_addon_paths(handler):
     handler.default_values['add_path'] = ''
     if apps:
         handler.default_values['add_path'] = ',' + ','.join(apps)
+    else:
+        handler.default_values['add_path'] = ''
 
 
 # ----------------------------------
@@ -168,26 +186,26 @@ def create_server_config(handler):
     collect_addon_paths(handler)
     # now copy a template openerp-server.conf
     handler.default_values['erp_admin_pw'] = erp_admin_pw
-    with open(
-        '%s/templates/%s' % (handler.default_values['sites_home'], config_name), 'r') as f:
-        template = f.read()
+    template = open(
+        '%s/templates/%s' % (handler.default_values['sites_home'], config_name), 'r').read()
     if os.path.exists('%s/etc/' % p):
-        with open('%s/etc/%s' % (p, config_name), 'w') as f:
-            f.write(template % handler.default_values)
-            # write rest of the values to the config file
-            # get them either from site description site_settings.server_config stanza
-            # or CONFIG_DEFAULTS
-            server_config = handler.site.get(
-                'site_settings', {}).get('server_config', {})
-            def_dic = {}
-            def_dic.update(handler.default_values)
-            def_dic.update(CONFIG_NAME[erp_type]['val_dic'])
-            for k, v in list(CONFIG_DEFAULTS.items()):
-                vv = server_config.get(k, v)
-                if isinstance(vv, str):
-                    vv = vv % def_dic
-                line = '%s = %s\n' % (k,  vv)
-                f.write(line)
+        f = open('%s/etc/%s' % (p, config_name), 'w')
+        f.write(template % handler.default_values)
+        # write rest of the values to the config file
+        # get them either from site description site_settings.server_config stanza
+        # or CONFIG_DEFAULTS
+        server_config = handler.site.get(
+            'site_settings', {}).get('server_config', {})
+        def_dic = {}
+        def_dic.update(handler.default_values)
+        def_dic.update(CONFIG_NAME[erp_type]['val_dic'])
+        for k, v in list(CONFIG_DEFAULTS.items()):
+            vv = server_config.get(k, v)
+            if isinstance(vv, str):
+                vv = vv % def_dic
+            line = '%s = %s\n' % (k,  vv)
+            f.write(line)
+        f.close()
     else:
         # should never happen
         print(bcolors.FAIL + 'ERROR: folder %s does not exist' % p + bcolors.ENDC)
@@ -229,7 +247,6 @@ def set_base_info(info_dic, filename):
 
 
 def get_base_info(base_info, base_defaults):
-    from config import BASE_INFO # avoid circular import
     "collect base info from user, update base_info"
     for k, v in list(base_defaults.items()):
         name, explanation, default = v
@@ -308,7 +325,6 @@ def module_add(opts, default_values, site_values, module_name):
     @site_values      : values for this site as found in systes.py
     @module_name      : name of the new module
     """
-    from config import BASE_INFO # avoid circular import
     # we start opening the sites.py as text file
     if default_values['is_local']:
         sites_path = '%s/sites_local' % BASE_INFO['sitesinfo_path']
@@ -566,7 +582,6 @@ def checkout_sa(opts):
     get addons from repository
     @opts   : options as entered by the user
     """
-    from config import BASE_INFO # avoid circular import    
     if not opts.name:
         # need a  site_name to do anythin sensible
         return
@@ -739,19 +754,7 @@ def checkout_sa(opts):
             if action_needed:
                 # what action is needed we find in return_counts
                 if return_counts.get('to_pull'):
-                    try:
-                        gr(branch)
-                    except Exception as e:
-                        print(bcolors.FAIL)
-                        print('*' * 80)
-                        print('an error occured')
-                        print('target:', real_target)
-                        print('actual_branch:', actual_branch)
-                        print('target branch:', branch)
-                        print(str(e))
-                        print('*' * 80)
-                        print(bcolors.ENDC)
-
+                    gr(branch)
 
         for name in names:            
             # we have to download all modules, also the ones in the skiplist
@@ -849,3 +852,73 @@ def XXupdate_container_info(default_values, opts):
             update_docker_info(default_values, master_site)
 
 
+# =============================================================
+# get server info from site description
+# =============================================================
+def get_remote_server_info(opts, use_name=None):
+    """
+    get server info from site description
+    """
+    import socket
+    serverDic = {}
+    if not use_name:
+        name = opts.name
+    else:
+        # in transfer, we do not want to use the name
+        # provided in opts ..
+        name = use_name
+        if not SITES.get(name):
+            print('*' * 80)
+            print('provided use_name=%s is not valid on this server' % use_name)
+            raise ValueError(
+                'provided use_name=%s is not valid on this server' % use_name)
+
+    if opts.use_ip:
+        try:
+            addr = socket.gethostbyname(opts.use_ip)
+        except gaierror:
+            print((bcolors.FAIL))
+            print(('*' * 80))
+            print(('% is not a vali ip' % opts.use_ip))
+            print((bcolors.ENDC))
+            return
+        serverDic = REMOTE_SERVERS.get(addr)
+    else:
+        d = deepcopy(SITES[name])
+        serverDic = d.get('remote_server')
+        if not serverDic:
+            print('*' * 80)
+            print('the site description for %s has no remote_server description' % opts.name)
+            print('please add one')
+            print('*' * 80)
+            serverDic = {
+                'remote_url': d['remote_url'],
+                'remote_data_path': d['remote_data_path'],
+                'remote_user': d['remote_user'],
+            }
+    if opts.use_ip_target:
+        try:
+            addr = socket.gethostbyname(opts.use_ip_target)
+        except gaierror:
+            print((bcolors.FAIL))
+            print(('*' * 80))
+            print(('% is not a vali ip' % opts.use_ip_target))
+            print((bcolors.ENDC))
+            return
+        serverDic_target = REMOTE_SERVERS.get(addr)
+    if not serverDic:
+        print('*' * 80)
+        print('the ip %s has no site description' % ip)
+        print('please add one using bin/s support --add-server %s' % ip)
+        print('*' * 80)
+        sys.exit()
+    # if the remote url is overridden, replace it now
+    if opts.use_ip:
+        if not serverDic.get('remote_url_orig'):
+            # do not overwrite if we land here a second time
+            serverDic['remote_url_orig'] = SITES[name]['remote_server']['remote_url']
+        serverDic['remote_url'] = opts.use_ip
+    if opts.use_ip_target:
+        serverDic['serverDic_target'] = serverDic_target
+
+    return serverDic

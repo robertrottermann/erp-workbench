@@ -313,23 +313,23 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         self._rpc_port = opts.__dict__.get('rpc_port', '8069')
         self._db_host = opts.__dict__.get('db_host','localhost')
         # starting with odoo 11 we need to check what python version to use
-        if self.version:
+        if self.erp_version:
             try:
-                if self.sites[opts.name].get('erp_provider') == 'flectra':
-                    self._default_values.update(FLECTRA_VERSIONS[self.version])
+                if self.erp_provider == 'flectra':
+                    self._default_values.update(FLECTRA_VERSIONS[self.erp_version])
                 else:
-                    if self.version in ODOO_VERSIONS.keys():
-                        self._default_values.update(ODOO_VERSIONS[self.version])
+                    if self.erp_version in ODOO_VERSIONS.keys():
+                        self._default_values.update(ODOO_VERSIONS[self.erp_version])
                     else:
                         print (bcolors.FAIL)
                         print ('*' * 80)
-                        print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
+                        print ('%s has no %s version' % (self.erp_provider, self.erp_version))
                         print (bcolors.ENDC)
                         raise(KeyError)
             except KeyError:
                 print (bcolors.FAIL)
                 print ('*' * 80)
-                print ('%s has no %s version' % (self.sites[opts.name].get('erp_provider'), self.version))
+                print ('%s has no %s version' % (self.erp_provider, self.erp_version))
                 print (bcolors.ENDC)
                 if opts.subparser_name == 'support':
                     if not opts.edit_site or opts.drop_site:

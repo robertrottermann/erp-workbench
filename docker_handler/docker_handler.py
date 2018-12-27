@@ -3,7 +3,7 @@
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
 from docker import Client
-from config import BASE_PATH, SITES, BASE_INFO, DOCKER_DEFAULTS, ODOO_VERSIONS, PROJECT_DEFAULTS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
+from config import BASE_PATH, SITES, BASE_INFO, DOCKER_DEFAULTS, DOCKER_IMAGE, ODOO_VERSIONS, PROJECT_DEFAULTS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
 #from config.handlers import InitHandler, DBUpdater
 from scripts.create_handler import InitHandler
 from scripts.update_local_db import DBUpdater
@@ -17,6 +17,7 @@ import docker
 import datetime
 from datetime import date
 from requests.exceptions import HTTPError
+import shlex
 
 from scripts.messages import DOCKER_DB_MISSING, DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
       DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
@@ -261,6 +262,7 @@ class DockerHandler(InitHandler, DBUpdater):
         #     'erp_server_data_path' : self.erp_server_data_path,           
         # }
         info_dic = self.create_docker_composer_dict()
+        info_dic['docker_extra_addons'] = self.site_addons_path
         # some of the docker templates have many elements in common, get them
         from templates.docker_templates import docker_common as DC
         docker_common = DC % info_dic
@@ -292,7 +294,7 @@ class DockerHandler(InitHandler, DBUpdater):
             except OSError:
                 pass # no such folder
         # make sure we have valid elements
-        allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog']
+        allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
         for k,v in info_dic.items():
             if k == 'erp_image_version':
                 v = v.split(':')[0] # avoid empty image version with only tag
@@ -382,7 +384,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'list_db' : self.docker_list_db,
             # in the following line, the $ needs to be escaped with a second $
             'dbfilter': '^%s$$' % self.site_name,
-            'admin_passwd' : self.docker_rpc_user_pw,
+            'admin_passwd' : shlex.quote(self.docker_rpc_user_pw),
             'db_maxconn' : self.docker_db_maxcon,
             'limit_memory_soft' : self.docker_limit_memory_soft,
             'limit_memory_hard' : self.docker_limit_memory_hard,
@@ -631,6 +633,11 @@ class DockerHandler(InitHandler, DBUpdater):
         if not hub_name:
             print(DOCKER_IMAGE_CREATE_MISING_HUB_INFO % self.site_name)
             return
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print(bcolors.FAIL, '-' * 80)
+        print("please adapt build_image to use the new properties mixin")
+        print(bcolors.ENDC)
         dockerhub_user = self.site.get('docker_hub', {}).get(hub_name, {}).get('user')
         dockerhub_user_pw = self.site.get('docker_hub', {}).get(hub_name, {}).get('docker_hub_pw')
         if not dockerhub_user or not dockerhub_user_pw:
@@ -642,21 +649,30 @@ class DockerHandler(InitHandler, DBUpdater):
         
         # copy files from the official erp-sites docker file to the sites data directory
         # while doing so adapt the dockerfile to pull all needed elements
-        erp_version = self.site.get('erp_version', self.site.get('odoo_version'))
+        erp_version = self.erp_version
         if not erp_version in list(ODOO_VERSIONS.keys()):
             print(ERP_VERSION_BAD % (self.site_name, self.site.get('erp_version', self.site.get('odoo_version'))))
             return
+        
         #docker_source_path = '%s/docker/docker/%s/' % (self.default_values['erp_server_data_path'], erp_version)
         # get path to where we want to write the docker file
-        docker_target_path = '%s/docker/' % self.default_values['data_dir']
+        docker_target_path = '%s/docker/' % self.site_data_dir
         if not os.path.exists(docker_target_path):
             os.makedirs(docker_target_path, exist_ok=True)
+        
         # there are some files we can copy unaltered
         #for fname in DOCKER_FILES[erp_version]:
             #shutil.copy('%s%s' % (docker_source_path, fname), docker_target_path)
         # construct dockerfile from template
         apt_list, pip_list = self.collect_extra_libs()
-        #line_matcher = re.compile(r'\s+&& pip install.+')
+        
+        # collect environment variables from the config/docker.yaml file
+        image_envars = DOCKER_IMAGE.get('environment', {})
+        en_vars = ''
+        if image_envars:
+            envar_line = 'ENV  %s=%s\n'
+            for k,v in image_envars.items():
+                en_vars += (envar_line % (k.strip(), v.strip()))
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
             data_dic = {
                'erp_image_version'  : self.docker_base_image
@@ -673,7 +689,8 @@ class DockerHandler(InitHandler, DBUpdater):
                         data_str += ';\\\n'
                     data_str += '    pip install --cache-dir=.pip '
                     data_str +=  (' '.join(['%s' % p for p in pip_list]))
-            data_dic['run_block'] = data_str     
+            data_dic['run_block'] = data_str
+            data_dic['env_vars'] = en_vars
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
             result.write(docker_file)
         # construct folder layout as expected by the base image
@@ -699,7 +716,7 @@ class DockerHandler(InitHandler, DBUpdater):
         # check out odoo source
         os.chdir(docker_target_path)
         # construct a valid version
-        version = self.version
+        version = self.erp_version
         minor = self.erp_minor
         try:
             version = str(int(float(version)))
