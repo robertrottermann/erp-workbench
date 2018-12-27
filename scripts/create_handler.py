@@ -183,8 +183,11 @@ class RPC_Mixin(object):
                         print('dbname:%s, rpcuser:%s, rpcpw: %s' %
                               (db_name, rpcuser, rpcpw))
                         print('*' * 80)
-                    odoo.login(db_name, rpcuser, rpcpw)
-
+                    try:
+                        odoo.login(db_name, rpcuser, rpcpw)
+                    except:
+                        odoo.login(db_name, rpcuser, 'admin')
+ 
             except odoorpc.error.RPCError:
                 print(bcolors.FAIL + 'could not login to running odoo server host: %s:%s, db: %s, user: %s, pw: %s' %
                       (rpchost, rpcport, db_name, rpcuser, rpcpw) + bcolors.ENDC)
