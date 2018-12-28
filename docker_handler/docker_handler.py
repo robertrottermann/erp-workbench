@@ -487,10 +487,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         extra_libs = self.site.get('extra_libs', {})        
         if self.opts.use_collect_sites:
-            version = self.version
+            erp_version = self.erp_version
             more_sites = []
             for k, v in list(self.sites.items()):
-                if v.get('erp_version') == version:
+                if v.get('erp_version') == erp_version:
                     more_sites.append(k)
         else:
             more_sites = (self.opts.use_sites or '').split(',')

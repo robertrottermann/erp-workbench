@@ -103,7 +103,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             st = self.erp_provider
             if st == 'odoo':
                 try:
-                    if float(self.version) > 10:
+                    if float(self.erp_version) > 10:
                         python_version = 'python3'
                 except:
                     python_version = 'python3'
@@ -149,7 +149,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
 
     def do_copy(self, source, outer_target, inner_target):
         # now copy files
-        if not(self.site and self.version):
+        if not(self.site and self.erp_version):
             print(bcolors.WARNING)
             print('*' * 80)
             print('Hoppalla, seems that %s is not a valid name' % self.site_name)
@@ -158,7 +158,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
         if self.site.get('erp_provider', 'odoo') == 'flectra':
             FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
-        elif 1:  # self.version != '9.0':
+        elif 1:  # self.erp_version != '9.0':
             FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
         from pprint import pprint
         # pprint(FILES_TO_COPY)
@@ -173,7 +173,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             from templates.versions import VERSIONS, VERSIONS_FLECTRA
             if self.site.get('erp_provider', 'odoo') == 'flectra':
                 open('%s/versions.cfg' % outer_target,
-                     'w').write(VERSIONS_FLECTRA[self.version])
+                     'w').write(VERSIONS_FLECTRA[self.erp_version])
             else:
                 open('%s/versions.cfg' % outer_target,
-                     'w').write(VERSIONS[self.version])
+                     'w').write(VERSIONS[self.erp_version])

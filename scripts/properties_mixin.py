@@ -230,12 +230,13 @@ class PropertiesMixin(object):
     _sites_flattened = False
     _remote_info_collected = False
     _defaults_constructed = False
-    _did_run_create_login = False
+    _login_info_created = False
     _all_done = False
     @property
     def _check_parsed(self):
+        _not_yet = False
         if self._all_done:
-            # make sure that construct_defualts is the las, so it can use all values
+            # make sure that construct_defualts is the last, so it can use all values
             if not self._defaults_constructed:
                 self._defaults_constructed = True
                 self.construct_defaults(self.site_name)
@@ -249,23 +250,38 @@ class PropertiesMixin(object):
             from site_desc_handler.handle_remote_data import collect_remote_info          
             collect_remote_info(self, self.site)
         if not self._docker_parsed:
-            self._docker_parsed = True
-            self.setup_docker_env(self.site)
+            if hasattr(self, 'setup_docker_env'):
+                self._docker_parsed = True
+                self.setup_docker_env(self.site)
+            else:
+                _not_yet = True
         if not self._pw_parsed:
-            self._pw_parsed = True
-            self._merge_pw(self.site)
+            if hasattr(self, '_merge_pw'):
+                self._pw_parsed = True
+                self._merge_pw(self.site)
+            else:
+                _not_yet = True
         if not self._site_parsed:
-            self._site_parsed = True
-            self._parse_site(self.site)
-        if not self._did_run_create_login:
-            # _did_run_create_login is set by create_login()
-            self._did_run_create_login = True            
-            self._create_login_info(self.login_info)
+            if hasattr(self, '_parse_site'):
+                self._site_parsed = True
+                self._parse_site(self.site)
+            else:
+                _not_yet = True
+        if not self._login_info_created:
+            if hasattr(self, '_create_login_info'):
+                self._login_info_created = True            
+                self._create_login_info(self.login_info)
+            else:
+                _not_yet = True
         if not self._addpath_collected:
-            from scripts.utilities import collect_addon_paths
-            self._addpath_collected = True
-            collect_addon_paths(self)
-        self._all_done = True
+            try:
+                from scripts.utilities import collect_addon_paths
+                self._addpath_collected = True
+                collect_addon_paths(self)
+            except ImportError:
+                _not_yet = True
+        if not _not_yet:
+            self._all_done = True
             
     _cp = _check_parsed
 
@@ -659,7 +675,9 @@ class PropertiesMixin(object):
     # its value has been passed as a command line option when executing a wp command
     @property
     def site_name(self):
-        return self.site_names and self.site_names[0] or ''
+        if self.sites:
+            return self.site_names and self.site_names[0] or ''
+        return ''
 
     @site_name.setter
     def site_name(self, v):
