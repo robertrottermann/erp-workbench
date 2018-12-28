@@ -31,19 +31,19 @@ class PropertiesMixin(object):
 
     @property
     def db_password(self):
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.docker_db_admin_pw
         return self.login_info.get('db_password')
 
     @property
     def db_user(self):
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.docker_db_admin
         return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', self.base_info['db_user'])
 
     @property
     def db_host(self):
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.docker_db_ip
         return self._db_host
 
@@ -165,7 +165,7 @@ class PropertiesMixin(object):
     @property
     def db_container_ip(self):
         self._cp
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.db_ip
         # does it make sense to return a default at all??
         return 'localhost'
@@ -227,25 +227,45 @@ class PropertiesMixin(object):
     _docker_parsed = False
     _pw_parsed = False
     _addpath_collected = False
+    _sites_flattened = False
+    _remote_info_collected = False
+    _defaults_constructed = False
+    _did_run_create_login = False
+    _all_done = False
     @property
     def _check_parsed(self):
-        first create_global_vars oder so 
+        if self._all_done:
+            # make sure that construct_defualts is the las, so it can use all values
+            if not self._defaults_constructed:
+                self._defaults_constructed = True
+                self.construct_defaults(self.site_name)
+            return
+        if not self._sites_flattened:
+            self._sites_flattened = True
+            from site_desc_handler.sdesc_utilities import flatten_sites
+            flatten_sites(self.sites)
+        if not self._remote_info_collected:
+            self._remote_info_collected = True
+            from site_desc_handler.handle_remote_data import collect_remote_info          
+            collect_remote_info(self, self.site)
+        if not self._docker_parsed:
+            self._docker_parsed = True
+            self.setup_docker_env(self.site)
         if not self._pw_parsed:
             self._pw_parsed = True
             self._merge_pw(self.site)
         if not self._site_parsed:
             self._site_parsed = True
             self._parse_site(self.site)
-        if self.subparser_name == 'docker' and not self._docker_parsed:
-            self._docker_parsed = True
-            self.setup_docker_env(self.site)
         if not self._did_run_create_login:
             # _did_run_create_login is set by create_login()
+            self._did_run_create_login = True            
             self._create_login_info(self.login_info)
         if not self._addpath_collected:
             from scripts.utilities import collect_addon_paths
             self._addpath_collected = True
             collect_addon_paths(self)
+        self._all_done = True
             
     _cp = _check_parsed
 
@@ -282,13 +302,13 @@ class PropertiesMixin(object):
     _rpc_port = ''
     @property
     def rpc_port(self):
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.docker_rpc_port
         return self._rpc_port
 
     @property
     def rpc_user(self):
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.docker_rpc_user
         return self.login_info.get('rpc_user', '')
 
@@ -441,7 +461,7 @@ class PropertiesMixin(object):
 
     @property
     def rpc_pw(self):
-        if self.parsername == 'docker':
+        if self.subparser_name == 'docker':
             return self.docker_rpc_user_pw
         return self.login_info.get('rpc_pw', '')
    # -----------------------------------------------------

@@ -268,16 +268,19 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         else:
             self._sites = SITES
         
-        #the following init stuff should be called from PropertiesMixin
-        #what about flatten site?
-        # set up values for proerties dealing with remote data
-        collect_remote_info(self, self.site)
-        # call the DockerHandlerMixin to setup the docker environment
-        self.setup_docker_env(self.site)
-        #self.check_name(no_completion=True, must_match=True)
-        # resolve inheritance within sites
-        flatten_sites(self._sites)
-        # collect info on what parser and what options are selected
+        if callable(self._check_parsed):
+            self._check_parsed()
+        
+        # #the following init stuff should be called from PropertiesMixin
+        # #what about flatten site?
+        # # set up values for proerties dealing with remote data
+        # collect_remote_info(self, self.site)
+        # # call the DockerHandlerMixin to setup the docker environment
+        # self.setup_docker_env(self.site)
+        # #self.check_name(no_completion=True, must_match=True)
+        # # resolve inheritance within sites
+        # flatten_sites(self._sites)
+        # # collect info on what parser and what options are selected
         parsername, selected, options = collect_options(opts)
         self.selections = selected
         if not selected:
@@ -299,13 +302,13 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 return
         #if self.site_name:
         # construct default values like list of target directories
-        self.construct_defaults(self.site_name)
+        # self.construct_defaults(self.site_name)
         self._default_values['current_user'] = self.user
         self._default_values['foldernames'] = self.foldernames
         # construct path to datafolder erp_server_data_path
-        if self.need_login_info:
-            # this will just return when there is no site name
-            self._create_login_info(self.login_info)
+        # if self.need_login_info:
+        #     # this will just return when there is no site name
+        #     self._create_login_info(self.login_info)
         #             # the following three values will be overruled by the docker registry
         # created using docker_handler.update_container_info
         # when we deal with a docker instance
@@ -337,7 +340,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 else:
                     raise
                     
-    _did_run_create_login = False
+    #_did_run_create_login = False
     def _create_login_info(self, login_info):
         # ----------------------------------
         # what login do we need
@@ -365,7 +368,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # actual user
         if self.opts.__dict__.get('delete_site_local') or self.opts.__dict__.get('drop_site'):
             return
-        if self.site and not self._did_run_create_login:
+        if self.site:
             p = '%s/sites_global/%s.py' % (
                 self.base_info['sitesinfo_path'], self.site_name)
             if not self.site.get('remote_server'):
@@ -433,7 +436,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 login_info['remote_docker_db_user'] = ''
                 login_info['remote_docker_db_pw'] = ''
 
-            _did_run_create_login = True
             
     def running_remote(self):
         # replace values that should be different when running remotely
@@ -1352,8 +1354,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 print(bcolors.OKGREEN + 'finished installing: ' +
                       bcolors.ENDC + ','.join(n_list))
                 print('*' * 80)
-            if installed and ((is_create and opts.updateown or opts.removeown), (is_docker and opts.dupdateown or opts.dremoveown)):
-                if opts.updateown or opts.dupdateown:
+            if installed and (
+                (is_create and (opts.updateown or opts.removeown)) 
+                or (is_docker and (opts.dupdateown or opts.dremoveown))):
+                if (is_create and opts.updateown) or (is_docker and opts.dupdateown):
                     i_list = [il[0]
                               for il in installed if (il[1] not in skip_upd_list)]
                     n_list = [il[1]

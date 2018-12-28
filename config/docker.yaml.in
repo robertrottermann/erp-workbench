@@ -85,3 +85,10 @@ DOCKER_DEFAULTS:
     docker_running_env: 'production'
     docker_without_demo: True
     docker_server_wide_modules': ''
+
+# ----------------------------
+# image creation
+# ----------------------------
+DOCKER_IMAGE:
+    environment:
+        ADDONS_PATH: '/odoo/local-src,/odoo/src/addons,/mnt/extra-addons,$ODOO_EXTRA_ADDONS'
