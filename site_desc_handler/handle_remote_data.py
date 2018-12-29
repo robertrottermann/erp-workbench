@@ -54,32 +54,6 @@ from config import REMOTE_SERVERS
     # def remote_url(self):
     #     return self.remote_server.get('remote_url', '')
 
-def collect_remote_info(self, site):
-    """collect remote info from the site description
-    
-    Arguments:
-        sites {dict} -- site description
-    """
-
-    # old setting
-    if 'site_name' in site.keys():
-        remote_server = site['remote_server']
-        self._remote_server_ip = remote_server.get('remote_url', '')
-        self._remote_data_path = remote_server.get('remote_data_path', '')
-        self._remote_user = remote_server.get('remote_user', '')
-        self._remote_sites_home = remote_server.get('remote_sites_home', '')
-        self._redirect_email_to = remote_server.get('redirect_emil_to', '')
-
-        # apache & nginx
-        apache = site['apache']
-        self._remote_http_url = apache.get('vservername', 'no vserver')
-
-    else:
-        # need to group the servers that are accessible on the same ip
-        # in a "parent" structure
-        pass
-
-# =============================================================
 # get server info from site description
 # =============================================================
 def get_remote_server_info(opts, sites, use_name=None):

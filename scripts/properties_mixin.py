@@ -17,28 +17,46 @@ class PropertiesMixin(object):
     #  'rpc_pw': 'admin',
     #  'rpc_user': 'robert',
     #  'user': 'robert'}    
+    # @property
+    # def login_info(self):
+    #     return self._login_info
+
+    # -------------------------------------------------------------
+    # credentials
+    # -------------------------------------------------------------
+
+    # odoo main password
     @property
-    def login_info(self):
-        return self._login_info
+    def erp_admin_pw(self):
+        return self._erp_admin_pw  # by set_passwords
+
+    @property
+    def rpc_user(self):
+        if self.subparser_name == 'docker':
+            return self.docker_rpc_user
+        return self._rpc_user
+
+    @property
+    def rpc_user_pw(self):
+        if self.subparser_name == 'docker':
+            return self.docker_rpc_user_pw
+        return self._rpc_user_pw
 
     @property
     def docker_db_user(self):
-        return self.login_info.get('docker_db_user') or self.opts.db_user
+        return self._db_user
 
     @property
-    def db_name(self):
-        return self.site.get('db_name', self.site_name)
-
-    @property
-    def db_password(self):
+    def db_user_pw(self):
         if self.subparser_name == 'docker':
-            return self.docker_db_admin_pw
-        return self.login_info.get('db_password')
+            return self.docker_db_user_pw
+        return self._db_user_pw
+    db_password = db_user_pw
 
     @property
     def db_user(self):
         if self.subparser_name == 'docker':
-            return self.docker_db_admin
+            return self.docker_db_user
         return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', self.base_info['db_user'])
 
     @property
@@ -52,9 +70,18 @@ class PropertiesMixin(object):
         return self.base_info.get('postgres_port', 5342)
 
     # ----------------------
+    # database
+    # ----------------------
+    @property
+    def db_name(self):
+        return self.site.get('db_name', self.site_name)
+
+
+    # ----------------------
     # get the sites container
     # ----------------------
     _docker_db_container = ''
+
     @property
     def docker_db_container(self):
         self._cp
@@ -109,14 +136,13 @@ class PropertiesMixin(object):
     _docker_db_admin = ''
 
     @property
-    def docker_db_admin(self):
+    def docker_db_user(self):
         self._cp
-        return self._docker_db_admin
+        return self._docker_db_user
 
     @property
-    def docker_db_admin_pw(self):
+    def docker_db_user_pw(self):
         # by default the odoo docker db user's pw is 'odoo'
-        #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
         return self.opts.dockerdbpw or self.docker_defaults.get('dockerdbpw', '')
 
     _docker_registry = {}
@@ -322,12 +348,6 @@ class PropertiesMixin(object):
             return self.docker_rpc_port
         return self._rpc_port
 
-    @property
-    def rpc_user(self):
-        if self.subparser_name == 'docker':
-            return self.docker_rpc_user
-        return self.login_info.get('rpc_user', '')
-
     _docker_local_user_id = ''
     @property
     def docker_local_user_id(self):
@@ -475,11 +495,6 @@ class PropertiesMixin(object):
         self._docker_list_db = self.docker_defaults.get('docker_list_db', False)
         return self._docker_list_db
 
-    @property
-    def rpc_pw(self):
-        if self.subparser_name == 'docker':
-            return self.docker_rpc_user_pw
-        return self.login_info.get('rpc_pw', '')
    # -----------------------------------------------------
     # property declarations
     # -----------------------------------------------------
