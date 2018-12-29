@@ -303,8 +303,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         #if self.site_name:
         # construct default values like list of target directories
         # self.construct_defaults(self.site_name)
-        self._default_values['current_user'] = self.user
-        self._default_values['foldernames'] = self.foldernames
+        # self._default_values['current_user'] = self.user
+        # self._default_values['foldernames'] = self.foldernames
         # construct path to datafolder erp_server_data_path
         # if self.need_login_info:
         #     # this will just return when there is no site name
@@ -316,29 +316,29 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         self._rpc_port = opts.__dict__.get('rpc_port', '8069')
         self._db_host = opts.__dict__.get('db_host','localhost')
         # starting with odoo 11 we need to check what python version to use
-        if self.erp_version:
-            try:
-                if self.erp_provider == 'flectra':
-                    self._default_values.update(FLECTRA_VERSIONS[self.erp_version])
-                else:
-                    if self.erp_version in ODOO_VERSIONS.keys():
-                        self._default_values.update(ODOO_VERSIONS[self.erp_version])
-                    else:
-                        print (bcolors.FAIL)
-                        print ('*' * 80)
-                        print ('%s has no %s version' % (self.erp_provider, self.erp_version))
-                        print (bcolors.ENDC)
-                        raise(KeyError)
-            except KeyError:
-                print (bcolors.FAIL)
-                print ('*' * 80)
-                print ('%s has no %s version' % (self.erp_provider, self.erp_version))
-                print (bcolors.ENDC)
-                if opts.subparser_name == 'support':
-                    if not opts.edit_site or opts.drop_site:
-                        raise
-                else:
-                    raise
+        # if self.erp_version:
+        #     try:
+        #         if self.erp_provider == 'flectra':
+        #             self._default_values.update(FLECTRA_VERSIONS[self.erp_version])
+        #         else:
+        #             if self.erp_version in ODOO_VERSIONS.keys():
+        #                 self._default_values.update(ODOO_VERSIONS[self.erp_version])
+        #             else:
+        #                 print (bcolors.FAIL)
+        #                 print ('*' * 80)
+        #                 print ('%s has no %s version' % (self.erp_provider, self.erp_version))
+        #                 print (bcolors.ENDC)
+        #                 raise(KeyError)
+        #     except KeyError:
+        #         print (bcolors.FAIL)
+        #         print ('*' * 80)
+        #         print ('%s has no %s version' % (self.erp_provider, self.erp_version))
+        #         print (bcolors.ENDC)
+        #         if opts.subparser_name == 'support':
+        #             if not opts.edit_site or opts.drop_site:
+        #                 raise
+        #         else:
+        #             raise
                     
 
             

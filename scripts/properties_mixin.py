@@ -66,6 +66,7 @@ class PropertiesMixin(object):
     # -------------------------------------------------------------
 
     # odoo main password
+    _erp_admin_pw = ''
     @property
     def erp_admin_pw(self):
         return self._erp_admin_pw  # by set_passwords
@@ -80,12 +81,14 @@ class PropertiesMixin(object):
     # ----------
     # local
     # ----------
+    _db_user = ''
     @property
     def db_user(self):
         if self.subparser_name == 'docker':
             return self.docker_db_user
         return self._db_user
 
+    _db_user_pw = ''
     @property
     def db_user_pw(self):
         if self.subparser_name == 'docker':
@@ -606,8 +609,12 @@ class PropertiesMixin(object):
     # -----------------------------------------------------
     # base data read from the yaml files
 
+    _default_values = {}
     @property
     def default_values(self):
+        if not self._default_values:
+            self._cp
+            self.construct_defaults()
         return self._default_values
 
     # projectname
@@ -623,6 +630,11 @@ class PropertiesMixin(object):
     def project_type(self):
         return self.project_defaults.get('erp_provider', 'odoo')
     erp_provider = project_type
+
+    # project_path is is where the local site s will be constructed
+    @property
+    def project_path(self):
+        return self.base_info.get('project_path', '')
 
     # sites_home is constructed of the fs path of the config/__init__.py file
     # it points to the erp-workbench installation folder
@@ -660,7 +672,7 @@ class PropertiesMixin(object):
     # flags a site description to be used only locally
     @property
     def is_local(self):
-        return self.default_values.get('is_local')
+        return self.site.get('is_local')
 
     # siteinfos is the list of folders withing the sites_list structure
     # it is constructed from config/config/yaml: siteinfos
@@ -708,7 +720,7 @@ class PropertiesMixin(object):
     @property
     def site_data_dir(self):
         self._cp
-        return self.default_values['data_dir']
+        return '%s/%s' % (self.erp_server_data_path, self.site_name)
       
     @property  
     def site_addons_path(self):

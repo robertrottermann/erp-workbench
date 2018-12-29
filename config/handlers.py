@@ -5,4 +5,4 @@ from docker_handler.docker_handler import DockerHandler
 from scripts.support_handler import SupportHandler
 from scripts.remote_handler import RemoteHandler
 from scripts.update_local_db import DBUpdater
-from scripts.mail_handler import MailHandler
+#from scripts.mail_handler import MailHandler

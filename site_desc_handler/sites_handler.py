@@ -380,7 +380,7 @@ class SitesHandler(PropertiesMixin):
             print('please create it with bin/s --add-server %s' % remote_url)
             print(bcolors.ENDC)
             sys.exit()
-        handler.default_values['base_sites_home'] = remote_server_info.get('remote_data_path', '/root/erp_workbench')
+        # handler.default_values['base_sites_home'] = remote_server_info.get('remote_data_path', '/root/erp_workbench')
         handler.default_values['base_url'] = ('%s.ch' % handler.site_name)
         template = ''
         # no_outer will be set, if we use an existing site-description as base
@@ -395,7 +395,6 @@ class SitesHandler(PropertiesMixin):
             if not handler.default_values['site_name']:
                 handler.default_values['site_name'] = handler.site_name
             with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
-                print('------------>', handler.default_values)
                 template = f.read() % handler.default_values
             template = template.replace('127.0.0.1', remote_url)
         # make sure do have a site name
@@ -410,8 +409,6 @@ class SitesHandler(PropertiesMixin):
 
     def add_site_local(self, handler, template_name = '', sublist='localhost'):
         self.handler = handler
-        handler.default_values['base_sites_home'] = '/home/%s/erp_workbench' % ACT_USER
-        handler.default_values['base_url'] = ('%s.ch' % handler.site_name)
         template = ''
         if template_name:
             template = self.find_template(template_name)

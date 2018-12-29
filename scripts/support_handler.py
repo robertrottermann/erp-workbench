@@ -113,7 +113,6 @@ class SupportHandler(InitHandler):
         site_name, subsite_name = (opts.name.split(':') + [''])[:2]
         # make sure all other processes pick the rigth name
         self.site_names = [site_name]
-        self.default_values['site_name'] = site_name
         if len(siteinfo_names) == 1:
             # if we have one subsite, use it
             subsite_name = siteinfo_names[0]
@@ -137,7 +136,6 @@ class SupportHandler(InitHandler):
             print('only [A-Za-z0-9_] allowed')
             print(bcolors.ENDC)
             sys.exit()
-        self.default_values['marker'] = MARKER
         # was a version option used
         if opts.erp_version:
             erp_version = opts.erp_version
@@ -145,9 +143,9 @@ class SupportHandler(InitHandler):
             erp_version, erp_minor = parts[:2]
             if erp_minor == '0':
                 erp_minor = '.0'
-            self.default_values['erp_version'] = erp_version
-            self.default_values['erp_minor'] = erp_minor
-            self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
+            # self.default_values['erp_version'] = erp_version
+            # self.default_values['erp_minor'] = erp_minor
+            # self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
         
         # if the site allready exist, we bail out
         if self.sites.get(self.site_name):
@@ -170,17 +168,17 @@ class SupportHandler(InitHandler):
         else:
             docker_port = self.docker_default_port
         docker_long_poll_port = docker_port + 10000
-        self.default_values['docker_port'] = docker_port
-        self.default_values['docker_long_poll_port'] = docker_long_poll_port
+        # self.default_values['docker_port'] = docker_port
+        # self.default_values['docker_long_poll_port'] = docker_long_poll_port
         
-        # docker hub
-        self.default_values['docker_hub_name'] = self.docker_hub_name
-        self.default_values['erp_image_version'] = self.erp_image_version   
+        # # docker hub
+        # self.default_values['docker_hub_name'] = self.docker_hub_name
+        # self.default_values['erp_image_version'] = self.erp_image_version   
 
-        if opts.remote_server:
-            self.default_values['remote_server'] = opts.remote_server
-        else:
-            self.default_values['remote_server'] = self.remote_data_path # bad naming!!
+        # if opts.remote_server:
+        #     self.default_values['remote_server'] = opts.remote_server
+        # else:
+        #     self.default_values['remote_server'] = self.remote_data_path # bad naming!!
    
         if opts.add_site:
             # before we can construct a site description we need a a file with site values
@@ -294,10 +292,10 @@ class SupportHandler(InitHandler):
             remote_data_path = '/root/erp_workbench'
         else:
             remote_data_path = '/home/%s/erp_workbench' % server_info[0]
-        self.default_values['remote_user'] = server_info[0]
-        self.default_values['use_ip'] = server_info[1]
-        self.default_values['remote_data_path'] = remote_data_path
-        self.default_values['marker'] = '\n' + MARKER
+        # self.default_values['remote_user'] = server_info[0]
+        # self.default_values['use_ip'] = server_info[1]
+        # self.default_values['remote_data_path'] = remote_data_path
+        # self.default_values['marker'] = '\n' + MARKER
 
         template = open('%s/templates/newserver.py' %
                         self.sites_home, 'r').read() % self.default_values

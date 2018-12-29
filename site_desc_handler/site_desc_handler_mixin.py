@@ -1,12 +1,13 @@
 import os
 from copy import deepcopy
-from config import BASE_PATH, PROJECT_DEFAULTS, BASE_INFO, DOCKER_DEFAULTS
+from config import BASE_PATH, PROJECT_DEFAULTS, BASE_INFO, DOCKER_DEFAULTS, MARKER
 from site_desc_handler.sdesc_utilities import _construct_sa
 import re
 import shutil
 import subprocess
 from scripts.properties_mixin import PropertiesMixin
 from scripts.utilities import collect_addon_paths
+from scripts.bcolors import bcolors 
 
 class SiteDescHandlerMixin(PropertiesMixin):
     """This class holds the site descriptions and
@@ -209,71 +210,57 @@ class SiteDescHandlerMixin(PropertiesMixin):
     # _sites <- all sites
     # _sites_local <- local sites
     # class variables 
-    def XXconstruct_defaults(self, site_name):
+    def construct_defaults(self):
         """
         construct defaultvalues for a site
         @site_name        : name of the site
         """
-        xx
         # construct a dictonary with default values
-        # some of the values in the imported default_values are to be replaced
-        # make sure we can do this more than once
-        from templates.default_values import default_values as d_v
-        self._default_values = deepcopy(d_v)
-        default_values = self.default_values
-        default_values['sites_home'] = BASE_PATH
+        default_values = self._default_values
+        default_values['sites_home'] = self.sites_home
         # first set default values that migth get overwritten
         # local sites are defined in local_sites and are not added to the repository
-        is_local = site_name and not(self.sites_local.get(site_name) is None)
+        is_local =  not(self.sites_local.get(self.site_name) is None)
         default_values['is_local'] = is_local
         default_values['db_user'] = self.db_user
-        # the site_name is defined with option -n and was checked by check_name
-        default_values['site_name'] = site_name
-        default_values.update(BASE_INFO)
-        if site_name and isinstance(site_name, str) and self.sites.get(site_name):
-            default_values.update(self.sites.get(site_name))
+        default_values['site_name'] = self.site_name
+        default_values.update(self.base_info)
+        default_values.update(self.site)
         # now we try to replace the %(xx)s element with values we connected from 
         # the yaml files
         tmp_dic = {}
-        for td in [DOCKER_DEFAULTS, PROJECT_DEFAULTS]:
+        for td in [self.docker_defaults, self.project_defaults]:
             tmp_dic.update(td)
         for k,v in self.default_values.items():
             try:
-                if v: # if empty or noe, there is nothing to replace
+                if v: # if empty or none, there is nothing to replace
                     self.default_values[k] = v % tmp_dic
             except:
                 pass
         # we need nightly to construct an url to download the software 
         if not self.default_values.get('erp_nightly'):
-            self.default_values['erp_nightly'] = PROJECT_DEFAULTS.get(
-                'erp_nightly') or '%s%s' % (self.default_values['erp_version'], self.default_values['erp_minor'])
+            self.default_values['erp_nightly'] = self.erp_nightly
         if not self.default_values.get('erp_provider'):
-            self.default_values['erp_provider'] = PROJECT_DEFAULTS.get(
-                'erp_provider', 'odoo')
+            self.default_values['erp_provider'] = self.erp_provider
         # now make sure we have a minor version number
         if not default_values.get('erp_minor'):
-            default_values['erp_minor'] = PROJECT_DEFAULTS.get('erp_minor', '')
-        site_base_path = os.path.normpath(os.path.expanduser(
-            '%(project_path)s/%(site_name)s/' % default_values))
-        # /home/robert/projects/afbsecure/afbsecure/parts/odoo
-        default_values['base_path'] = site_base_path
-        default_values['data_dir'] = "%s/%s" % (
-            self.erp_server_data_path, self.site_name)
-        default_values['db_name'] = site_name
-        default_values['outer'] = '%s/%s' % (
-            BASE_INFO['project_path'], site_name)
-        default_values['inner'] = '%(outer)s/%(site_name)s' % default_values
-        default_values['addons_path'] = '%(base_path)s/parts/odoo/openerp/addons,%(base_path)s/parts/odoo/addons,%(data_dir)s/%(site_name)s/addons' % default_values
+            default_values['erp_minor'] = self.erp_minor
+        default_values['base_path'] = self.sites_home
+        default_values['data_dir'] = self.site_data_dir
+        default_values['db_name'] = self.site_name
+        outer = '%s/%s' % (self.project_path, self.site_name)
+        default_values['outer'] = outer
+        default_values['inner'] = '%s/%s' % (outer, self.site_name)
+        default_values['addons_path'] = self.do_collect_addon_paths()
         # if we are using docker, the addon path is very different
         default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
         default_values['skeleton'] = '%s/skeleton' % self.sites_home
         # add modules that must be installed using pip
-        _s = {}
-        if is_local:
-            _s = self._sites_local.get(site_name)
-        else:
-            if self._sites.get(site_name):
-                _s = self._sites.get(site_name)
+        print(bcolors.OKBLUE)
+        print('*' * 80)
+        print('collecting of addons, piplist usw must be refactored into own methods')
+        print(bcolors.ENDC)
+        _s = self.site
         site_addons = _s.get('addons', [])
         pip_modules = _s.get('extra_libs', {}).get('pip', [])
         skip_list = _s.get('skip', {}).get('addons', [])
@@ -289,7 +276,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # the site addons will only contain paths to download
         # if from one of the downloaded addon folders more than one addon should be installed ??????
         default_values['site_addons'] = _construct_sa(
-            site_name, deepcopy(site_addons), skip_list)
+            self.site_name, deepcopy(site_addons), skip_list)
 
         default_values['skip_list'] = skip_list
 
@@ -308,6 +295,23 @@ class SiteDescHandlerMixin(PropertiesMixin):
             else:
                 erp_version = PROJECT_DEFAULTS.get('erp_version', '12.0')
             self.default_values['erp_version'] = erp_version
+
+        self.default_values['base_sites_home'] = '/home/%s/erp_workbench' % self.user
+        self.default_values['base_url'] = ('%s.ch' % self.site_name)
+        self.default_values['marker'] = '\n' + MARKER
+        self.default_values['remote_server'] = self.remote_server_ip
+        self.default_values['docker_hub_name'] = self.docker_hub_name
+        self.default_values['erp_image_version'] = self.erp_image_version
+        self.default_values['docker_port'] = self.docker_defaults.get('docker_port', 9000)
+        self.default_values['docker_long_poll_port'] = self.docker_defaults.get('docker_long_poll_port', 19000)
+        self.default_values['username'] = self.user
+        self.default_values['db_host'] = self.db_host
+        self.default_values['db_password'] = self.db_user_pw
+        self.default_values['log_db_level'] = self.docker_defaults.get('docker_log_db', False)
+        self.default_values['erp_admin_pw'] = self.erp_admin_pw
+        self.default_values['create_database'] = True
+        self.default_values['foldernames'] = self.foldernames
+        self.default_values['add_path'] = self.site_addons_path
 
     def remove_virtual_env(self, site_name):
         """remove an existing virtual env
