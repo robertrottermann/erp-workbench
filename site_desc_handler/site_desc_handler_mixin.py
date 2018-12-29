@@ -6,6 +6,7 @@ import re
 import shutil
 import subprocess
 from scripts.properties_mixin import PropertiesMixin
+from scripts.utilities import collect_addon_paths
 
 class SiteDescHandlerMixin(PropertiesMixin):
     """This class holds the site descriptions and
@@ -88,8 +89,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # local
             # ----------
             # the db_user is read from the config.yaml and is used as a default user
+            db_user = self.base_info['db_user']
             self._db_user = self.opts.__dict__.get(
-                'db_user', self.base_info['db_user'])
+                'db_user', db_user)
 
             db_user_pw = self.base_info.get('db_user_pw')
             self._db_user_pw = self.opts.__dict__.get(
@@ -105,8 +107,10 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # docker
             # ----------
             # docker_db_user is aliased to db_user
-            self._docker_db_user = ((self.subparser_name == 'docker' and self.opts.dockerdbpw) 
-                 or self.docker_defaults.get('dockerdbpw', ''))
+            self._docker_db_user = ((self.subparser_name == 'docker' and self.opts.docker_db_user) 
+                 or self.docker_defaults.get('docker_db_user', ''))
+            self._docker_db_user_pw = ((self.subparser_name == 'docker' and self.opts.docker_db_user_pw) 
+                 or self.docker_defaults.get('docker_db_user_pw', ''))
 
             docker_rpc_user = ''
             if self.subparser_name == 'docker':
@@ -120,61 +124,54 @@ class SiteDescHandlerMixin(PropertiesMixin):
             if not docker_rpc_user_pw:
                 # no password was provided by an option
                 # we try whether we can learn it from the site itself
-                docker_rpc_user_pw = self.site.get('odoo_admin_pw', '')
+                docker_rpc_user_pw = running_site.get('odoo_admin_pw', '')
                 if not docker_rpc_user_pw:
                     docker_rpc_user_pw = self.docker_defaults.get('dockerrpcuserpw', '')
             self._docker_rpc_user_pw = docker_rpc_user_pw
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
---------------------------------
-            # ----------
-            # remote
-            # ----------
-            self._remote_user = remote_server.get('remote_user', '')
-            self._remote_user_pw ????
-
-            # -----------------
-            # local
-            # -----------------
+            # ------------------------------------
+            # data not from site_description
+            # ------------------------------------
+            db_container_name = ''
+            if self.subparser_name == 'docker':
+                db_container_name = self.opts.dockerdbname
+            if not db_container_name:
+                db_container_name = self.docker_defaults.get('dockerdb_container_name', 'db')
+            self._docker_db_container_name = db_container_name
             
-            login_info['db_password'] = self.opts.__dict__.get(
-                'db_password', db_password)
-            login_info['db_user'] = self.opts.__dict__.get('db_user', db_user)
-            # access to the locally running odoo
-            login_info['rpc_user'] 
-            login_info['rpc_pw']
+            # get the dbcontainer
+            docker_db_container = ''
+            if self.subparser_name == 'docker':
+                db_container_list = self.docker_containers(filters = {'name' : self.docker_db_container_name})
+                if db_container_list:
+                    docker_db_container = db_container_list[0]
+                else:
+                    raise Exception('either db container was missing or some other problem') # provide error
+                self._docker_db_container = docker_db_container
+            
+            if self.subparser_name == 'docker':
+                # try to read the output of the command docker inspect containername
+                # and collect the ip address of its first network interface
+                registry = self.docker_registry.get(self.docker_container_name)
+                try:
+                    docker_rpc_host = registry['NetworkSettings']['IPAddress']
+                except:
+                    docker_rpc_host = 'localhost'
+                self._docker_rpc_host = docker_rpc_host
 
-            # -----------------
-            # remote
-            # -----------------
-            # remote user depends which server the site is running on
-            server = self.site and self.remote_servers.get(
-                site_server_ip, {}) or {}
-            login_info['remote_user'] = server.get('remote_user') or ''
-            login_info['remote_user_pw'] = self.site and server.get(
-                'remote_pw') or ''
-            login_info['remote_db_password'] = self.opts.__dict__.get(
-                'db_password', db_password)
-            login_info['remote_db_user'] = self.opts.__dict__.get(
-                'db_user', db_user)
+            # make sure that within a docker container no "external" paths are used
+            self._docker_path_map =  (os.path.expanduser('~/'), '/root/')
+
+            # ------------------------------------
+            # odoo version, minor, nightly
+            # ------------------------------------
+            self._erp_minor = running_site.get('erp_minor', self.project_defaults.get('erp_minor', '12'))
+            self._erp_nightly = running_site.get(
+                'erp_nightly', self.project_defaults.get('erp_nightly', '12'))
+            self._erp_version = running_site.get('erp_version', self.project_defaults.get(
+                'erp_version', self.project_defaults.get('odoo_version', '12')))
+            self._erp_provider = running_site.get('erp_provider', self.project_defaults.get(
+                'erp_provider', self.project_defaults.get('erp_provider', '12')))
 
     def prepare_properties(self, running_site):
         """collect information from yaml files and the site description
@@ -182,36 +179,26 @@ class SiteDescHandlerMixin(PropertiesMixin):
         Arguments:
             running_site {dict} -- site description
         """
-
+        self.set_passwords(running_site)
         # old setting
         if 'site_name' in running_site.keys():
-            remote_server = site['remote_server']
+            remote_server = running_site['remote_server']
             self._remote_server_ip = remote_server.get('remote_url', '')
             self._remote_data_path = remote_server.get('remote_data_path', '')
             self._remote_sites_home = remote_server.get('remote_sites_home', '')
             self._redirect_email_to = remote_server.get('redirect_emil_to', '')
 
             # apache & nginx
-            apache = site['apache']
+            apache = running_site['apache']
             self._remote_http_url = apache.get('vservername', 'no vserver')
-
-
 
         else:
             # need to group the servers that are accessible on the same ip
             # in a "parent" structure
             pass
+        # construct the addons path
+        self._site_addons_path = collect_addon_paths(self)
 
-
-
-    def _parse_site(self, site):
-        self._erp_minor = site.get('erp_minor', self.project_defaults.get('erp_minor', '12'))
-        self._erp_nightly = site.get(
-            'erp_nightly', self.project_defaults.get('erp_nightly', '12'))
-        self._erp_version = site.get('erp_version', self.project_defaults.get(
-            'erp_version', self.project_defaults.get('odoo_version', '12')))
-        self._erp_provider = site.get('erp_provider', self.project_defaults.get(
-            'erp_provider', self.project_defaults.get('erp_provider', '12')))
 
     # ----------------------------------
     # construct_defaults
@@ -222,11 +209,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
     # _sites <- all sites
     # _sites_local <- local sites
     # class variables 
-    def construct_defaults(self, site_name):
+    def XXconstruct_defaults(self, site_name):
         """
         construct defaultvalues for a site
         @site_name        : name of the site
         """
+        xx
         # construct a dictonary with default values
         # some of the values in the imported default_values are to be replaced
         # make sure we can do this more than once
@@ -373,6 +361,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # local
         # -----------------
         # actual user
+        xx
         if self.opts.__dict__.get('delete_site_local') or self.opts.__dict__.get('drop_site'):
             return
         if self.site:

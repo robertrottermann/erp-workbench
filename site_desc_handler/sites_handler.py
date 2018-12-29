@@ -395,6 +395,7 @@ class SitesHandler(PropertiesMixin):
             if not handler.default_values['site_name']:
                 handler.default_values['site_name'] = handler.site_name
             with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
+                print('------------>', handler.default_values)
                 template = f.read() % handler.default_values
             template = template.replace('127.0.0.1', remote_url)
         # make sure do have a site name

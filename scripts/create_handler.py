@@ -36,7 +36,7 @@ from docker_handler.docker_mixin import DockerHandlerMixin
 # refactoring 
 from site_desc_handler.sdesc_utilities import flatten_sites
 from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
-from site_desc_handler.handle_remote_data import collect_remote_info
+#from site_desc_handler.handle_remote_data import collect_remote_info
 from scripts.properties_mixin import PropertiesMixin
 
 

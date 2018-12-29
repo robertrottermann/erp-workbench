@@ -1,6 +1,5 @@
 from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS
 
-
 class PropertiesMixin(object):
     _login_info = {}
 
@@ -45,6 +44,23 @@ class PropertiesMixin(object):
     def remote_servers(self):
         return REMOTE_SERVERS
 
+    # ----------
+    # db
+    # ----------
+    @property
+    def db_host(self):
+        if self.subparser_name == 'docker':
+            return self.docker_db_ip
+        return self._db_host
+
+    @property
+    def postgres_port(self):
+        return self.base_info.get('postgres_port', 5342)
+
+    @property
+    def db_name(self):
+        return self.site.get('db_name', self.site_name)
+
     # -------------------------------------------------------------
     # credentials
     # -------------------------------------------------------------
@@ -53,6 +69,13 @@ class PropertiesMixin(object):
     @property
     def erp_admin_pw(self):
         return self._erp_admin_pw  # by set_passwords
+
+    # --------------------------------------------------
+    # get the credential to log into the db container
+    # --------------------------------------------------
+    # by default the odoo docker user db is 'odoo'
+
+    # where is it ??
 
     # ----------
     # local
@@ -92,31 +115,24 @@ class PropertiesMixin(object):
     # by default the odoo docker db user's pw is 'odoo'
     @property
     def docker_db_user_pw(self):
-        return self.docker_db_user_pw
+        return self._docker_db_user_pw
 
-    # ----------
-    # db
-    # ----------
+    # --------------------------------------------------
+    # get the credential to log into the sites container
+    # --------------------------------------------------
     @property
-    def db_host(self):
-        if self.subparser_name == 'docker':
-            return self.docker_db_ip
-        return self._db_host
-
-    @property
-    def postgres_port(self):
-        return self.base_info.get('postgres_port', 5342)
+    def docker_rpc_user(self):
+        self._cp
+        return self._docker_rpc_user
 
     @property
-    def db_name(self):
-        return self.site.get('db_name', self.site_name)
-
+    def docker_rpc_user_pw(self):
+        self._cp
+        return self._docker_rpc_user_pw
 
     # ----------------------
     # get the sites container
     # ----------------------
-    _docker_db_container = ''
-
     @property
     def docker_db_container(self):
         self._cp
@@ -140,35 +156,12 @@ class PropertiesMixin(object):
         self._cp
         return self._docker_path_map
 
-    # --------------------------------------------------
-    # get the credential to log into the sites container
-    # --------------------------------------------------
-    _docker_rpc_user = ''
-
-    @property
-    def docker_rpc_user(self):
-        self._cp
-        return self._docker_rpc_user
-
-    _docker_rpc_user_pw = ''
-
-    @property
-    def docker_rpc_user_pw(self):
-        self._cp
-        return self._docker_rpc_user_pw
-
     _db_container_name = ''
 
     @property
     def docker_db_container_name(self):
         self._cp
         return self._docker_db_container_name
-
-    # --------------------------------------------------
-    # get the credential to log into the db container
-    # --------------------------------------------------
-    # by default the odoo docker user db is 'odoo'
-    _docker_db_admin = '' ????
 
     _docker_registry = {}
 
@@ -274,69 +267,77 @@ class PropertiesMixin(object):
         return self._docker_long_polling_port
 
     # we must have parsed the site description at least once
-    _site_parsed = False
-    _docker_parsed = False
-    _pw_parsed = False
-    _addpath_collected = False
-    _sites_flattened = False
-    _remote_info_collected = False
-    _defaults_constructed = False
-    _login_info_created = False
+    # _site_parsed = False
+    # _docker_parsed = False
+    # _pw_parsed = False
+    # _addpath_collected = False
+    # _sites_flattened = False
+    # _remote_info_collected = False
+    # _defaults_constructed = False
+    # _login_info_created = False
     _all_done = False
     @property
     def _check_parsed(self):
-        _not_yet = False
-        if self._all_done:
-            # make sure that construct_defualts is the last, so it can use all values
-            if not self._defaults_constructed:
-                self._defaults_constructed = True
-                self.construct_defaults(self.site_name)
-            return
-        if not self._sites_flattened:
-            self._sites_flattened = True
-            from site_desc_handler.sdesc_utilities import flatten_sites
-            flatten_sites(self.sites)
-        if not self._remote_info_collected:
-            self._remote_info_collected = True
-            from site_desc_handler.handle_remote_data import collect_remote_info          
-            collect_remote_info(self, self.site)
-        if not self._docker_parsed:
-            if hasattr(self, 'setup_docker_env'):
-                self._docker_parsed = True
-                self.setup_docker_env(self.site)
-            else:
-                _not_yet = True
-        if not self._pw_parsed:
-            if hasattr(self, '_merge_pw'):
-                self._pw_parsed = True
-                self._merge_pw(self.site)
-            else:
-                _not_yet = True
-        if not self._site_parsed:
-            if hasattr(self, '_parse_site'):
-                self._site_parsed = True
-                self._parse_site(self.site)
-            else:
-                _not_yet = True
-        if not self._login_info_created:
-            if hasattr(self, '_create_login_info'):
-                self._login_info_created = True            
-                self._create_login_info(self.login_info)
-            else:
-                _not_yet = True
-        if not self._addpath_collected:
-            try:
-                from scripts.utilities import collect_addon_paths
-                self._addpath_collected = True
-                collect_addon_paths(self)
-            except ImportError:
-                _not_yet = True
-        if not _not_yet:
+        if not self._all_done:
             self._all_done = True
-            
+            self.prepare_properties(self.site)
+        # _not_yet = False
+        # if self._all_done:
+        #     # make sure that construct_defualts is the last, so it can use all values
+        #     if not self._defaults_constructed:
+        #         self._defaults_constructed = True
+        #         self.construct_defaults(self.site_name)
+        #     return
+        # if not self._sites_flattened:
+        #     self._sites_flattened = True
+        #     from site_desc_handler.sdesc_utilities import flatten_sites
+        #     flatten_sites(self.sites)
+        # if not self._remote_info_collected:
+        #     self._remote_info_collected = True
+        #     from site_desc_handler.handle_remote_data import collect_remote_info          
+        #     collect_remote_info(self, self.site)
+        # if not self._docker_parsed:
+        #     if hasattr(self, 'setup_docker_env'):
+        #         self._docker_parsed = True
+        #         self.setup_docker_env(self.site)
+        #     else:
+        #         _not_yet = True
+        # if not self._pw_parsed:
+        #     if hasattr(self, '_merge_pw'):
+        #         self._pw_parsed = True
+        #         self._merge_pw(self.site)
+        #     else:
+        #         _not_yet = True
+        # if not self._site_parsed:
+        #     if hasattr(self, '_parse_site'):
+        #         self._site_parsed = True
+        #         self._parse_site(self.site)
+        #     else:
+        #         _not_yet = True
+        # if not self._login_info_created:
+        #     if hasattr(self, '_create_login_info'):
+        #         self._login_info_created = True            
+        #         self._create_login_info(self.login_info)
+        #     else:
+        #         _not_yet = True
+        # if not self._addpath_collected:
+        #     try:
+        #         from scripts.utilities import collect_addon_paths
+        #         self._addpath_collected = True
+        #         collect_addon_paths(self)
+        #     except ImportError:
+        #         _not_yet = True
+        # if not _not_yet:
+        #     self._all_done = True
+        
     _cp = _check_parsed
 
+    @_check_parsed.setter
+    def set_check_parsed(self, value):
+        self._check_parsed = value
+
     _erp_nightly = ''
+
     @property
     def erp_nightly(self):
         self._cp
@@ -605,8 +606,6 @@ class PropertiesMixin(object):
     # -----------------------------------------------------
     # base data read from the yaml files
 
-    _default_values = {}
-
     @property
     def default_values(self):
         return self._default_values
@@ -714,7 +713,7 @@ class PropertiesMixin(object):
     @property  
     def site_addons_path(self):
         self._cp
-        return self.default_values['add_path']
+        return self._site_addons_path
         
     @property
     def use_postgres_version(self):
