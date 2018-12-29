@@ -22,6 +22,30 @@ class PropertiesMixin(object):
     #     return self._login_info
 
     # -------------------------------------------------------------
+    # values read from the yaml files
+    # -------------------------------------------------------------
+
+    @property
+    def base_info(self):
+        return BASE_INFO
+
+    @property
+    def docker_defaults(self):
+        return DOCKER_DEFAULTS
+
+    @property
+    def foldernames(self):
+        return FOLDERNAMES
+
+    @property
+    def project_defaults(self):
+        return PROJECT_DEFAULTS
+
+    @property
+    def remote_servers(self):
+        return REMOTE_SERVERS
+
+    # -------------------------------------------------------------
     # credentials
     # -------------------------------------------------------------
 
@@ -29,6 +53,22 @@ class PropertiesMixin(object):
     @property
     def erp_admin_pw(self):
         return self._erp_admin_pw  # by set_passwords
+
+    # ----------
+    # local
+    # ----------
+    @property
+    def db_user(self):
+        if self.subparser_name == 'docker':
+            return self.docker_db_user
+        return self._db_user
+
+    @property
+    def db_user_pw(self):
+        if self.subparser_name == 'docker':
+            return self.docker_db_user_pw
+        return self._db_user_pw
+    db_password = db_user_pw
 
     @property
     def rpc_user(self):
@@ -42,23 +82,21 @@ class PropertiesMixin(object):
             return self.docker_rpc_user_pw
         return self._rpc_user_pw
 
+    # ----------
+    # docker
+    # ----------
     @property
     def docker_db_user(self):
         return self._db_user
 
+    # by default the odoo docker db user's pw is 'odoo'
     @property
-    def db_user_pw(self):
-        if self.subparser_name == 'docker':
-            return self.docker_db_user_pw
-        return self._db_user_pw
-    db_password = db_user_pw
+    def docker_db_user_pw(self):
+        return self.docker_db_user_pw
 
-    @property
-    def db_user(self):
-        if self.subparser_name == 'docker':
-            return self.docker_db_user
-        return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', self.base_info['db_user'])
-
+    # ----------
+    # db
+    # ----------
     @property
     def db_host(self):
         if self.subparser_name == 'docker':
@@ -69,9 +107,6 @@ class PropertiesMixin(object):
     def postgres_port(self):
         return self.base_info.get('postgres_port', 5342)
 
-    # ----------------------
-    # database
-    # ----------------------
     @property
     def db_name(self):
         return self.site.get('db_name', self.site_name)
@@ -133,17 +168,7 @@ class PropertiesMixin(object):
     # get the credential to log into the db container
     # --------------------------------------------------
     # by default the odoo docker user db is 'odoo'
-    _docker_db_admin = ''
-
-    @property
-    def docker_db_user(self):
-        self._cp
-        return self._docker_db_user
-
-    @property
-    def docker_db_user_pw(self):
-        # by default the odoo docker db user's pw is 'odoo'
-        return self.opts.dockerdbpw or self.docker_defaults.get('dockerdbpw', '')
+    _docker_db_admin = '' ????
 
     _docker_registry = {}
 
@@ -500,25 +525,6 @@ class PropertiesMixin(object):
     # -----------------------------------------------------
 
     # -----------------------------------------------------
-    # base data read from the yaml files
-
-    @property
-    def base_info(self):
-        return BASE_INFO
-
-    @property
-    def docker_defaults(self):
-        return DOCKER_DEFAULTS
-
-    @property
-    def project_defaults(self):
-        return PROJECT_DEFAULTS
-
-    @property
-    def foldernames(self):
-        return FOLDERNAMES
-
-    # -----------------------------------------------------
     # properties from remote block
 
     @property
@@ -724,10 +730,6 @@ class PropertiesMixin(object):
 
         #if self.site:
             #return self.erp_version
-
-    @property
-    def remote_servers(self):
-        return REMOTE_SERVERS
 
     @property
     def user(self):

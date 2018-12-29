@@ -31,7 +31,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # running without docker
             login to odoo:
                 rpc_user
-                rpc_user_pw / rpc_pw ???
+                rpc_user_pw
             db user:
                 db_user
                 db_password
@@ -40,13 +40,13 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 docker_rpc_user
                 docker_rpc_user_pw
             db user:
-                docker_db_user / docker_db_user which one ??
-                docker_db_admin_pw why admin???
+                docker_db_user 
+                docker_db_user_pw 
 
         # remote user:
             we log in as this user into the remote machine:
                 remote_user
-                _remote_user_pw
+                remote_user_pw
 
         """
 
@@ -70,7 +70,10 @@ class SiteDescHandlerMixin(PropertiesMixin):
             from sites_pw import SITES_PW
         except ImportError:
             pass
+        
+        # -------------------------------------------------------------
         # old setting
+        # -------------------------------------------------------------
         if 'site_name' in running_site.keys():
 
             # get passwords from the password store
@@ -81,35 +84,72 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # get the  odoo main password
             self._erp_admin_pw = kDic.get('odoo_admin_pw', '')
 
-            # the db_user is read from the config.yaml and user as a default user
-            self._db_user = self.base_info.get('db_user')
-            db_password = self.base_info.get('db_password')
+            # ----------
+            # local
+            # ----------
+            # the db_user is read from the config.yaml and is used as a default user
+            self._db_user = self.opts.__dict__.get(
+                'db_user', self.base_info['db_user'])
+
+            db_user_pw = self.base_info.get('db_user_pw')
             self._db_user_pw = self.opts.__dict__.get(
-                'db_password', db_password)
+                'db_user_pw', db_user_pw)
 
             self._rpc_user =  self.opts.__dict__.get(
                 'rpc_user', db_user)
 
             self._rpc_user_pw = self.opts.__dict__.get(
-                'rpc_password', db_password)
+                'rpc_password', db_user_pw)
 
-            @property
-            def docker_db_user(self):
-                return self.login_info.get('docker_db_user') or self.opts.db_user
+            # ----------
+            # docker
+            # ----------
+            # docker_db_user is aliased to db_user
+            self._docker_db_user = ((self.subparser_name == 'docker' and self.opts.dockerdbpw) 
+                 or self.docker_defaults.get('dockerdbpw', ''))
 
-            @property
-            def db_password(self):
-                if self.subparser_name == 'docker':
-                    return self.docker_db_admin_pw
-                return self.login_info.get('db_password')
+            docker_rpc_user = ''
+            if self.subparser_name == 'docker':
+                docker_rpc_user = self.opts.drpcuser
+            if not docker_rpc_user:
+                docker_rpc_user = self.docker_defaults.get('dockerrpcuser', '')
+            self._docker_rpc_user = docker_rpc_user
+            docker_rpc_user_pw = ''
+            if self.subparser_name == 'docker':
+                docker_rpc_user_pw = self.opts.drpcuserpw
+            if not docker_rpc_user_pw:
+                # no password was provided by an option
+                # we try whether we can learn it from the site itself
+                docker_rpc_user_pw = self.site.get('odoo_admin_pw', '')
+                if not docker_rpc_user_pw:
+                    docker_rpc_user_pw = self.docker_defaults.get('dockerrpcuserpw', '')
+            self._docker_rpc_user_pw = docker_rpc_user_pw
 
-            @property
-            def db_user(self):
-                if self.subparser_name == 'docker':
-                    return self.docker_db_admin
-                return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', self.base_info['db_user'])
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------
+            # ----------
+            # remote
+            # ----------
             self._remote_user = remote_server.get('remote_user', '')
+            self._remote_user_pw ????
 
             # -----------------
             # local
@@ -135,14 +175,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 'db_password', db_password)
             login_info['remote_db_user'] = self.opts.__dict__.get(
                 'db_user', db_user)
-            # docker
-            # while docker opts are not yet loaded
-            try:
-                login_info['remote_docker_db_user'] = self.opts.remotedockerdbuser
-                login_info['remote_docker_db_pw'] = self.opts.remotedockerdbpw
-            except:
-                login_info['remote_docker_db_user'] = ''
-                login_info['remote_docker_db_pw'] = ''
 
     def prepare_properties(self, running_site):
         """collect information from yaml files and the site description
