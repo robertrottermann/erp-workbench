@@ -20,13 +20,10 @@ DOCKER_DEFAULTS:
     # port at which the db container exports its port
     docker_postgres_port: 55432
 
-    # dockerdb_container_name
+    # docker_db_container_name
     # the name of the container in which all database are created
-    dockerdb_container_name: 'db'
-
-    # the name of the containe in which all database are created
     docker_db_container_name: 'db'
-    
+
     # docker_db_user is used to access the database  in the database container
     docker_db_user: 'odoo'
     

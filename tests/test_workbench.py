@@ -130,7 +130,7 @@ class TestSupportNewSites(SitesListKiller):
         result = self.handler.drop_site()
         self.assertTrue(result)
 
-
+        
 class TestSupport(unittest.TestCase):
 
     def setUp(self):
@@ -168,6 +168,32 @@ class TestDocker(unittest.TestCase):
 
     def XXtest_build_image(self):
         self.handler.build_image()
+
+class TestCreateDB(unittest.TestCase):
+    def setUp(self):
+        from config.handlers import DockerHandler
+        args = MyNamespace()
+        args.subparser_name = 'docker'
+        args.skip_name = True
+        args.quiet = True
+        #args.docker_create_container = True
+        args.name = 'db'
+        #args.erp_image_version = ''
+        #self.handler.site_names = ['demo_global']
+        self.args = args
+        self.handler = DockerHandler(args)
+
+    def test_create_delete_db_container(self):
+        result = self.handler.update_docker_info(name='db', required=False, start=False)
+        if result:
+            self.handler.check_and_create_container(delete_container=True)
+        result = self.handler.update_docker_info(name='db', required=False, start=False)
+        self.assertFalse(result)
+        self.handler.check_and_create_container()
+        result = self.handler.update_docker_info(name='db', required=False, start=False)
+        self.assertTrue(result)
+        print(result)
+
 
 if __name__ == '__main__':
     unittest.main()

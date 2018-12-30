@@ -129,6 +129,7 @@ class PropertiesMixin(object):
         return self._db_user
 
     # by default the odoo docker db user's pw is 'odoo'
+    _docker_db_user_pw = 'odoo'
     @property
     def docker_db_user_pw(self):
         return self._docker_db_user_pw
@@ -141,6 +142,8 @@ class PropertiesMixin(object):
         self._cp
         return self._docker_rpc_user
 
+    # by default the odoo rpc user's pw is 'admin'
+    _docker_rpc_user_pw = 'admin'
     @property
     def docker_rpc_user_pw(self):
         self._cp
@@ -149,6 +152,7 @@ class PropertiesMixin(object):
     # ----------------------
     # get the sites container
     # ----------------------
+    _docker_db_container = ''
     @property
     def docker_db_container(self):
         self._cp
@@ -158,7 +162,9 @@ class PropertiesMixin(object):
     def docker_db_ip(self):
         self._cp
         # the ip address to access the db container
-        return self.docker_db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+        if self.docker_db_container:
+            return self.docker_db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+        return ''
 
     _docker_rpc_host = 'localhost'
     @property
@@ -172,7 +178,7 @@ class PropertiesMixin(object):
         self._cp
         return self._docker_path_map
 
-    _db_container_name = ''
+    _docker_db_container_name = ''
 
     @property
     def docker_db_container_name(self):
@@ -670,6 +676,7 @@ class PropertiesMixin(object):
         self._cp
         return '%s/%s' % (self.erp_server_data_path, self.site_name)
       
+    _site_addons_path = ''
     @property  
     def site_addons_path(self):
         self._cp
