@@ -34,7 +34,8 @@ class TestCreate(unittest.TestCase):
     def test_create_create(self):
         """ run the create -c command 
         """
-        self.handler.site_names = [list(self.handler.sites.keys())[0]]
+        #self.handler.site_names = [list(self.handler.sites.keys())[0]]
+        self.handler.site_name = list(self.handler.sites.keys())[0]
         result = self.handler.create_or_update_site()
         self.assertTrue(result)
 

@@ -124,10 +124,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 docker_rpc_user_pw = self.opts.drpcuserpw
             if not docker_rpc_user_pw:
                 # no password was provided by an option
-                # we try whether we can learn it from the site itself
-                docker_rpc_user_pw = running_site.get('odoo_admin_pw', '')
+                docker_rpc_user_pw = self.erp_admin_pw
                 if not docker_rpc_user_pw:
-                    docker_rpc_user_pw = self.docker_defaults.get('dockerrpcuserpw', '')
+                    docker_rpc_user_pw = self.docker_defaults.get('docker_rpc_user_pw', '')
             self._docker_rpc_user_pw = docker_rpc_user_pw
 
             # ------------------------------------
@@ -220,8 +219,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['sites_home'] = self.sites_home
         # first set default values that migth get overwritten
         # local sites are defined in local_sites and are not added to the repository
-        is_local =  not(self.sites_local.get(self.site_name) is None)
-        default_values['is_local'] = is_local
+        default_values['is_local'] = self.site.get('is_local')
         default_values['db_user'] = self.db_user
         default_values['site_name'] = self.site_name
         default_values.update(self.base_info)
@@ -248,13 +246,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['base_path'] = self.sites_home
         default_values['data_dir'] = self.site_data_dir
         default_values['db_name'] = self.site_name
-        outer = '%s/%s' % (self.project_path, self.site_name)
-        default_values['outer'] = outer
-        default_values['inner'] = '%s/%s' % (outer, self.site_name)
+        default_values['outer'] = self.outer_path
+        default_values['inner'] = self.inner_path
         default_values['addons_path'] = self.do_collect_addon_paths()
         # if we are using docker, the addon path is very different
         default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
-        default_values['skeleton'] = '%s/skeleton' % self.sites_home
+        default_values['skeleton'] = self.skeleton_path
         # add modules that must be installed using pip
         print(bcolors.OKBLUE)
         print('*' * 80)
@@ -312,6 +309,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.default_values['create_database'] = True
         self.default_values['foldernames'] = self.foldernames
         self.default_values['add_path'] = self.site_addons_path
+        self.default_values['projectname'] = self.projectname
 
     def remove_virtual_env(self, site_name):
         """remove an existing virtual env
@@ -336,8 +334,8 @@ class SiteDescHandlerMixin(PropertiesMixin):
 
     def do_collect_addon_paths(self):
         from scripts.utilities import collect_addon_paths
-        self._addpath_collected = True
-        collect_addon_paths(self)
+        #self._addpath_collected = True
+        return collect_addon_paths(self)
 
     #_did_run_create_login = False
     def _create_login_info(self, login_info):
