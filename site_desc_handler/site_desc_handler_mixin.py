@@ -1,4 +1,5 @@
 import os
+import sys
 from copy import deepcopy
 from config import BASE_PATH, PROJECT_DEFAULTS, BASE_INFO, DOCKER_DEFAULTS, MARKER
 from site_desc_handler.sdesc_utilities import _construct_sa
@@ -146,7 +147,15 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 if db_container_list:
                     docker_db_container = db_container_list[0]
                 else:
-                    raise Exception('either db container was missing or some other problem') # provide error
+                    try:
+                        # as this is a docker handler instance, try to create it
+                        self.check_and_create_container(container_name='db')
+                    except Exception as e:
+                        print(bcolors.FAIL)
+                        print('*' * 80)
+                        print('either the db container was missing and could not be created or some other problem')
+                        print(str(e))
+                        sys.exit()
                 self._docker_db_container = docker_db_container
             
             if self.subparser_name == 'docker':
@@ -172,6 +181,45 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 'erp_version', self.project_defaults.get('odoo_version', '12')))
             self._erp_provider = running_site.get('erp_provider', self.project_defaults.get(
                 'erp_provider', self.project_defaults.get('erp_provider', '12')))
+
+
+
+            # ------------------------------------
+            # docker stuff
+            # ------------------------------------
+            docker_hub = running_site.get('docker_hub', {}).get('docker_hub', {})
+            docker = running_site.get('docker', {})
+            # docker hub
+            if docker_hub.get('user', ''):
+                self._docker_hub_name = docker_hub.get('user', '')
+            self._docker_hub_pw = docker_hub.get('docker_hub_pw')
+            
+            # docker
+            self._docker_base_image = docker.get('base_image', 'camptocamp/odoo-project:%s-latest' % self.erp_version)
+            erp_image_version = docker.get('erp_image_version', docker.get('odoo_image_version'))
+            if not erp_image_version:
+                erp_image_version = 'no-erp_image_version-defined'
+            self._docker_image_version = erp_image_version
+            self._docker_container_name = docker.get('container_name', self.site_name)
+            self._docker_rpc_port = docker.get(
+                'erp_port', docker.get('odoo_port'))
+            docker_long_polling_port = docker.get('erp_longpoll', docker.get('odoo_longpoll'))
+            if not docker_long_polling_port:
+                    docker_long_polling_port = int(self.docker_rpc_port) + 10000
+            self._docker_long_polling_port = docker_long_polling_port     
+            self._docker_external_user_group_id = docker.get('external_user_group_id', '104:107')
+
+            # ------------------------------------
+            # docker db
+            # ------------------------------------
+            self._docker_db_container_name = self.docker_defaults.get('docker_db_container_name', '')
+
+            if self.subparser_name == 'docker':
+                self._docker_db_admin = self.opts.docker_db_user or self.docker_defaults.get('docker_db_user', '')
+            else:
+                self._docker_db_admin = self.docker_defaults.get('docker_db_user', '')
+
+
 
     def prepare_properties(self, running_site):
         """collect information from yaml files and the site description

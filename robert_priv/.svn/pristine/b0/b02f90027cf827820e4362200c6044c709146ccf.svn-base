@@ -1,0 +1,104 @@
+#!/usr/bin/python
+# -*- encoding: utf-8 -*-
+# global password: RedcorKmuOnFrieda$99
+
+# Your personal key: ed9a644a89302a5367285c490c36d05f
+# You can check the use of your key here: http://tel.search.ch/api/help.en.html
+
+#Lisa : lwzVoEqsfb
+SITES_PW = {
+    'docker_hub' : {
+        'docker_hub' : {
+            'robertredcor' : {'docker_hub_pw' : 'Coco2Dil$DO',}
+        }
+    },            
+    "afbs" : {
+        'odoo_admin_pw' : 'Afbs$99Elsbeth16',
+        'email_pw_incomming' : 'Mailhandler$99A',
+        'email_pw_outgoing' : 'Mailhandler$99A',
+    },
+    "afbsdemo" : {
+        'odoo_admin_pw' : 'AfbsDemo$77',
+        'email_pw_incomming' : 'AfbsDemo$77',
+        'email_pw_outgoing' : 'AfbsDemo$77',
+    },
+    "afbstest" : {
+        'odoo_admin_pw' : 'Afbs$99Elsbeth16',
+        'email_pw_incomming' : 'Afbs$99Elsbeth16',
+        'email_pw_outgoing' : 'Afbs$99Elsbeth16',
+    },
+    "afbschweiz" : {
+        'odoo_admin_pw' : 'Afbs$99Elsbeth16',
+        'email_pw_incomming' : 'Afbs$99Elsbeth16',
+        'email_pw_outgoing' : 'Afbs$99Elsbeth16',
+    },
+    "breitschtraeff9" : {
+        'odoo_admin_pw' : 'BreitschTraeffOnFrieda',
+        'email_pw_incomming' : 'BreitschTraeffOnFrieda',
+        'email_pw_outgoing' : 'BreitschTraeffOnFrieda',
+        'robert@go2breitsch.ch' : 'robert$99',
+    },
+    "breitschtraeff92" : {
+        'odoo_admin_pw' : 'BreitschTraeffOnFrieda',
+        'email_pw_incomming' : 'BreitschTraeffOnFrieda',
+        'email_pw_outgoing' : 'BreitschTraeffOnFrieda',
+        'robert@go2breitsch.ch' : 'robert$99',
+    },
+    "docmarolf" : {
+        'odoo_admin_pw': 'DocMarolfOnFrieda$51',
+        'email_pw_incomming' : '',
+        'email_pw_outgoing' : '',
+    },
+    "ecassoc" : {
+        'odoo_admin_pw' : 'EcAssocOnFrieda',
+        'email_pw_incomming' : 'ecasincomming$99',
+        'email_pw_outgoing' : 'ecassoc$99',
+    },
+    "eplusp" : {
+        'odoo_admin_pw' : 'EpluspOnFrieda$99',
+        'email_pw_incomming' : 'EpluspOnFrieda$99',
+        'email_pw_outgoing' : '',
+    },
+    "key2gont" : {
+        'odoo_admin_pw' : '',
+        'email_pw_incomming' : '',
+        'email_pw_outgoing' : '',
+    },
+    "harito" : {
+        'odoo_admin_pw' : 'osho79Pune%Odoo',
+        'email_pw_incomming' : 'osho79Pune%%',
+        'email_pw_outgoing' : '',
+    },
+    "leanbi" : {
+        'email_pw_incomming' : 'Terry$99Brenda',
+	'email_account_outconing' : 'leanbi@alice2.ch',
+        'email_pw_outgoing' : 'NaduDuDelDu$99',
+        'odoo_admin_pw' :  'Vw6FMVf2KBfBYyfB',
+    },
+    "redcorkmu" : {
+        'odoo_admin_pw' : 'RedcorKmuOnFrieda',
+        'email_pw_incomming' : 'HelpdeskOnRedcorKmu$99',
+        'email_pw_outgoing' : 'HelpdeskOnRedcorKmu$99',
+    },
+    "tibhub" : {
+        'odoo_admin_pw' : 'Terry$99Brenda',
+        'email_pw_incomming' : 'Terry$99Brenda',
+        'email_pw_outgoing' : 'Terry$99Brenda',
+    },
+    "rederpdemo" : {
+        'odoo_admin_pw' : 'RederpOnFrieda$16',
+        'email_pw_incomming' : 'HelpdeskErpdemo6670$ch',
+        'email_pw_outgoing' : 'HelpdeskErpdemo6670$ch',
+    },
+    "roduit" : {
+        'odoo_admin_pw' : 'Roduit$99Frieda$16',
+        'email_pw_incomming' : 'Roduit$99Frieda$16',
+        'email_pw_outgoing' : 'Roduit$99Frieda$16',
+    },
+    "umelectricite" : {
+        'odoo_admin_pw' : 'Um$99Frieda$16',
+        'email_pw_incomming' : 'Um$99Frieda$16',
+        'email_pw_outgoing' : 'Um$99Frieda$16',
+        'um-electricite@redcor.ch' : 'um-electricite$99'
+    },
+}
