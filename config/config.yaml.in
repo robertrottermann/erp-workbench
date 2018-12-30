@@ -84,10 +84,10 @@ BASE_DEFAULTS:
   # server description file from the sites.yaml file
   db_user: '%(DB_USER)s'
 
-  # db_password:
-  # this is the default password, if it not is defined in the
+  # db_user_pw:
+  # this is the default password, if it is not defined in the
   # server description file from the sites.yaml file
-  db_password: 'admin'
+  db_user_pw: 'admin'
 
   # sites_autopull:
   # should the list of sites be pulled automatically
@@ -99,6 +99,6 @@ BASE_DEFAULTS:
   print_banner: True
 
   # postgres_port:
-  # this is the default password, if it not is defined in the
+  # this is the default password, if it is not defined in the
   # server description file from the sites.yaml file
   postgres_port: 5432

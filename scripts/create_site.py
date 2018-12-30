@@ -48,7 +48,7 @@ from config.handlers import SiteCreator
 from config.handlers import DockerHandler
 from config.handlers import SupportHandler
 from config.handlers import RemoteHandler
-from config.handlers import MailHandler
+#from config.handlers import MailHandler
 
 # get config options
 from scripts.options_create import add_options_create
@@ -116,8 +116,8 @@ def main(opts, parsername, need_names_dic):
         handler = RemoteHandler(opts, SITES)
     elif parsername == 'docker':
         handler = DockerHandler(opts, SITES)
-    elif parsername == 'mail':
-        handler = MailHandler(opts, SITES)
+    # elif parsername == 'mail':
+    #     handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
        # _subparser_name = 'docker'

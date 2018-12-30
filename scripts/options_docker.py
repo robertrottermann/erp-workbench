@@ -161,27 +161,27 @@ def add_options_docker(parser, result_dic):
     parser_docker.add_argument(
         "-ddbname", "--dockerdbname",
         action="store", dest="dockerdbname", # no default, otherwise we can not get it from the site description
-        help="user to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['dockerdb_container_name'])
+        help="user to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['docker_db_container_name'])
 
     parser_docker.add_argument(
         "-ddbuser", "--dockerdbuser",
-        action="store", dest="dockerdbuser", # no default, otherwise we can not get it from the site description
-        help="user to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['dockerdbuser'])
+        action="store", dest="docker_db_user", # no default, otherwise we can not get it from the site description
+        help="user to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['docker_db_user'])
 
     parser_docker.add_argument(
         "-ddbpw",
-        action="store", dest="dockerdbpw", # no default, otherwise we can not get it from the site description
-        help="password to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['dockerdbpw'])
+        action="store", dest="docker_db_user_pw", # no default, otherwise we can not get it from the site description
+        help="password to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['docker_db_user_pw'])
 
     parser_docker.add_argument(
         "-drpcuser",
         action="store", dest="drpcuser", # no default, otherwise we can not get it from the site description
-        help="password to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['dockerrpcuser'])
+        help="password to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['docker_rpc_user'])
 
     parser_docker.add_argument(
         "-drpcuserpw",
         action="store", dest="drpcuserpw", # no default, otherwise we can not get it from the site description
-        help="password to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['dockerrpcuserpw'])
+        help="password to access db in a docker, if not set, it is taken form the sites erp stanza, default %s" % DOCKER_DEFAULTS['docker_rpc_user_pw'])
 
     parser_docker.add_argument(
         "-dud", "--dataupdate_docker",

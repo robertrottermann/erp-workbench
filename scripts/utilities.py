@@ -129,12 +129,11 @@ def collect_addon_paths(handler):
         if addon.get('add_path'):
             apps.append('%s/%s' % (base_path, addon['add_path']))
 
-    handler.default_values['add_path'] = ''
+    result = ''
     if apps:
-        handler.default_values['add_path'] = ',' + ','.join(apps)
-    else:
-        handler.default_values['add_path'] = ''
+        result = ',' + ','.join(apps)
 
+    return result
 
 # ----------------------------------
 # create_server_config

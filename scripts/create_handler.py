@@ -36,7 +36,7 @@ from docker_handler.docker_mixin import DockerHandlerMixin
 # refactoring 
 from site_desc_handler.sdesc_utilities import flatten_sites
 from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
-from site_desc_handler.handle_remote_data import collect_remote_info
+#from site_desc_handler.handle_remote_data import collect_remote_info
 from scripts.properties_mixin import PropertiesMixin
 
 
@@ -303,8 +303,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         #if self.site_name:
         # construct default values like list of target directories
         # self.construct_defaults(self.site_name)
-        self._default_values['current_user'] = self.user
-        self._default_values['foldernames'] = self.foldernames
+        # self._default_values['current_user'] = self.user
+        # self._default_values['foldernames'] = self.foldernames
         # construct path to datafolder erp_server_data_path
         # if self.need_login_info:
         #     # this will just return when there is no site name
@@ -316,125 +316,30 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         self._rpc_port = opts.__dict__.get('rpc_port', '8069')
         self._db_host = opts.__dict__.get('db_host','localhost')
         # starting with odoo 11 we need to check what python version to use
-        if self.erp_version:
-            try:
-                if self.erp_provider == 'flectra':
-                    self._default_values.update(FLECTRA_VERSIONS[self.erp_version])
-                else:
-                    if self.erp_version in ODOO_VERSIONS.keys():
-                        self._default_values.update(ODOO_VERSIONS[self.erp_version])
-                    else:
-                        print (bcolors.FAIL)
-                        print ('*' * 80)
-                        print ('%s has no %s version' % (self.erp_provider, self.erp_version))
-                        print (bcolors.ENDC)
-                        raise(KeyError)
-            except KeyError:
-                print (bcolors.FAIL)
-                print ('*' * 80)
-                print ('%s has no %s version' % (self.erp_provider, self.erp_version))
-                print (bcolors.ENDC)
-                if opts.subparser_name == 'support':
-                    if not opts.edit_site or opts.drop_site:
-                        raise
-                else:
-                    raise
+        # if self.erp_version:
+        #     try:
+        #         if self.erp_provider == 'flectra':
+        #             self._default_values.update(FLECTRA_VERSIONS[self.erp_version])
+        #         else:
+        #             if self.erp_version in ODOO_VERSIONS.keys():
+        #                 self._default_values.update(ODOO_VERSIONS[self.erp_version])
+        #             else:
+        #                 print (bcolors.FAIL)
+        #                 print ('*' * 80)
+        #                 print ('%s has no %s version' % (self.erp_provider, self.erp_version))
+        #                 print (bcolors.ENDC)
+        #                 raise(KeyError)
+        #     except KeyError:
+        #         print (bcolors.FAIL)
+        #         print ('*' * 80)
+        #         print ('%s has no %s version' % (self.erp_provider, self.erp_version))
+        #         print (bcolors.ENDC)
+        #         if opts.subparser_name == 'support':
+        #             if not opts.edit_site or opts.drop_site:
+        #                 raise
+        #         else:
+        #             raise
                     
-    #_did_run_create_login = False
-    def _create_login_info(self, login_info):
-        # ----------------------------------
-        # what login do we need
-        # local:
-        #    local user
-        #    odoo rpc
-        #    odoo admin
-        #    docker db user
-        #    docker db password
-        #    docker admin pw
-        #    docker master pw
-        # remote:
-        #    remote usercreate_virtual_env
-        #    # no password, as only key allowed
-        #    odoo rpc
-        #    odoo admin
-        #    docker db user
-        #    docker db password
-        #    docker admin pw
-        #    docker master pw
-
-        # -----------------
-        # local
-        # -----------------
-        # actual user
-        if self.opts.__dict__.get('delete_site_local') or self.opts.__dict__.get('drop_site'):
-            return
-        if self.site:
-            p = '%s/sites_global/%s.py' % (
-                self.base_info['sitesinfo_path'], self.site_name)
-            if not self.site.get('remote_server'):
-                print(SITE_HAS_NO_REMOTE_INFO %
-                      (self.site_name, os.path.normpath(p)))
-                site_server_ip = 'localhost'
-            else:
-                site_server_ip = self.site['remote_server']['remote_url']
-            try:
-                site_server_ip = socket.gethostbyname(site_server_ip)
-            except:
-                pass
-            # robert restructure
-            #if site_server_ip == 'xx.xx.xx.xx':
-                #if self.default_values['is_local']:
-                    #p = '%s/sites_local/%s.py' % (
-                        #self.base_info['sitesinfo_path'], self.site_name)
-                #print(SITE_NOT_EDITED % (self.site_name, os.path.normpath(p)))
-                #selections = self.selections
-                #must_exit = True
-                #if selections:
-                    #for s in selections:
-                        #if s[0] in NO_NEED_SERVER_IP:
-                            #must_exit = False
-                #if must_exit:
-                    #sys.exit()
-            if self.site and not self.remote_servers.get(site_server_ip):
-                selections = self.selections
-                must_exit = True
-                if selections:
-                    for s in selections:
-                        if s[0] in NO_NEED_SERVER_IP:
-                            must_exit = False
-                if must_exit:
-                    print(SITE_UNKNOW_IP % (site_server_ip,
-                                            self.site_name, self.user, site_server_ip))
-                    sys.exit()
-            login_info['user'] = self.user
-            # access to the local database
-            db_user = self.base_info.get('db_user')
-            db_password = self.base_info.get('db_password')
-            login_info['db_password'] = self.opts.__dict__.get('db_password', db_password)
-            login_info['db_user'] = self.opts.__dict__.get('db_user', db_user)
-            # access to the locally running odoo
-            login_info['rpc_user'] = self.opts.__dict__.get('rpc_user', db_user)
-            login_info['rpc_pw'] = self.opts.__dict__.get('rpc_password', db_password)
-            # access to the local docker
-            # -----------------
-            # remote
-            # -----------------
-            # remote user depends which server the site is running on
-            server = self.site and self.remote_servers.get(
-                site_server_ip, {}) or {}
-            login_info['remote_user'] = server.get('remote_user') or ''
-            login_info['remote_user_pw'] = self.site and server.get(
-                'remote_pw') or ''
-            login_info['remote_db_password'] = self.opts.__dict__.get('db_password', db_password)
-            login_info['remote_db_user'] = self.opts.__dict__.get('db_user', db_user)
-            # docker
-            # while docker opts are not yet loaded
-            try:
-                login_info['remote_docker_db_user'] = self.opts.remotedockerdbuser
-                login_info['remote_docker_db_pw'] = self.opts.remotedockerdbpw
-            except:
-                login_info['remote_docker_db_user'] = ''
-                login_info['remote_docker_db_pw'] = ''
 
             
     def running_remote(self):
