@@ -43,7 +43,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
     # =============================================================
     def create_or_update_site(self):
         # read and update the data from which login_info.cfg.in will be created
-        config_info = self.get_config_info()
+        config_info = self.get_config_info(reset=True)
         # check if the project in the project folder defined in the configuration exists
         # if not create the project structure and copy all files from the skeleton folder
         existed = False
@@ -67,20 +67,16 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         return existed
 
 
-    def get_config_info(self):
+    def get_config_info(self, reset=False):
         """
         collect values needed to put into the openerp.cfg file
         """
+        if reset:
+            self.reset_values()
         default_values = self.default_values
-        default_values['projectname'] = self.projectname
-        # only set when creating or editing the site
-        default_values['erp_version'] = self.site.get('erp_version', self.site.get('odoo_version', ''))
-        # read the login_info.py.in
-        # in this file, all variables are of the form $(VARIABLENAME)$
-        # replace_dic is constructed in get_user_info_base->build_replace_info
-        # the names to replace are defined globaly as REPLACE_NAMES
         p2 = LOGIN_INFO_TEMPLATE_FILE % default_values['skeleton']
-        return open(p2, 'r').read() % default_values
+        with open(p2, 'r') as f:
+            return f.read() % default_values
 
     def check_project_exists(self):
         """
@@ -91,9 +87,9 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         # we only create a site, if we have a site_name
         if self.site_name:
             # check if project exists
-            skeleton_path = default_values['skeleton']
-            outer_path = default_values['outer']
-            inner_path = default_values['inner']
+            skeleton_path = self.skeleton_path
+            outer_path = self.outer_path
+            inner_path = self.inner_path
             if not os.path.exists(inner_path):
                 self.create_new_project()
                 existed = False
@@ -123,12 +119,12 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
 
         default_values = self.default_values
         "ask for project info, create the structure and copy the files"
-        outer = default_values['outer']
-        inner = default_values['inner']
+        outer_path = self.outer_path
+        inner_path = self.inner_path
         # create project folders
         # create sensible error message
         # check whether projects folder exists
-        pp = default_values['project_path']
+        pp = self.project_path
         if not os.path.exists(pp) and not os.path.isdir(pp):
             # try to create it
             try:
@@ -137,15 +133,12 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
                 print('*' * 80)
                 print('could not create %s' % pp)
                 sys.exit()
-        for p in [outer, inner]:
+        for p in [outer_path, inner_path]:
             if not os.path.exists(p):
                 os.mkdir(p)
-        ppath_ini = '%s/__init__.py' % outer
+        ppath_ini = '%s/__init__.py' % outer_path
         if not os.path.exists(ppath_ini):
             open(ppath_ini, 'w').close()
-        # reate virtualenv
-        # copy files
-        # reate_virtual_env(inner)
 
     def do_copy(self, source, outer_target, inner_target):
         # now copy files

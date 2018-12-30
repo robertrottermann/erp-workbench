@@ -16,27 +16,27 @@ DOCKER_DEFAULTS:
     # server the site is running
     docker_port: 9000
 
-    # dockerdb_container_name
-    # the name of the container in which all database are created
-    dockerdb_container_name: 'db'
-
     # docker_postgres_port
     # port at which the db container exports its port
     docker_postgres_port: 55432
 
-    # dockerdbuser is used to access the database  in the database container
-    dockerdbuser: 'odoo'
+    # docker_db_container_name
+    # the name of the container in which all database are created
+    docker_db_container_name: 'db'
 
-    # dockerdbpw is the dockerdbuser's password
-    dockerdbpw: 'odoo'
+    # docker_db_user is used to access the database  in the database container
+    docker_db_user: 'odoo'
+    
+    # docker_db_user_pw is the dockerdbuser's password
+    docker_db_user_pw: 'odoo'
+    
+    # docker_rpc_user is the user with which we want to login to the erp site running in the container
+    docker_rpc_user: 'admin'
 
-    # dockerrpcuser is the user with which we want to login to the erp site running in the container
-    dockerrpcuser: 'admin'
-
-    # dockerrpcuserpw dockerrpcuser's password
+    # docker_rpc_user_pw dockerrpcuser's password
     # this is in most cases NOT 'admin'
     # you can overrule it with -ddbpw
-    dockerrpcuserpw: 'odoo'
+    docker_rpc_user_pw: 'admin'
 
     # erp_image_version
     # is used when creating a new site description, do determine 

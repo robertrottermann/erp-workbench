@@ -1,6 +1,5 @@
 from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS
 
-
 class PropertiesMixin(object):
     _login_info = {}
 
@@ -17,30 +16,50 @@ class PropertiesMixin(object):
     #  'rpc_pw': 'admin',
     #  'rpc_user': 'robert',
     #  'user': 'robert'}    
+    # @property
+    # def login_info(self):
+    #     return self._login_info
+    
+    # we must have parsed the site description at least once
+    _all_done = False
     @property
-    def login_info(self):
-        return self._login_info
+    def _check_parsed(self):
+        if not self._all_done:
+            self._all_done = True
+            self.prepare_properties(self.site)
+    _cp = _check_parsed
+    
+    def reset_values(self):
+        self._all_done = False
+        self._default_values = {}        
+
+    # -------------------------------------------------------------
+    # values read from the yaml files
+    # -------------------------------------------------------------
 
     @property
-    def docker_db_user(self):
-        return self.login_info.get('docker_db_user') or self.opts.db_user
+    def base_info(self):
+        return BASE_INFO
 
     @property
-    def db_name(self):
-        return self.site.get('db_name', self.site_name)
+    def docker_defaults(self):
+        return DOCKER_DEFAULTS
 
     @property
-    def db_password(self):
-        if self.subparser_name == 'docker':
-            return self.docker_db_admin_pw
-        return self.login_info.get('db_password')
+    def foldernames(self):
+        return FOLDERNAMES
 
     @property
-    def db_user(self):
-        if self.subparser_name == 'docker':
-            return self.docker_db_admin
-        return self.login_info.get('db_user') or self.opts.__dict__.get('db_user', self.base_info['db_user'])
+    def project_defaults(self):
+        return PROJECT_DEFAULTS
 
+    @property
+    def remote_servers(self):
+        return REMOTE_SERVERS
+
+    # ----------
+    # db
+    # ----------
     @property
     def db_host(self):
         if self.subparser_name == 'docker':
@@ -50,6 +69,85 @@ class PropertiesMixin(object):
     @property
     def postgres_port(self):
         return self.base_info.get('postgres_port', 5342)
+
+    @property
+    def db_name(self):
+        return self.site.get('db_name', self.site_name)
+
+    # -------------------------------------------------------------
+    # credentials
+    # -------------------------------------------------------------
+
+    # odoo main password
+    _erp_admin_pw = ''
+    @property
+    def erp_admin_pw(self):
+        return self._erp_admin_pw  # constructed by set_passwords
+
+    # --------------------------------------------------
+    # get the credential to log into the db container
+    # --------------------------------------------------
+    # by default the odoo docker user db is 'odoo'
+
+    # where is it ??
+
+    # ----------
+    # local
+    # ----------
+    _db_user = ''
+    @property
+    def db_user(self):
+        if self.subparser_name == 'docker':
+            return self.docker_db_user
+        return self._db_user
+
+    _db_user_pw = ''
+    @property
+    def db_user_pw(self):
+        if self.subparser_name == 'docker':
+            return self.docker_db_user_pw
+        return self._db_user_pw
+    db_password = db_user_pw
+
+    @property
+    def rpc_user(self):
+        if self.subparser_name == 'docker':
+            return self.docker_rpc_user
+        return self._rpc_user
+
+    @property
+    def rpc_user_pw(self):
+        if self.subparser_name == 'docker':
+            return self.docker_rpc_user_pw
+        return self._rpc_user_pw
+
+    # ----------
+    # docker
+    # ----------
+    @property
+    def docker_db_user(self):
+        return self._db_user
+
+    # by default the odoo docker db user's pw is 'odoo'
+    _docker_db_user_pw = 'odoo'
+    @property
+    def docker_db_user_pw(self):
+        return self._docker_db_user_pw
+
+    # --------------------------------------------------
+    # get the credential to log into the sites container
+    # --------------------------------------------------
+    @property
+    def docker_rpc_user(self):
+        self._cp
+        return self._docker_rpc_user
+
+    # by default the odoo rpc user's pw is 'admin'
+    _docker_rpc_user_pw = 'admin'
+    @property
+    def docker_rpc_user_pw(self):
+        self._cp
+        return self._docker_rpc_user_pw
 
     # ----------------------
     # get the sites container
@@ -64,7 +162,9 @@ class PropertiesMixin(object):
     def docker_db_ip(self):
         self._cp
         # the ip address to access the db container
-        return self.docker_db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+        if self.docker_db_container:
+            return self.docker_db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+        return ''
 
     _docker_rpc_host = 'localhost'
     @property
@@ -78,46 +178,12 @@ class PropertiesMixin(object):
         self._cp
         return self._docker_path_map
 
-    # --------------------------------------------------
-    # get the credential to log into the sites container
-    # --------------------------------------------------
-    _docker_rpc_user = ''
-
-    @property
-    def docker_rpc_user(self):
-        self._cp
-        return self._docker_rpc_user
-
-    _docker_rpc_user_pw = ''
-
-    @property
-    def docker_rpc_user_pw(self):
-        self._cp
-        return self._docker_rpc_user_pw
-
-    _db_container_name = ''
+    _docker_db_container_name = ''
 
     @property
     def docker_db_container_name(self):
         self._cp
         return self._docker_db_container_name
-
-    # --------------------------------------------------
-    # get the credential to log into the db container
-    # --------------------------------------------------
-    # by default the odoo docker user db is 'odoo'
-    _docker_db_admin = ''
-
-    @property
-    def docker_db_admin(self):
-        self._cp
-        return self._docker_db_admin
-
-    @property
-    def docker_db_admin_pw(self):
-        # by default the odoo docker db user's pw is 'odoo'
-        #self.docker_db_admin_pw = DOCKER_DEFAULTS['dockerdbpw']
-        return self.opts.dockerdbpw or self.docker_defaults.get('dockerdbpw', '')
 
     _docker_registry = {}
 
@@ -222,70 +288,13 @@ class PropertiesMixin(object):
         self._cp
         return self._docker_long_polling_port
 
-    # we must have parsed the site description at least once
-    _site_parsed = False
-    _docker_parsed = False
-    _pw_parsed = False
-    _addpath_collected = False
-    _sites_flattened = False
-    _remote_info_collected = False
-    _defaults_constructed = False
-    _login_info_created = False
-    _all_done = False
-    @property
-    def _check_parsed(self):
-        _not_yet = False
-        if self._all_done:
-            # make sure that construct_defualts is the last, so it can use all values
-            if not self._defaults_constructed:
-                self._defaults_constructed = True
-                self.construct_defaults(self.site_name)
-            return
-        if not self._sites_flattened:
-            self._sites_flattened = True
-            from site_desc_handler.sdesc_utilities import flatten_sites
-            flatten_sites(self.sites)
-        if not self._remote_info_collected:
-            self._remote_info_collected = True
-            from site_desc_handler.handle_remote_data import collect_remote_info          
-            collect_remote_info(self, self.site)
-        if not self._docker_parsed:
-            if hasattr(self, 'setup_docker_env'):
-                self._docker_parsed = True
-                self.setup_docker_env(self.site)
-            else:
-                _not_yet = True
-        if not self._pw_parsed:
-            if hasattr(self, '_merge_pw'):
-                self._pw_parsed = True
-                self._merge_pw(self.site)
-            else:
-                _not_yet = True
-        if not self._site_parsed:
-            if hasattr(self, '_parse_site'):
-                self._site_parsed = True
-                self._parse_site(self.site)
-            else:
-                _not_yet = True
-        if not self._login_info_created:
-            if hasattr(self, '_create_login_info'):
-                self._login_info_created = True            
-                self._create_login_info(self.login_info)
-            else:
-                _not_yet = True
-        if not self._addpath_collected:
-            try:
-                from scripts.utilities import collect_addon_paths
-                self._addpath_collected = True
-                collect_addon_paths(self)
-            except ImportError:
-                _not_yet = True
-        if not _not_yet:
-            self._all_done = True
-            
-    _cp = _check_parsed
+
+    @_check_parsed.setter
+    def set_check_parsed(self, value):
+        self._check_parsed = value
 
     _erp_nightly = ''
+
     @property
     def erp_nightly(self):
         self._cp
@@ -321,12 +330,6 @@ class PropertiesMixin(object):
         if self.subparser_name == 'docker':
             return self.docker_rpc_port
         return self._rpc_port
-
-    @property
-    def rpc_user(self):
-        if self.subparser_name == 'docker':
-            return self.docker_rpc_user
-        return self.login_info.get('rpc_user', '')
 
     _docker_local_user_id = ''
     @property
@@ -475,33 +478,9 @@ class PropertiesMixin(object):
         self._docker_list_db = self.docker_defaults.get('docker_list_db', False)
         return self._docker_list_db
 
-    @property
-    def rpc_pw(self):
-        if self.subparser_name == 'docker':
-            return self.docker_rpc_user_pw
-        return self.login_info.get('rpc_pw', '')
-   # -----------------------------------------------------
+    # -----------------------------------------------------
     # property declarations
     # -----------------------------------------------------
-
-    # -----------------------------------------------------
-    # base data read from the yaml files
-
-    @property
-    def base_info(self):
-        return BASE_INFO
-
-    @property
-    def docker_defaults(self):
-        return DOCKER_DEFAULTS
-
-    @property
-    def project_defaults(self):
-        return PROJECT_DEFAULTS
-
-    @property
-    def foldernames(self):
-        return FOLDERNAMES
 
     # -----------------------------------------------------
     # properties from remote block
@@ -585,9 +564,11 @@ class PropertiesMixin(object):
     # base data read from the yaml files
 
     _default_values = {}
-
     @property
     def default_values(self):
+        if not self._default_values:
+            self._cp
+            self.construct_defaults()
         return self._default_values
 
     # projectname
@@ -630,17 +611,22 @@ class PropertiesMixin(object):
     def sites(self):
         return self._sites
 
-    _sites_local = {}
+    _sites_local = None
     # sites_local is a dict of all sites-descriptions with the local flag set
     @property
     def sites_local(self):
+        if self._sites_local is None:
+            self._sites_local = {}
+            for k,v in self.sites.items():
+                if v.get('is_local'):
+                    self._sites_local[k] = v
         return self._sites_local
 
     # is_local
     # flags a site description to be used only locally
     @property
     def is_local(self):
-        return self.default_values.get('is_local')
+        return self.site.get('is_local')
 
     # siteinfos is the list of folders withing the sites_list structure
     # it is constructed from config/config/yaml: siteinfos
@@ -688,32 +674,48 @@ class PropertiesMixin(object):
     @property
     def site_data_dir(self):
         self._cp
-        return self.default_values['data_dir']
+        return '%s/%s' % (self.erp_server_data_path, self.site_name)
       
+    _site_addons_path = ''
     @property  
     def site_addons_path(self):
         self._cp
-        return self.default_values['add_path']
+        if not self._site_addons_path and self.site_name:
+            # it will set at __init__ when ther migth be no site_name known yet
+            self._site_addons_path = self.do_collect_addon_paths()
+        return self._site_addons_path
         
     @property
     def use_postgres_version(self):
         return self.docker_defaults.get('use_postgres_version')
     
-    #@property
-    #def version(self):
-        #"""return the value of the version key of the site description
-        
-        #Returns:
-            #string -- version of the erp system
-        #"""
-
-        #if self.site:
-            #return self.erp_version
-
-    @property
-    def remote_servers(self):
-        return REMOTE_SERVERS
-
     @property
     def user(self):
         return ACT_USER
+
+    
+    # -----------------------------------------------------
+    # property we need to construct the local project
+    # -----------------------------------------------------
+
+    # project_path is is where the local site s will be constructed
+    @property
+    def project_path(self):
+        return self.base_info.get('project_path', '')
+
+    # skeleton_path is where we find the project skeleton we copy  
+    # to the new project and fill with actual values
+    @property
+    def skeleton_path(self):
+        return '%s/skeleton' % self.sites_home
+
+    # the project itself is structured in an outer folder
+    # where we could place the projects documentation
+    # and an inner folder, where the actual project is constructed
+    @property
+    def outer_path(self):
+        return '%s/%s' % (self.project_path, self.site_name)
+
+    @property
+    def inner_path(self):
+        return '%s/%s' % (self.outer_path, self.site_name)

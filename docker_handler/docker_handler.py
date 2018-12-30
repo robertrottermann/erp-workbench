@@ -78,6 +78,8 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         registry = self.docker_registry
         cli = self.docker_client
+        exists = False
+        info = []
         if name:
             # check whether a container with the requested name exists.
             # similar to docker ps -a, we need to also consider the stoped containers
@@ -112,6 +114,7 @@ class DockerHandler(InitHandler, DBUpdater):
                         print(DOCKER_DB_MISSING)
                         return
                     raise ValueError('required container:%s does not exist' % name)
+        return info # only needed when testing
 
     def update_container_info(self):
         """
@@ -200,6 +203,7 @@ class DockerHandler(InitHandler, DBUpdater):
         BASE_INFO['docker_command'] = shutil.which('docker')
         if name == 'db':
             self.update_docker_info('db')
+            container_name = 'db'
             site = {
                 'docker' : {
                     'container_name' : 'db',
@@ -262,7 +266,10 @@ class DockerHandler(InitHandler, DBUpdater):
         #     'erp_server_data_path' : self.erp_server_data_path,           
         # }
         info_dic = self.create_docker_composer_dict()
+        if not info_dic.get('container_name'):
+            info_dic['container_name'] = container_name
         info_dic['docker_extra_addons'] = self.site_addons_path
+        info_dic['docker_db_container_name'] = self.docker_db_container_name
         # some of the docker templates have many elements in common, get them
         from templates.docker_templates import docker_common as DC
         docker_common = DC % info_dic
@@ -295,17 +302,18 @@ class DockerHandler(InitHandler, DBUpdater):
                 pass # no such folder
         # make sure we have valid elements
         allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
-        for k,v in info_dic.items():
-            if k == 'erp_image_version':
-                v = v.split(':')[0] # avoid empty image version with only tag
-            if not v and k not in allow_empty:
-                print(bcolors.FAIL)
-                print('*' * 80)
-                print('the value for %s is not set but is needed to create a docker container.' % k)
-                print('*' * 80)
-                print(bcolors.ENDC)
-                print(info_dic)
-                sys.exit()                
+        if not delete_container and container_name != 'db':
+            for k,v in info_dic.items():
+                if k == 'erp_image_version':
+                    v = v.split(':')[0] # avoid empty image version with only tag
+                if not v and k not in allow_empty:
+                    print(bcolors.FAIL)
+                    print('*' * 80)
+                    print('the value for %s is not set but is needed to create a docker container.' % k)
+                    print('*' * 80)
+                    print(bcolors.ENDC)
+                    print(info_dic)
+                    sys.exit()                
         if update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
             from templates.docker_templates import docker_template_update

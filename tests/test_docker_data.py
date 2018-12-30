@@ -61,6 +61,7 @@ class TestGetDockerData(SitesListKiller):
 
     def test_get_docker_erp_image_version(self):
         # make sure the sites_pw.py provides the following pw for the new site
+        self.dHandler.reset_values()
         self.assertTrue(self.dHandler.docker_rpc_user_pw == 'demo_global$odoo_admin_pw')
 
     def test_create_docker_composer_dict(self):
