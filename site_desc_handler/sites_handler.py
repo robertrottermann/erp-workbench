@@ -9,19 +9,15 @@ from pprint import pformat
 import subprocess
 from subprocess import PIPE
 #from config.config_data.base_info import base_info as BASE_INFO
-from config import BASE_INFO
-from config import ACT_USER
-from config.config_data.servers_info import REMOTE_SERVERS
 from scripts.bcolors import bcolors
 from importlib import reload
-from config import BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS
 from .sdesc_utilities import AttrDict, UpdateError
 
 from scripts.messages import LOCALSITESLIST_BASEPATH_MISSING, SITES_GLOBAL_TEMPLATE, SITES_GLOBAL_TEMPLATE, \
     LOCALSITESLIST_CREATED,LOCALSITESLIST_CLONED, MARKER, SITE_ADDED_NO_DOT, SITES_GLOBAL_TEMPLATE
 
-from scripts.properties_mixin import PropertiesMixin
-
+#from scripts.properties_mixin import PropertiesMixin
+from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
 # --------------------------------------
 # sites_handler.py maintains two set of data
 # 1. local_data.py
@@ -60,45 +56,16 @@ set_orig(SL_%(file_name)s, '%(file_name)s')
 SITES_L.update(SL_%(file_name)s)
 """
 
-class SitesHandler(PropertiesMixin):
+class SitesHandler(SiteDescHandlerMixin):
+    
+    subparser_name = ''
+    
     def __init__(self, base_path, template_name='', preset_values=''):
         self.base_path = base_path
         #self.check_and_copy_local_data()
         self.template_name = template_name
         self.preset_values = preset_values
 
-    # @property
-    # def docker_hub_name(self):
-    #     # her we only know about the default hub name
-    #     return DOCKER_DEFAULTS.get('docker_hub_name', 'no docker hub-name set in docker.yaml')
-        
-    # @property
-    # def erp_image_version(self):
-    #     return DOCKER_DEFAULTS.get('erp_image_version', '')
-
-    # @property
-    # def erp_version(self):
-    #     return PROJECT_DEFAULTS.get('erp_version', PROJECT_DEFAULTS.get('odoo_version', '12'))
-
-    # @property
-    # def erp_minor(self):
-    #     return PROJECT_DEFAULTS.get('erp_minor', '12')
-    
-    # @property
-    # def erp_nightly(self):
-    #     return PROJECT_DEFAULTS.get('erp_nightly', '12')
-
-    # @property
-    # def erp_provider(self):
-    #     return PROJECT_DEFAULTS.get('erp_provider', 'odoo')
-
-    # @property
-    # def remote_servers(self):
-    #     return REMOTE_SERVERS
-    
-    # @property
-    # def user(self):
-    #     return ACT_USER
 
     def _create_sites_rep(self, running_path):
         """
@@ -196,12 +163,14 @@ class SitesHandler(PropertiesMixin):
         must_exit = False
         must_update_ini = False
         sitelist_names = []
-        sites_list_path = BASE_INFO.get('sitesinfo_path')
+        #sites_list_path = BASE_INFO.get('sitesinfo_path')
+        sites_list_path = self.base_info.get('sitesinfo_path')
         if not sites_list_path:
             return '' # not yet configured
         # create sitelisth path
         os.makedirs(sites_list_path, exist_ok=True)
-        siteinfos = BASE_INFO.get('siteinfos', [])
+        #siteinfos = BASE_INFO.get('siteinfos', [])
+        siteinfos = self.base_info.get('siteinfos', [])
         if siteinfos:
             for sitelist_name, sites_list_url in list(siteinfos.items()):
                 #sites_list_url = BASE_INFO.get('sitesinfo_url')
@@ -440,10 +409,10 @@ class SitesHandler(PropertiesMixin):
             outer_template = template
         if where == 'G':
             # add a new file with the sites info
-            f_path = '%s/%s/sites_global/%s.py' % (BASE_INFO['sitesinfo_path'], sublist, site_name)
+            f_path = '%s/%s/sites_global/%s.py' % (self.handler.base_info['sitesinfo_path'], sublist, site_name)
         elif where == 'L':
             site_name = self.handler.site_name
-            f_path = '%s/%s/sites_local/%s.py' % (BASE_INFO['sitesinfo_path'], sublist, site_name)
+            f_path = '%s/%s/sites_local/%s.py' % (self.handler.base_info['sitesinfo_path'], sublist, site_name)
         f_path = os.path.normpath(f_path)
         with open(f_path, 'w') as f:
             f.write(outer_template)
@@ -464,7 +433,7 @@ class SitesHandler(PropertiesMixin):
         if not hasattr(self, 'sites_list_path'):
             return
         if auto =='check':
-            if not BASE_INFO.get('sites_autopull', ''):
+            if not self.base_info.get('sites_autopull', ''):
                 return
         os.chdir(self.sites_list_path)
         p = subprocess.Popen(

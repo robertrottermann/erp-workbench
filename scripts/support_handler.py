@@ -185,7 +185,9 @@ class SupportHandler(InitHandler):
             pvals = {} # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
             if 1: #preset_values:
-                result = sites_handler.add_site_global(handler = self, template_name=template, sublist=subsite_name)#, preset_values=preset_values)
+                sites_handler.reset_values() # force to reread the vlues, they were read when no site_name was yet known
+                sites_handler.opts = opts
+                result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=subsite_name)#, preset_values=preset_values)
                 if result:
                     if not opts.quiet:
                         print("%s added to sites.py" % self.site_name)

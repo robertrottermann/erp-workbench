@@ -9,6 +9,15 @@ import subprocess
 from scripts.properties_mixin import PropertiesMixin
 from scripts.utilities import collect_addon_paths
 from scripts.bcolors import bcolors 
+from argparse import Namespace
+
+
+class DummyNamespace(Namespace):
+    # we need a namespace that just ignores unknow options
+    def __getattr__(self, key):
+        if key in self.__dict__.keys():
+            return self.__dict__[key]
+        return ''
 
 class SiteDescHandlerMixin(PropertiesMixin):
     """This class holds the site descriptions and
@@ -18,6 +27,10 @@ class SiteDescHandlerMixin(PropertiesMixin):
         object {[type]} -- [description]
     """
 
+    # provide opts, so we can survive the very first call
+    # later opts will be replace by the one presented to the user
+    opts = DummyNamespace()
+    
     # -------------------------------------------------------------
     # set properties for users and passwords
     # -------------------------------------------------------------
@@ -53,6 +66,8 @@ class SiteDescHandlerMixin(PropertiesMixin):
 
         """
 
+        if not running_site:
+            running_site = {} # to be sure ..
         # -------------------------------------------------------------
         # merge passwords
         # -------------------------------------------------------------
@@ -77,10 +92,10 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # -------------------------------------------------------------
         # old setting
         # -------------------------------------------------------------
-        if 'site_name' in running_site.keys():
+        if 1: #'site_name' in running_site.keys():
 
             # get passwords from the password store
-            site_name = running_site['site_name']
+            site_name = running_site.get('site_name', self.opts.name and self.opts.name.split(':')[0] or '')
             # get a dict with pw info
             kDic = SITES_PW.get(site_name, {})
 
@@ -174,15 +189,23 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # ------------------------------------
             # odoo version, minor, nightly
             # ------------------------------------
-            self._erp_minor = running_site.get('erp_minor', self.project_defaults.get('erp_minor', '12'))
-            self._erp_nightly = running_site.get(
-                'erp_nightly', self.project_defaults.get('erp_nightly', '12'))
-            self._erp_version = running_site.get('erp_version', self.project_defaults.get(
-                'erp_version', self.project_defaults.get('odoo_version', '12')))
-            self._erp_provider = running_site.get('erp_provider', self.project_defaults.get(
-                'erp_provider', self.project_defaults.get('erp_provider', '12')))
-
-
+            # version
+            erp_version = running_site.get('erp_version')
+            if not erp_version:
+                erp_version = self.project_defaults.get('erp_version', '12')
+            self._erp_version = erp_version
+            # minor
+            erp_minor = running_site.get('erp_minor')
+            if not erp_minor:
+                erp_minor = self.project_defaults.get('erp_minor', '12')
+            self._erp_minor = erp_minor
+            # nightly
+            erp_nightly = running_site.get('erp_nightly')
+            if not erp_nightly:
+                erp_nightly = self.project_defaults.get('erp_nightly', '12')
+            self._erp_nightly = erp_nightly
+            # provider
+            self._erp_provider = running_site.get('erp_provider',  'odoo')
 
             # ------------------------------------
             # docker stuff
@@ -205,10 +228,31 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 'erp_port', docker.get('odoo_port'))
             docker_long_polling_port = docker.get('erp_longpoll', docker.get('odoo_longpoll'))
             if not docker_long_polling_port:
+                if self.docker_rpc_port:
                     docker_long_polling_port = int(self.docker_rpc_port) + 10000
+                
             self._docker_long_polling_port = docker_long_polling_port     
             self._docker_external_user_group_id = docker.get('external_user_group_id', '104:107')
 
+            # ------------------------------------
+            # remote
+            # ------------------------------------
+            remote_server = running_site.get('remote_server', {})
+            self._remote_server_ip = remote_server.get('remote_url', '')
+            self._remote_data_path = remote_server.get('remote_data_path', '')
+            self._remote_sites_home = remote_server.get('remote_sites_home', '')
+            self._redirect_email_to = remote_server.get('redirect_emil_to', '')
+
+            # ------------------------------------
+            # apache & nginx
+            # ------------------------------------
+            apache = running_site.get('apache', {})
+            self._remote_http_url = apache.get('vservername', 'no vserver')
+
+            # ------------------------------------
+            # db
+            # ------------------------------------
+            self._db_host = running_site.get('db_host', self._remote_server_ip)
             # ------------------------------------
             # docker db
             # ------------------------------------
@@ -228,22 +272,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
             running_site {dict} -- site description
         """
         self.set_passwords(running_site)
-        # old setting
-        if 'site_name' in running_site.keys():
-            remote_server = running_site['remote_server']
-            self._remote_server_ip = remote_server.get('remote_url', '')
-            self._remote_data_path = remote_server.get('remote_data_path', '')
-            self._remote_sites_home = remote_server.get('remote_sites_home', '')
-            self._redirect_email_to = remote_server.get('redirect_emil_to', '')
-
-            # apache & nginx
-            apache = running_site['apache']
-            self._remote_http_url = apache.get('vservername', 'no vserver')
-
-        else:
-            # need to group the servers that are accessible on the same ip
-            # in a "parent" structure
-            pass
         # construct the addons path
         self._site_addons_path = collect_addon_paths(self)
 

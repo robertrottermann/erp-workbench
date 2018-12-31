@@ -18,7 +18,7 @@ try:
 except ImportError as e:
     print(MODULE_MISSING % 'git')
     sys.exit()
-from config import bcolors, BASE_PATH, BASE_INFO, SITES, SITES_LOCAL
+from scripts.bcolors import bcolors
 import git
 import socket
 from socket import gaierror
@@ -45,9 +45,6 @@ SITE_TEMPLATE = """
     },
 """
 
-from config.config_data.servers_info import REMOTE_SERVERS
-
-
 def get_process_id(name, path):
     """Return process ids found by (partial) name or regex.
 
@@ -69,21 +66,6 @@ def get_process_id(name, path):
             result.append([p.pid, cmdline])
     return result
 
-# check if needed links are set
-
-
-def check_links():
-    # there is only one link that must be set
-    # if 'erp_server_data_path' and BASE_PATH differ
-    # we must set a link to the dumper folder, so that
-    # the dumper docker container finds its content
-    return  # not used ...
-    if BASE_INFO['erp_server_data_path'] != BASE_PATH:
-        actual = os.getcwd()
-        os.chdir(BASE_PATH)
-        if not os.path.exists('dumper'):
-            os.symlink('%s/dumper' % BASE_PATH, 'dumper')
-        os.chdir(actual)
 
 
 def collect_options(opts):
@@ -239,46 +221,6 @@ def get_single_value(
     return result
 
 
-def set_base_info(info_dic, filename):
-    "write base info back to the config folder"
-    info = 'base_info = %s' % pformat(info_dic)
-    open(filename, 'w').write(info)
-
-
-def get_base_info(base_info, base_defaults):
-    "collect base info from user, update base_info"
-    for k, v in list(base_defaults.items()):
-        name, explanation, default = v
-        # use value as stored, default otherwise
-        default = BASE_INFO.get(k, default)
-        base_info[k] = get_single_value(name, explanation, default)
-
-# # ----------------------------------
-# # update_base_info
-# # collects localdata that will be stored in config/base_info.py
-# # @base_info_path   : path to config/base_info.pyconfig/base_info.py
-# # @default_values   : dictionary with default values
-# # ----------------------------------
-
-
-# def update_base_info(base_info_path, defaults):
-#     """
-#     collects localdata that will be stored in config/base_info.py
-#     @base_info_path   : path to config/base_info.pyconfig/base_info.py
-#     @default_values   : dictionary with default values
-#     """
-#     base_info = {}
-#     get_base_info(base_info, defaults)
-#     set_base_info(base_info, base_info_path)
-#     print('%s created' % base_info_path)
-
-# ----------------------------------
-# list_sites
-# list sitenames listed in the sites_dic
-# @sites_dic    : dictionary with info about sites
-#                 this is the combination of sites.py and local_sites.py
-# ----------------------------------
-
 
 def list_sites(sites_dic, quiet=False):
     """
@@ -299,105 +241,6 @@ def list_sites(sites_dic, quiet=False):
         else:
             if not quiet:
                 print('%s%s' % (key, origin))
-
-# ----------------------------------
-# module_add
-# add module to sites.py for a site, create it if opts.module_create
-# if user is allowed to write to the apache directory, add it to
-#   sites_available and sites_enabled
-# if not, just print it out
-# @opts             : option instance
-# @default_values   : dictionary with default values
-# @site_values      : values for this site as found in systes.py
-# @module_name      : name of the new module
-# ----------------------------------
-
-
-def module_add(opts, default_values, site_values, module_name):
-    """
-    add module to sitey.py for a site, create it if opts.module_create
-    if user is allowed to wite to the apache directory, add it to
-      sites_available and sites_enabled
-    if not, just print it out
-    @opts             : option instance
-    @default_values   : dictionary with default values
-    @site_values      : values for this site as found in systes.py
-    @module_name      : name of the new module
-    """
-    # we start opening the sites.py as text file
-    if default_values['is_local']:
-        sites_path = '%s/sites_local' % BASE_INFO['sitesinfo_path']
-    else:
-        sites_path = '%s/sites_global' % BASE_INFO['sitesinfo_path']
-    sites_str = open(sites_path, 'r').read()
-    # startmach is a line with nothin but:
-    #    "breitschtraeff9" : {
-    start_match = re.compile(r'\s+"%(site_name)s"\s*:\s\{' % default_values)
-    # startmach is a line with nothin but:
-    #    },
-    end_match = re.compile(r'^\s*},\s*$')
-    # separate sites.py into lines before and after actual site
-    lines = sites_str.split('\n')
-    pref_lines = []
-    sub_lines = []
-    started = False
-    before = True  # we add lines to before
-    for line in lines:
-        if start_match.match(line):
-            started = True
-        if started:
-            # we only check if fiished, if started = true
-            if end_match.match(line):
-                started = False
-                before = False
-            continue
-        # we are not within the started block
-        if before:
-            pref_lines.append(line)
-        else:
-            sub_lines.append(line)
-    # add new module to the list of modules
-    mlist = site_values.get('addons', [])
-    if not module_name in mlist:
-        mlist.append(module_name)
-        site_values['addons'] = mlist
-        # create dict as text to be patched between pref_ & sub_lines
-        buff = StringIO()
-        pprint(site_values, indent=8, stream=buff)
-        site_string = buff.getvalue()
-        # remove opening/closing brackets
-        site_string = ' ' + site_string[1:-2] + ','
-        new_site = SITE_TEMPLATE % {
-            'data': site_string, 'site_name': default_values['site_name']}
-        # construct new filecontent of systes.py by conatenating its three elements
-        data = '\n'.join(pref_lines) + new_site + '\n'.join(sub_lines)
-        # write that thing
-        open(sites_path, 'w').write(data)
-    # if opts.module_create we create the modul using odos scaffolding facility
-    if opts.module_create:
-        # check wheter the addon directory exists
-        # this directory is create by dosetup.py
-        addons_path = '%(inner)s/%(site_name)s_addons' % default_values
-        module_path = '%s/%s' % (addons_path, module_name)
-        if not os.path.exists(addons_path):
-            print('%s does not exist')
-            return
-        if os.path.exists(module_path):
-            print('module %s allready exists')
-            return
-        # fine, we can go ahead
-        # hopefully odoo is at its standard place
-        #odoo_path = '%(inner)s/parts/odoo/odoo.py' % default_values
-        runner_path = '%(inner)s/bin/odoorunner.py' % default_values
-        # usage: odoorunner.py scaffold [-h] [-t TEMPLATE] name [dest]
-        cmdline = '%s scaffold %s %s' % (runner_path, module_name, addons_path)
-        print(cmdline)
-        cur_dir = os.getcwd()
-        os.chdir(default_values['inner'])
-        p = subprocess.Popen(cmdline, stdout=PIPE, shell=True)
-        p.communicate()
-        os.chdir(cur_dir)
-        print('added skeleton to %s' % module_path)
 
 
 # ----------------------------------
@@ -576,23 +419,20 @@ def repo_has_branch(repo_path, branch, verbose=False):
     return branch in remote_branches
 
 
-def checkout_sa(opts):
+def checkout_sa(opts, handler):
     """
     get addons from repository
     @opts   : options as entered by the user
     """
     if not opts.name:
-        # need a  site_name to do anythin sensible
+        # need a  site_name to do anything sensible
         return
     from .git_check import gitcheck, argopts
+    site = handler.site
     result = {'failed': [], 'need_reload': []}
     site_addons = []
-    is_local = SITES_LOCAL.get(opts.name) is not None
-    _s = SITES.get(opts.name)
-    if not _s:
-        return
-    if is_local:
-        _s = SITES_LOCAL.get(opts.name)
+    is_local = site.get('is_local')
+    _s = site
     site_addons = _s.get('addons', [])
     skip_list = _s.get('skip', {}).get('addons', [])
     flag_info = _s.get('tags', {})
@@ -603,7 +443,8 @@ def checkout_sa(opts):
     # the access urls according to the way we want to access the code repositories
     # we construct an sa_dic with
     #    {'gitlab.redcor.ch': 'ssh://git@gitlab.redcor.ch:10022/', 'github...', 'access url', ..}
-    sa_string = BASE_INFO.get('repo_mapper', '')
+    base_info = handler.base_info
+    sa_string = base_info.get('repo_mapper', '')
     if sa_string.endswith('/'):
         sa_string = sa_string[:-1]
     sa_dic = {}
@@ -642,9 +483,9 @@ def checkout_sa(opts):
         # if the addon is in the project folders addon_path, we assume it is under developement,
         # and we do not download it
         temp_target = os.path.normpath(
-            '%s/%s/%s/%s_addons/%%s' % (BASE_INFO['project_path'], opts.name, opts.name, opts.name))
+            '%s/%s/%s/%s_addons/%%s' % (base_info['project_path'], opts.name, opts.name, opts.name))
         target = os.path.normpath(
-            '%s/%s/addons' % (BASE_INFO['erp_server_data_path'], opts.name))
+            '%s/%s/addons' % (base_info['erp_server_data_path'], opts.name))
         # when we have a folder full of addons, as it is the case with OCA modules
         # they will be downloaded to download_target
         download_target = ''
@@ -854,10 +695,11 @@ def XXupdate_container_info(default_values, opts):
 # =============================================================
 # get server info from site description
 # =============================================================
-def get_remote_server_info(opts, use_name=None):
+def get_remote_server_info(opts, use_name=None, SITES = {}, REMOTE_SERVERS={}):
     """
     get server info from site description
     """
+    xx # sites und remoteserver übergeben
     import socket
     serverDic = {}
     if not use_name:

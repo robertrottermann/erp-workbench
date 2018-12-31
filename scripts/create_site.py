@@ -27,7 +27,7 @@ except ImportError:
 from scripts.bcolors import bcolors
 from scripts.banner import BANNER_HEAD, BANNER_TEXT
 
-from scripts.messages import *
+#from scripts.messages import *
 
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
@@ -129,7 +129,6 @@ def main(opts, parsername, need_names_dic):
     # if yes, flag it to the user. To do the actual update
     # the user has to use the support optin --fix-sites-list
     from config import sites_handler
-    sites_handler.fix_sites_list()
     # ckeck wheter the the sites-list has to be autoloaded
     sites_handler.check_pull()
     did_run_a_command = False
@@ -191,7 +190,7 @@ def main(opts, parsername, need_names_dic):
             # make sure project was added to bash_aliases
             handler.add_aliases()
             # checkout repositories
-            checkout_sa(opts)
+            checkout_sa(opts, handler)
             
         # list_sites
         # ----------
