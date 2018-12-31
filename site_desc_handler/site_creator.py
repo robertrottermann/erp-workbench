@@ -1,7 +1,5 @@
 import os
 import sys
-import shutil
-import subprocess
 from scripts.update_local_db import DBUpdater
 from scripts.bcolors import bcolors
 from scripts.create_handler import InitHandler
@@ -11,7 +9,7 @@ from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
 LOGIN_INFO_TEMPLATE_FILE = '%s/login_info.cfg.in'
 
 class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
-    
+
     def __init__(self, opts, sites):
         super().__init__(opts, sites)
 
@@ -50,14 +48,17 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         if self.site_name:
             existed = self.check_project_exists()
             # construct list of addons read from site
-            open(LOGIN_INFO_FILE_TEMPLATE % self.default_values['inner'], 'w').write(
-                config_info % self.default_values)
+            with  open(LOGIN_INFO_FILE_TEMPLATE % self.default_values['inner'], 'w') as f:
+                f.write(config_info) # % self.default_values)
             # overwrite requrements.txt with values from systes.py
             data = open(REQUIREMENTS_FILE_TEMPLATE %
                         self.default_values['inner'], 'r').read()
             # we want to preserve changes in the requirements.txt
-            data = '\n'.join(list(dict(enumerate([d for d in data.split('\n') if d] +
-                                            self.default_values['pip_modules'].split('\n'))).values()))
+            data = '\n'.join(
+                list(
+                    dict(enumerate(
+                        [d for d in data.split('\n') if d] +
+                        self.default_values['pip_modules'].split('\n'))).values()))
             # MODULES_TO_ADD_LOCALLY are allways added to a local installation
             # these are tools to help testing and such
             s = data.split('\n') + (MODULES_TO_ADD_LOCALLY and MODULES_TO_ADD_LOCALLY or [])
@@ -82,7 +83,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         """
         check if a project exists, if not create it
         """
-        default_values = self.default_values
         existed = True
         # we only create a site, if we have a site_name
         if self.site_name:
@@ -117,7 +117,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             - a virtual environment (done by the calling method)
         """
 
-        default_values = self.default_values
         "ask for project info, create the structure and copy the files"
         outer_path = self.outer_path
         inner_path = self.inner_path
@@ -153,9 +152,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
         elif 1:  # self.erp_version != '9.0':
             FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
-        from pprint import pprint
-        # pprint(FILES_TO_COPY)
-        # odules_update = False # only copy some files so we can rerun dosetup
         self.handle_file_copy_move(
             source, inner_target, FILES_TO_COPY['project'])
         # create directories and readme in the project home

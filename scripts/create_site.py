@@ -26,9 +26,7 @@ except ImportError:
 
 from scripts.bcolors import bcolors
 from scripts.banner import BANNER_HEAD, BANNER_TEXT
-
-#from scripts.messages import *
-
+from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
 try:
