@@ -126,7 +126,7 @@ class PropertiesMixin(object):
     # ----------
     @property
     def docker_db_user(self):
-        return self._db_user
+        return self._docker_db_user
 
     # by default the odoo docker db user's pw is 'odoo'
     _docker_db_user_pw = 'odoo'

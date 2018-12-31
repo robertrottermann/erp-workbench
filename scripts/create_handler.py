@@ -67,7 +67,7 @@ class RPC_Mixin(object):
         """
         dbuser = self.db_user
         dbhost = self.db_host
-        dbpw = self.db_password
+        dbpw = self.db_user_pw
         postgres_port = self.postgres_port
         if not db_name:
             db_name = self.db_name
@@ -168,7 +168,7 @@ class RPC_Mixin(object):
                 rpchost = self.rpc_host
                 rpcport = self.rpc_port
                 rpcuser = self.rpc_user
-                rpcpw = self.rpc_pw
+                rpcpw = self.rpc_user_pw
                 # login
                 if verbose:
                     print('*' * 80)
@@ -186,6 +186,11 @@ class RPC_Mixin(object):
                     try:
                         odoo.login(db_name, rpcuser, rpcpw)
                     except:
+                        if verbose:
+                            print('login failed, will retry with pw admin:')
+                            print('dbname:%s, rpcuser:%s, rpcpw: admin' %
+                                  (db_name, rpcuser))
+                            print('*' * 80)
                         odoo.login(db_name, rpcuser, 'admin')
  
             except odoorpc.error.RPCError:
@@ -300,45 +305,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         if 'drop_site' in vars(opts):
             if opts.drop_site:
                 return
-        #if self.site_name:
-        # construct default values like list of target directories
-        # self.construct_defaults(self.site_name)
-        # self._default_values['current_user'] = self.user
-        # self._default_values['foldernames'] = self.foldernames
-        # construct path to datafolder erp_server_data_path
-        # if self.need_login_info:
-        #     # this will just return when there is no site name
-        #     self._create_login_info(self.login_info)
-        #             # the following three values will be overruled by the docker registry
-        # created using docker_handler.update_container_info
-        # when we deal with a docker instance
-        self._rpc_host = opts.__dict__.get('rpc_host', 'localhost')
-        self._rpc_port = opts.__dict__.get('rpc_port', '8069')
-        self._db_host = opts.__dict__.get('db_host','localhost')
-        # starting with odoo 11 we need to check what python version to use
-        # if self.erp_version:
-        #     try:
-        #         if self.erp_provider == 'flectra':
-        #             self._default_values.update(FLECTRA_VERSIONS[self.erp_version])
-        #         else:
-        #             if self.erp_version in ODOO_VERSIONS.keys():
-        #                 self._default_values.update(ODOO_VERSIONS[self.erp_version])
-        #             else:
-        #                 print (bcolors.FAIL)
-        #                 print ('*' * 80)
-        #                 print ('%s has no %s version' % (self.erp_provider, self.erp_version))
-        #                 print (bcolors.ENDC)
-        #                 raise(KeyError)
-        #     except KeyError:
-        #         print (bcolors.FAIL)
-        #         print ('*' * 80)
-        #         print ('%s has no %s version' % (self.erp_provider, self.erp_version))
-        #         print (bcolors.ENDC)
-        #         if opts.subparser_name == 'support':
-        #             if not opts.edit_site or opts.drop_site:
-        #                 raise
-        #         else:
-        #             raise
                     
 
             

@@ -101,7 +101,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
 
             # get the  odoo main password
             self._erp_admin_pw = kDic.get('odoo_admin_pw', '')
-
+            
             # ----------
             # local
             # ----------
@@ -120,6 +120,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
             self._rpc_user_pw = self.opts.__dict__.get(
                 'rpc_password', db_user_pw)
 
+            self._rpc_port = self.opts.__dict__.get(
+                'rpc_port', '8069')
+
+            self._rpc_host = self.opts.__dict__.get(
+                'rpc_host', 'localhost')
+            
             # ----------
             # docker
             # ----------
@@ -133,7 +139,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             if self.subparser_name == 'docker':
                 docker_rpc_user = self.opts.drpcuser
             if not docker_rpc_user:
-                docker_rpc_user = self.docker_defaults.get('dockerrpcuser', '')
+                docker_rpc_user = self.docker_defaults.get('docker_rpc_user', '')
             self._docker_rpc_user = docker_rpc_user
             docker_rpc_user_pw = ''
             if self.subparser_name == 'docker':
@@ -259,9 +265,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
             self._docker_db_container_name = self.docker_defaults.get('docker_db_container_name', '')
 
             if self.subparser_name == 'docker':
-                self._docker_db_admin = self.opts.docker_db_user or self.docker_defaults.get('docker_db_user', '')
+                self._docker_db_user = self.opts.docker_db_user or self.docker_defaults.get('docker_db_user', '')
             else:
-                self._docker_db_admin = self.docker_defaults.get('docker_db_user', '')
+                self._docker_db_user = self.docker_defaults.get('docker_db_user', '')
 
 
 
