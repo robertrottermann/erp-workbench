@@ -2,14 +2,14 @@
 # to find its data
 
 # Variables that can be used in the values
-# %(BASE_PATH)s will be replaced with the actual folder where erp-worbench is installed
+# %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
 # %(USER_HOME)s the home folder of the logged in user
 
 BASE_DEFAULTS:
   # erp_version:
   # define what erp version should be uses for a new site
   # this only affects the generation of new site descriptions
-  # and can be easily changed in the generated description file.
+  # and can be easily changed in the generated site description
   erp_version: '11'
 
   # erp_minor:
@@ -20,20 +20,18 @@ BASE_DEFAULTS:
 
   # site_editor:
   # define what editor to use when editing site description
-  # this can be any editor like cod, vim, pico ..
   site_editor: 'code'
 
   # sitesinfo_path:
   # Sites are defined in a sites description file
   # There exist local sites, which are not managed using a source
   # controll system (git), and gloabal sites which are managed with 
-  # git and normaly describe sites that eventuall run on a remote server.
-  #
-  # The sitesinfo_path points to a folder, where these site descriptions 
+  # git and normaly describe sites that eventuall run on remote servers.
+  # the sitesinfo_path points to a folder, where these site descriptions 
   # are kept in several subfolders
-  # By default it points to a folder within the erp-workbench folder.
+  # by default it is kept within the erp-workbench folder
+  # %s(BASE_PATH)
   sitesinfo_path: '%(BASE_PATH)s/sites_list/'
-
 
   # repo_mapper:
   # repo_mapper allows to use locical names in a site description
@@ -45,22 +43,19 @@ BASE_DEFAULTS:
   # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
 
   # sitesinfo_url:
-  # sitesinfo_url is the url where the git repository can be found
-  # with which the sites are maintained 
-  sitesinfo_url: 'localhost'
-
-  # sitesinfo_url:
-  # sitesinfo_url is the url where the git repository can be found
-  # where the sites are maintained
-  # it could be something like: 
-  # https://gitlab.redcor.ch/customers/sites_list.git
-  # by default it points to localhost, so no sourcecontroll is provided.
-  sitesinfo_url: 'localhost'
+  # sitesinfo_url is the url where git repositories can be found
+  # in which the sites are maintained 
+  siteinfos:
+    localhost:
+      'localhost'
+  #  redo2oo:
+  #    'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
+  #  cooby:
+  #    'git@gitlab.com:cooby/erp-workbench.git'
 
   # project_path:
-  # path to the local projects
-  # Here a structure for each erp site is created to build and test a erp/odoo servers
-  # using exactly the same setting the live server uses.
+  # path to the projects
+  # Here a structure for each erp site is created to build and run an erp/odoo servers
   project_path: '%(USER_HOME)s/projects'
 
   # erp_server_data_path
@@ -89,12 +84,21 @@ BASE_DEFAULTS:
   # server description file from the sites.yaml file
   db_user: '%(DB_USER)s'
 
-  # db_password:
-  # this is the default password, if it not is defined in the
+  # db_user_pw:
+  # this is the default password, if it is not defined in the
   # server description file from the sites.yaml file
-  db_password: 'admin'
+  db_user_pw: 'admin'
 
   # sites_autopull:
   # should the list of sites be pulled automatically
   # if set to False, you have to do it manually
   sites_autopull: True
+
+  # print_banner:
+  # should the (beautiful) erp-workbench banner be printed?
+  print_banner: True
+
+  # postgres_port:
+  # this is the default password, if it is not defined in the
+  # server description file from the sites.yaml file
+  postgres_port: 5432

@@ -8,6 +8,7 @@ import string
 from importlib import reload
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '.')
 
 try:
@@ -59,14 +60,15 @@ class TestGetDockerData(SitesListKiller):
         self.assertTrue(docker_info==self._use_site_name)
         print(docker_info)
 
-    def test_get_docker_erp_image_version(self):
+    def test_get_docker_password(self):
         # make sure the sites_pw.py provides the following pw for the new site
         self.dHandler.reset_values()
-        self.assertTrue(self.dHandler.docker_rpc_user_pw == 'demo_global$odoo_admin_pw')
+        pw = self.dHandler.docker_rpc_user_pw 
+        self.assertTrue(pw == 'demo_global$odoo_admin_pw', pw)
 
     def test_create_docker_composer_dict(self):
         self.dHandler.create_docker_composer_dict()
 
-    def test_create_docker_composer_file(self):
-        self.dHandler.create_docker_composer_file()
+    # def test_create_docker_composer_file(self):
+    #     self.dHandler.create_docker_composer_file()
         

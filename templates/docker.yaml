@@ -9,23 +9,40 @@ DOCKER_DEFAULTS:
     # docker_hub_name:
     # what is the name of the dockerhub to use
     docker_hub_name: 'robertredcor'
+
     # docker_port:
     # this is the default posrt we assign to a docker container to use
     # it has to be adapted in the site description depending on what
     # server the site is running
     docker_port: 9000
-    # the name of the containe in which all database are created
-    dockerdb_container_name: 'db'
-    # dockerdbuser is used to access the database  in the database container
-    dockerdbuser: 'odoo'
-    # dockerdbpw is the dockerdbuser's password
-    dockerdbpw: 'odoo'
-    # dockerrpcuser is the user with which we want to login to the erp site running in the container
-    dockerrpcuser: 'admin'
-    # dockerrpcuserpw dockerrpcuser's password
+
+    # docker_postgres_port
+    # port at which the db container exports its port
+    docker_postgres_port: 55432
+
+    # docker_db_container_name
+    # the name of the container in which all database are created
+    docker_db_container_name: 'db'
+
+    # docker_db_user is used to access the database  in the database container
+    docker_db_user: 'odoo'
+    
+    # docker_db_user_pw is the dockerdbuser's password
+    docker_db_user_pw: 'odoo'
+    
+    # docker_rpc_user is the user with which we want to login to the erp site running in the container
+    docker_rpc_user: 'admin'
+
+    # docker_rpc_user_pw dockerrpcuser's password
     # this is in most cases NOT 'admin'
     # you can overrule it with -ddbpw
-    dockerrpcuserpw: 'admin'
+    docker_rpc_user_pw: 'admin'
+
+    # erp_image_version
+    # is used when creating a new site description, do determine 
+    # from what image a container for the site-description should be created
+    # IMPORTANT: the version should be the same as the erp_version in config.yaml
+    erp_image_version: 'odoo-project:12.0-latest'
 
     # dumper_image:
     # when dumping a container based erp site site to its backup structure
@@ -40,13 +57,6 @@ DOCKER_DEFAULTS:
     # use_postgres_version
     # is used when creating the db image to define what postgres version to use
     use_postgres_version: '10.0'
-
-    # erp_image_version
-    # is used when creating a new site description, do determine 
-    # from what image a container for the site-description should be created
-    # IMPORTANT: the version should be the same as the erp_version in config.yaml
-    erp_image_version: 'odoo-project:12.0-latest'
-
 
     # docker_local_user_id
     # the user id assigned to the odoo user within the running docker container
@@ -82,4 +92,3 @@ DOCKER_DEFAULTS:
 DOCKER_IMAGE:
     environment:
         ADDONS_PATH: '/odoo/local-src,/odoo/src/addons,/mnt/extra-addons,$ODOO_EXTRA_ADDONS'
-

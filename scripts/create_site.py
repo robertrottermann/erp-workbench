@@ -30,12 +30,12 @@ from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
 try:
-    from config import SITES, SITES_LOCAL
+    from tests.config import SITES, SITES_LOCAL
 except ImportError:
     from config import sites_handler
     sites_handler.check_and_create_sites_repo()
     from config import SITES, SITES_LOCAL
-    
+
 from config import ACT_USER, BASE_PATH, FOLDERNAMES, \
     BASE_INFO, MARKER, LOGIN_INFO_FILE_TEMPLATE, \
     REQUIREMENTS_FILE_TEMPLATE, DOCKER_DEFAULTS

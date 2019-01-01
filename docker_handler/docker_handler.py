@@ -3,7 +3,7 @@
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
 from docker import Client
-from config import BASE_PATH, SITES, BASE_INFO, DOCKER_DEFAULTS, DOCKER_IMAGE, ODOO_VERSIONS, PROJECT_DEFAULTS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
+from config import ODOO_VERSIONS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
 #from config.handlers import InitHandler, DBUpdater
 from scripts.create_handler import InitHandler
 from scripts.update_local_db import DBUpdater
@@ -34,7 +34,7 @@ RUN apt update;
 
 class DockerHandler(InitHandler, DBUpdater):
     master = '' # possible master site from which to copy
-    def __init__(self, opts, sites=SITES, url='unix://var/run/docker.sock', use_tunnel=False):
+    def __init__(self, opts, sites = {}, url='unix://var/run/docker.sock', use_tunnel=False):
         """
         """
         super().__init__(opts, sites)
@@ -200,9 +200,11 @@ class DockerHandler(InitHandler, DBUpdater):
 
         name = self.site_name or container_name
         site = self.site
-        BASE_INFO['docker_command'] = shutil.which('docker')
+        base_info = self.base_info
+        base_info['docker_command'] = shutil.which('docker')
+        info_dic = self.create_docker_composer_dict()
         if name == 'db':
-            self.update_docker_info('db')
+            #self.update_docker_info('db')
             container_name = 'db'
             site = {
                 'docker' : {
@@ -217,112 +219,104 @@ class DockerHandler(InitHandler, DBUpdater):
         else:
             site = self.site
         
-        if not site:
-            print(bcolors.FAIL)
-            print('*' * 80)
-            print('%s is not a known site' % name)
-            print(bcolors.ENDC)
-            return
-            raise ValueError('%s is not a known site' % name)
-        if not container_name:
-            # get info on the docker container to use
-            #'docker' : {
-                #'erp_image_version': 'odoo:9.0',
-                #'container_name'    : 'afbs',
-                #'erp_port'         : '8070',
-            #},        
-            container_name = self.docker_container_name
-        erp_port = self.docker_rpc_port
-        if erp_port == '??':
-            print(DOCKER_INVALID_PORT % (name, name))
-            return()
-        long_polling_port = self.docker_long_polling_port
-        if long_polling_port == '??':
-            print(DOCKER_INVALID_PORT % (name, name))
-            return()
-        #if not long_polling_port:
-        #    long_polling_port = int(erp_port) + 10000
+            if not site:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('%s is not a known site' % name)
+                print(bcolors.ENDC)
+                return
+    
+            if not container_name:
+                # get info on the docker container to use
+                #'docker' : {
+                    #'erp_image_version': 'odoo:9.0',
+                    #'container_name'    : 'afbs',
+                    #'erp_port'         : '8070',
+                #},        
+                container_name = self.docker_container_name
+            erp_port = self.docker_rpc_port
+            if erp_port == '??':
+                print(DOCKER_INVALID_PORT % (name, name))
+                return()
+            long_polling_port = self.docker_long_polling_port
+            if long_polling_port == '??':
+                print(DOCKER_INVALID_PORT % (name, name))
+                return()
+            
+            allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
+            if not delete_container:
+                # make sure we have valid elements
+                for k,v in info_dic.items():
+                    if k == 'erp_image_version':
+                        v = v.split(':')[0] # avoid empty image version with only tag
+                    if not v and k not in allow_empty:
+                        print(bcolors.FAIL)
+                        print('*' * 80)
+                        print('the value for %s is not set but is needed to create a docker container.' % k)
+                        print('*' * 80)
+                        print(bcolors.ENDC)
+                        print(info_dic)
+                        sys.exit()                
+            info_dic['docker_extra_addons'] = self.site_addons_path
+            info_dic['docker_db_container_name'] = self.docker_db_container_name
+            # some of the docker templates have many elements in common, get them
+            from templates.docker_templates import docker_common as DC
+            docker_common = DC % info_dic
+            info_dic['docker_common'] = docker_common  # values for the docker config
+
+            # if we are running as user root, we make sure that the 
+            # folders that are accessed from within odoo belong to the respective 
+            # we do that before we start the container, so it has immediat access
+            if os.geteuid() == 0:
+                # cd to the site folder, preserve old folder
+                act_pwd = os.getcwd()
+                t_folder = os.path.normpath('%s/%s' % (base_info['erp_server_data_path'], name))
+                try:
+                    os.chdir(t_folder)
+                    user_and_group = self.docker_external_user_group_id
+                    cmdlines = [
+                        ['/bin/chown', user_and_group, 'log'],
+                        ['/bin/chown', user_and_group, 'filestore', '-R'],
+                    ]
+                    for c in cmdlines:
+                        os.system(' '.join(c))
+                    #self.run_commands(cmdlines, self.user, pw='')
+                    os.chdir(act_pwd)
+                except OSError:
+                    pass # no such folder
+
+        if not info_dic.get('container_name'):
+            info_dic['container_name'] = container_name
             
         if pull_image:
             image = self.erp_image_version
             if image:
                 self.pull_image(image)
-            return
-        if rename_container:
+        
+        elif rename_container:
             self.stop_container(container_name)
             n = str(datetime.datetime.now()).replace(':', '_').replace('.', '_').replace(' ', '_').replace('-', '_')
             self.rename_container(container_name, '%s.%s' % (container_name, n))
         
-        # the docker registry was created by update_docker_info
-        # if this registry does not contain a description for container_name
-        # we have to create it
-        # info_dic = {
-        #     'erp_port' : erp_port,
-        #     'erp_longpoll' : long_polling_port,
-        #     'site_name' : name,
-        #     'container_name' : container_name,
-        #     'remote_data_path' : self.remote_data_path,
-        #     'erp_image_version' : self.erp_image_version,
-        #     'erp_server_data_path' : self.erp_server_data_path,           
-        # }
-        info_dic = self.create_docker_composer_dict()
-        if not info_dic.get('container_name'):
-            info_dic['container_name'] = container_name
-        info_dic['docker_extra_addons'] = self.site_addons_path
-        info_dic['docker_db_container_name'] = self.docker_db_container_name
-        # some of the docker templates have many elements in common, get them
-        from templates.docker_templates import docker_common as DC
-        docker_common = DC % info_dic
-        info_dic['docker_common'] = docker_common  # values for the docker config
-        if recreate_container:
+        elif recreate_container:
             # make sure the container is stopped
             from templates.docker_templates import docker_delete_template
             self.stop_container(container_name)
             self._create_container(docker_delete_template, info_dic)                    
             
-        # if we are running as user root, we make sure that the 
-        # folders that are accessed from within odoo belong to the respective 
-        # we do that before we start the container, so it has immediat access
-        if os.geteuid() == 0:
-            # cd to the site folder, preserve old folder
-            act_pwd = os.getcwd()
-            t_folder = os.path.normpath('%s/%s' % (BASE_INFO['erp_server_data_path'], name))
-            try:
-                os.chdir(t_folder)
-                user_and_group = self.docker_external_user_group_id
-                cmdlines = [
-                    ['/bin/chown', user_and_group, 'log'],
-                    ['/bin/chown', user_and_group, 'filestore', '-R'],
-                ]
-                for c in cmdlines:
-                    os.system(' '.join(c))
-                #self.run_commands(cmdlines, self.user, pw='')
-                os.chdir(act_pwd)
-            except OSError:
-                pass # no such folder
-        # make sure we have valid elements
-        allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
-        if not delete_container and container_name != 'db':
-            for k,v in info_dic.items():
-                if k == 'erp_image_version':
-                    v = v.split(':')[0] # avoid empty image version with only tag
-                if not v and k not in allow_empty:
-                    print(bcolors.FAIL)
-                    print('*' * 80)
-                    print('the value for %s is not set but is needed to create a docker container.' % k)
-                    print('*' * 80)
-                    print(bcolors.ENDC)
-                    print(info_dic)
-                    sys.exit()                
-        if update_container:
+        elif update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
             from templates.docker_templates import docker_template_update
             self._create_container(docker_template_update, info_dic)
+            
         elif delete_container:
             from templates.docker_templates import docker_delete_template
             # make sure the container is stopped
             self.stop_container(container_name)
+            info_dic['docker_common'] = ''
             self._create_container(docker_delete_template, info_dic)
+            print('container %s deleted' % name) 
+            
         elif recreate_container or rename_container or self.docker_registry \
             and container_name or (container_name == 'db'):
             if container_name != 'db':
@@ -347,8 +341,16 @@ class DockerHandler(InitHandler, DBUpdater):
                     from templates.docker_templates import flectra_docker_template
                 else:
                     from templates.docker_templates import docker_db_template
-                BASE_INFO['postgres_version'] = pg_version
-                docker_template = docker_db_template % BASE_INFO
+                base_info['postgres_version'] = pg_version
+                docker_template = docker_db_template % base_info
+                from templates.docker_templates import logout_template
+                logout_template = logout_template % base_info
+                # just to be sure, we log out of docker, as the db base image is not created by us
+                try:
+                    self.run_commands([logout_template], user=self.user, pw='')
+                except:
+                    pass 
+                # no create the db container
                 try:
                     self.run_commands([docker_template], user=self.user, pw='')
                     print('created container: %s' % name)
@@ -356,9 +358,9 @@ class DockerHandler(InitHandler, DBUpdater):
                     pass # did exist allready ??
             if self.opts.verbose:
                 print(docker_template)
-        else:
-            if self.opts.verbose:
-                print('container %s allready running' % name)
+        #else:
+            #if self.opts.verbose:
+                #print('container %s allready running' % name)
 
     def create_docker_composer_file(self):
         from templates.docker_compose import composer_template
@@ -547,7 +549,7 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         from templates.docker_templates import dumper_docker_template
         template = dumper_docker_template % {'postgres_version' : int(float(self.use_postgres_version))}
-        docker_target_path = '%s/dumper/' % BASE_PATH
+        docker_target_path = '%s/dumper/' % self.sites_home
         with open('%sDockerfile' % docker_target_path, 'w') as f:
             f.write(template)
         try:

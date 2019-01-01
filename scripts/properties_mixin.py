@@ -1,4 +1,4 @@
-from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS
+from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
 
 class PropertiesMixin(object):
     _login_info = {}
@@ -260,21 +260,11 @@ class PropertiesMixin(object):
             return self.docker_defaults.get('docker_hub_name')
         return self._docker_hub_name
 
-    # _docker_hub_user = ''
-    # @property
-    # def docker_hub_user(self):
-    #     return self._docker_hub_user
-
     _docker_external_user_group_id = ''
     @property
     def docker_external_user_group_id(self):
         self._cp
         return self._docker_external_user_group_id
-
-    # _docker_hub_user_pw = ''
-    # @property
-    # def docker_hub_user_pw(self):
-    #     return self._docker_hub_user_pw
 
     _docker_rpc_port = ''
     @property
@@ -287,7 +277,6 @@ class PropertiesMixin(object):
     def docker_long_polling_port(self):
         self._cp
         return self._docker_long_polling_port
-
 
     @_check_parsed.setter
     def set_check_parsed(self, value):
@@ -707,7 +696,8 @@ class PropertiesMixin(object):
     # to the new project and fill with actual values
     @property
     def skeleton_path(self):
-        return '%s/skeleton' % self.sites_home
+        import skeleton
+        return skeleton.__path__[0]
 
     # the project itself is structured in an outer folder
     # where we could place the projects documentation
@@ -719,3 +709,11 @@ class PropertiesMixin(object):
     @property
     def inner_path(self):
         return '%s/%s' % (self.outer_path, self.site_name)
+
+    # -----------------------------------------------------
+    # thit n that
+    # -----------------------------------------------------
+    @property
+    def marker(self):
+        return MARKER
+

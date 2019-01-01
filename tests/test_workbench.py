@@ -7,6 +7,7 @@ from importlib import reload
 from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, '.')
 
 from tests.name_space import MyNamespace
@@ -34,10 +35,8 @@ class TestCreate(unittest.TestCase):
     def test_create_create(self):
         """ run the create -c command 
         """
-        #self.handler.site_names = [list(self.handler.sites.keys())[0]]
-        self.handler.site_name = list(self.handler.sites.keys())[0]
+        #self.handler.site_names = [list(self.handler.sites.keys())[0]]        
         result = self.handler.create_or_update_site()
-        self.assertTrue(result)
 
     def test_create_create_main(self):
         """ run the create -c command 
@@ -186,13 +185,12 @@ class TestCreateDB(unittest.TestCase):
     def test_create_delete_db_container(self):
         result = self.handler.update_docker_info(name='db', required=False, start=False)
         if result:
-            self.handler.check_and_create_container(delete_container=True)
+            self.handler.check_and_create_container(container_name = 'db', delete_container=True)
         result = self.handler.update_docker_info(name='db', required=False, start=False)
         self.assertFalse(result)
-        self.handler.check_and_create_container()
+        self.handler.check_and_create_container(container_name = 'db')
         result = self.handler.update_docker_info(name='db', required=False, start=False)
         self.assertTrue(result)
-
 
 if __name__ == '__main__':
     unittest.main()

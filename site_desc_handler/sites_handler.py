@@ -7,6 +7,8 @@ import logging
 import re
 from pprint import pformat
 import subprocess
+import templates
+
 from subprocess import PIPE
 #from config.config_data.base_info import base_info as BASE_INFO
 from scripts.bcolors import bcolors
@@ -93,7 +95,7 @@ class SitesHandler(SiteDescHandlerMixin):
             ini_p = '%s/__init__.py' % p1
             if not os.path.exists(ini_p):
                 open(ini_p, 'w').write(SITES_LIST_INI)
-            template = open('%s/templates/newsite.py' % self.base_path, 'r').read()
+            template = open('%s/newsite.py' % templates.__path__[0], 'r').read()
             template = template.replace('xx.xx.xx.xx', 'localhost')
             # default values for the demo sites
             defaults = {
@@ -114,7 +116,7 @@ class SitesHandler(SiteDescHandlerMixin):
             }                
             # create global sites
             global_dir = '%s/sites_global' % p1
-            __ini__data = open('%s/templates/sites_list__init__.py' % self.base_path).read()
+            __ini__data = open('%s/sites_list__init__.py' % templates.__path__[0]).read()
             print_message = True
             if not os.path.exists(global_dir):
                 did_change = True
@@ -363,7 +365,7 @@ class SitesHandler(SiteDescHandlerMixin):
             # make sure we really have a site_name, this is sometimes not the case while testing
             if not handler.default_values['site_name']:
                 handler.default_values['site_name'] = handler.site_name
-            with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
+            with open('%s/newsite.py' % templates.__path__[0], 'r') as f:
                 template = f.read() % handler.default_values
             template = template.replace('127.0.0.1', remote_url)
         # make sure do have a site name
@@ -388,7 +390,7 @@ class SitesHandler(SiteDescHandlerMixin):
             # make sure we really have a site_name, this is sometimes not the cae while testing
             if not handler.default_values['site_name']:
                 handler.default_values['site_name'] = handler.site_name
-            with open('%s/templates/newsite.py' % handler.sites_home, 'r') as f:
+            with open('%s/newsite.py' % templates.__path__[0], 'r') as f:
                 template = f.read() % handler.default_values
             template = template.replace('xx.xx.xx.xx', 'localhost')
         return self._add_site('L', template, False, sublist)

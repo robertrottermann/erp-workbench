@@ -92,11 +92,7 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
             # compare file dates
             # check if folder exists:
             if not os.path.exists(os.path.dirname(data_file_path)):
-                print(bcolors.FAIL)
-                print('*' * 80)
-                print('folder %s does not exist' % os.path.dirname(data_file_path))
-                print(bcolors.ENDC)
-                raise ValueError
+                os.makedirs(os.path.dirname(data_file_path))
             if os.path.exists(data_file_path) and  \
                 os.path.getmtime(data_file_path) >= os.path.getmtime(yaml_file_path):
                 # we have to flag, that we did not load this module

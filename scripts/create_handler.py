@@ -1418,6 +1418,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         marker_start = AMARKER % 'start'
         marker_end = AMARKER % 'end'
         exclude_f_path = '%s/.git/info/exclude' % self.sites_home
+        if not os.path.exists(exclude_f_path):
+            # we are propably in a test
+            return
         with open(exclude_f_path, 'r') as f:
             data = f.read()
         data = data.split('\n')
@@ -1425,7 +1428,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # loop over data and add lines to the result untill we see the marker
         # then we loop untill we get the endmarker or the end of the file
         start_found = False
-        end_found = False
         for line in data:
             if not start_found:
                 if line.strip() == marker_start:

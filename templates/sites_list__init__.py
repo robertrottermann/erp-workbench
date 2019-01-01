@@ -11,6 +11,8 @@ for file_name in files:
         n, e = file_name.split('.')
     except:
         continue
+    if not n:
+        continue
     if n != '__init__' and e == 'py':
         fun = importlib.import_module(n)
         SITES_G.update(getattr(fun, n))

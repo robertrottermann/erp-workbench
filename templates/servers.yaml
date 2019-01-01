@@ -19,3 +19,4 @@ REMOTE_SERVERS:
         http_server: nginx
         # filesystem path to the http server config folder
         http_server_fs_path: /etc/nginx
+

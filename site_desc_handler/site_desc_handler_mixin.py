@@ -1,7 +1,6 @@
 import os
 import sys
 from copy import deepcopy
-from config import BASE_PATH, PROJECT_DEFAULTS, BASE_INFO, DOCKER_DEFAULTS, MARKER
 from site_desc_handler.sdesc_utilities import _construct_sa
 import re
 import shutil
@@ -164,13 +163,17 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # get the dbcontainer
             docker_db_container = ''
             if self.subparser_name == 'docker':
-                db_container_list = self.docker_containers(filters = {'name' : self.docker_db_container_name})
+                docker_db_container_name = self.docker_db_container_name
+                db_container_list = self.docker_containers(filters = {'name' : docker_db_container_name})
                 if db_container_list:
                     docker_db_container = db_container_list[0]
                 else:
                     try:
                         # as this is a docker handler instance, try to create it
                         self.check_and_create_container(container_name='db')
+                        db_container_list = self.docker_containers(filters = {'name' : docker_db_container_name})
+                        if db_container_list:
+                            docker_db_container = db_container_list[0]                        
                     except Exception as e:
                         print(bcolors.FAIL)
                         print('*' * 80)
@@ -372,12 +375,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
             if 'erp_version' in vars(self.opts).keys():
                 erp_version = self.opts.erp_version
             else:
-                erp_version = PROJECT_DEFAULTS.get('erp_version', '12.0')
+                erp_version = self.project_defaults.get('erp_version', '12.0')
             self.default_values['erp_version'] = erp_version
 
         self.default_values['base_sites_home'] = '/home/%s/erp_workbench' % self.user
         self.default_values['base_url'] = ('%s.ch' % self.site_name)
-        self.default_values['marker'] = '\n' + MARKER
+        self.default_values['marker'] = '\n' + self.marker
         self.default_values['remote_server'] = self.remote_server_ip
         self.default_values['docker_hub_name'] = self.docker_hub_name
         self.default_values['erp_image_version'] = self.erp_image_version

@@ -2,26 +2,30 @@
 # -*- encoding: utf-8 -*-
 
 import os
-import sys
-import subprocess
-from subprocess import PIPE
 import re
-from pprint import pprint, pformat
-from io import StringIO
+import socket
+import subprocess
+import sys
 from copy import deepcopy
+from io import StringIO
+from pprint import pformat, pprint
+from socket import gaierror
+from subprocess import PIPE
+
+import git
 import psutil
+
+import templates
+from scripts.bcolors import bcolors
 from scripts.messages import *
-from scripts.vcs.git import GitRepo, BUILDOUT_ORIGIN, logging
 from scripts.vcs.base import UpdateError
+from scripts.vcs.git import BUILDOUT_ORIGIN, GitRepo, logging
+
 try:
     from git import Repo
 except ImportError as e:
     print(MODULE_MISSING % 'git')
     sys.exit()
-from scripts.bcolors import bcolors
-import git
-import socket
-from socket import gaierror
 
 """
 create_new_project.py
@@ -168,7 +172,7 @@ def create_server_config(handler):
     # now copy a template openerp-server.conf
     handler.default_values['erp_admin_pw'] = erp_admin_pw
     template = open(
-        '%s/templates/%s' % (handler.default_values['sites_home'], config_name), 'r').read()
+        '%s/%s' % (templates.__path__[0], config_name), 'r').read()
     if os.path.exists('%s/etc/' % p):
         f = open('%s/etc/%s' % (p, config_name), 'w')
         f.write(template % handler.default_values)
