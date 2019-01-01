@@ -1,3 +1,0 @@
-OOIN_SERVER.txt
----------------
-https://pythonhosted.org/Pyro4/intro.html#simple-example
