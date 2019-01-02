@@ -92,3 +92,7 @@ DOCKER_DEFAULTS:
 DOCKER_IMAGE:
     environment:
         ADDONS_PATH: '/odoo/local-src,/odoo/src/addons,/mnt/extra-addons,$ODOO_EXTRA_ADDONS'
+
+    # commands to use within a dockerfile to pull aditional libraries
+    apt_command: apt
+    pip_command: pip

@@ -208,7 +208,3 @@ ODOO_VERSIONS = {
         'python_path' : '/usr/bin/python3',
     },
 }
-
-# commands to use within a dockerfile to pull aditional libraries
-APT_COMMAND = 'apt'
-PIP_COMMAND = 'pip'

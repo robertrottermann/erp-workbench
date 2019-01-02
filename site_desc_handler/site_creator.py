@@ -54,11 +54,12 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             data = open(REQUIREMENTS_FILE_TEMPLATE %
                         self.default_values['inner'], 'r').read()
             # we want to preserve changes in the requirements.txt
+            print('---------------------------------->>', self.default_values['pip_modules'])
             data = '\n'.join(
                 list(
                     dict(enumerate(
                         [d for d in data.split('\n') if d] +
-                        self.default_values['pip_modules'].split('\n'))).values()))
+                        self.default_values['pip_modules'])).values()))
             # MODULES_TO_ADD_LOCALLY are allways added to a local installation
             # these are tools to help testing and such
             s = data.split('\n') + (MODULES_TO_ADD_LOCALLY and MODULES_TO_ADD_LOCALLY or [])

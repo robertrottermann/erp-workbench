@@ -3,7 +3,7 @@
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
 from docker import Client
-from config import ODOO_VERSIONS, APT_COMMAND, PIP_COMMAND #,DOCKER_FILES
+from config import ODOO_VERSIONS
 #from config.handlers import InitHandler, DBUpdater
 from scripts.create_handler import InitHandler
 from scripts.update_local_db import DBUpdater
@@ -487,53 +487,7 @@ class DockerHandler(InitHandler, DBUpdater):
             client.login(username=user, password=pw)
         except:
             raise ValueError('could  not log in to docker hub, user or pw wrong')
-                
-    def collect_extra_libs(self):
-        """
-        collect apt modules and pip libraries needed to construct image with expected capabilities
-        we collect them from the actual site, and all sites named with the option -sites
-        """
-        extra_libs = self.site.get('extra_libs', {})        
-        if self.opts.use_collect_sites:
-            erp_version = self.erp_version
-            more_sites = []
-            for k, v in list(self.sites.items()):
-                if v.get('erp_version') == erp_version:
-                    more_sites.append(k)
-        else:
-            more_sites = (self.opts.use_sites or '').split(',')
-        # libraries we need to install using apt
-        apt_list = extra_libs.get(APT_COMMAND, [])       
-        # libraries we need to install using pip
-        pip_list = extra_libs.get(PIP_COMMAND, [])  
-        for addon in self.site.get('addons', []):
-            pip_list += addon.get('pip_list', [])
-            apt_list += addon.get('apt_list', [])
-        for s in more_sites:
-            if not s:
-                continue
-            site = self.sites.get(s)
-            if not site:
-                print((SITE_NOT_EXISTING % s))
-                continue
-            apt_list += site.get('extra_libs', {}).get(APT_COMMAND, [])
-            pip_list += site.get('extra_libs', {}).get(PIP_COMMAND, [])
-            for addon in self.site.get('addons', []):
-                pip_list += addon.get('pip_list', [])
-                apt_list += addon.get('apt_list', [])
-            
-        if apt_list:
-            apt_list = list(set(apt_list))
-        if pip_list:
-            pip_list = list(set(pip_list))
-        if self.opts.verbose:
-            print(bcolors.WARNING)
-            print('*' * 80)
-            print('apt_list:%s' % apt_list)
-            print('pip_list:%s' % pip_list)
-            print(bcolors.ENDC)
-        return apt_list, pip_list
-    
+                    
     def _clean_run_block(self, block):
         # make sure run_block is well formed
         block = block.strip()
@@ -668,14 +622,12 @@ class DockerHandler(InitHandler, DBUpdater):
         if not os.path.exists(docker_target_path):
             os.makedirs(docker_target_path, exist_ok=True)
         
-        # there are some files we can copy unaltered
-        #for fname in DOCKER_FILES[erp_version]:
-            #shutil.copy('%s%s' % (docker_source_path, fname), docker_target_path)
-        # construct dockerfile from template
-        apt_list, pip_list = self.collect_extra_libs()
+        # get the pip and apt libraries to include in the image
+        apt_list = self.site_apt_modules
+        pip_list = self.site_pip_modules
         
         # collect environment variables from the config/docker.yaml file
-        image_envars = DOCKER_IMAGE.get('environment', {})
+        image_envars = self.docker_image.get('environment', {})
         en_vars = ''
         if image_envars:
             envar_line = 'ENV  %s=%s\n'
@@ -843,7 +795,7 @@ class DockerHandler(InitHandler, DBUpdater):
         self.check_and_create_container()
         get_remote_server_info(self.opts, self.sites)
         # we have to decide, whether this is a local or remote
-        dumper_image = BASE_INFO.get('docker_dumper_image')
+        dumper_image = self.docker_defaults.get('docker_dumper_image')
         if not dumper_image:
             print(bcolors.FAIL + \
                   'the %s image is not available. please create it first. ' \

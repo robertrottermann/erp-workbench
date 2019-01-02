@@ -1,4 +1,4 @@
-from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
+from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
 
 class PropertiesMixin(object):
     _login_info = {}
@@ -44,6 +44,10 @@ class PropertiesMixin(object):
     @property
     def docker_defaults(self):
         return DOCKER_DEFAULTS
+
+    @property
+    def docker_image(self):
+        return DOCKER_IMAGE
 
     @property
     def foldernames(self):
@@ -665,15 +669,6 @@ class PropertiesMixin(object):
         self._cp
         return '%s/%s' % (self.erp_server_data_path, self.site_name)
       
-    _site_addons_path = ''
-    @property  
-    def site_addons_path(self):
-        self._cp
-        if not self._site_addons_path and self.site_name:
-            # it will set at __init__ when ther migth be no site_name known yet
-            self._site_addons_path = self.do_collect_addon_paths()
-        return self._site_addons_path
-        
     @property
     def use_postgres_version(self):
         return self.docker_defaults.get('use_postgres_version')
@@ -711,9 +706,51 @@ class PropertiesMixin(object):
         return '%s/%s' % (self.outer_path, self.site_name)
 
     # -----------------------------------------------------
+    # adoon modules
+    # -----------------------------------------------------
+
+    _site_addons_path = ''
+
+    @property
+    def site_addons_path(self):
+        self._cp
+        if not self._site_addons_path and self.site_name:
+            # it will set at __init__ when ther migth be no site_name known yet
+            self._site_addons_path = self.do_collect_addon_paths()
+        return self._site_addons_path
+
+    _site_addons = []
+    @property
+    def site_addons(self):
+        return self._site_addons
+
+    _site_pip_modules = []
+    @property
+    def site_pip_modules(self):
+        return self._site_pip_modules
+
+    _site_apt_modules = []
+    @property
+    def site_apt_modules(self):
+        return self._site_apt_modules
+
+    _site_skip_list = []
+    @property
+    def site_skip_list(self):
+        return self._site_skip_list
+
+
+    # -----------------------------------------------------
     # thit n that
     # -----------------------------------------------------
     @property
     def marker(self):
         return MARKER
 
+    @property
+    def apt_command(self):
+        return self.docker_image.get('apt_command', 'apt')
+
+    @property
+    def pip_command(self):
+        return self.docker_image.get('pip_command', 'pip')

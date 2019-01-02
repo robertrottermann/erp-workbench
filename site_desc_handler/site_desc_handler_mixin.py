@@ -272,7 +272,93 @@ class SiteDescHandlerMixin(PropertiesMixin):
             else:
                 self._docker_db_user = self.docker_defaults.get('docker_db_user', '')
 
+    def collect_extra_libs(self):
+        """
+        collect apt modules and pip libraries needed to construct image with expected capabilities
+        we collect them from the actual site, and all sites named with the option -sites
+        """
+        extra_libs = self.site.get('extra_libs', {})
+        if self.opts.use_collect_sites:
+            erp_version = self.erp_version
+            more_sites = []
+            for k, v in list(self.sites.items()):
+                if v.get('erp_version') == erp_version:
+                    more_sites.append(k)
+        else:
+            more_sites = (self.opts.use_sites or '').split(',')
+        # libraries we need to install using apt
+        apt_list = extra_libs.get(self.apt_command, [])
+        # libraries we need to install using pip
+        pip_list = extra_libs.get(self.pip_command, [])
+        for addon in self.site.get('addons', []):
+            pip_list += addon.get('pip_list', [])
+            apt_list += addon.get('apt_list', [])
+        for s in more_sites:
+            if not s:
+                continue
+            site = self.sites.get(s)
+            if not site:
+                print((SITE_NOT_EXISTING % s))
+                continue
+            apt_list += site.get('extra_libs', {}).get(self.apt_command, [])
+            pip_list += site.get('extra_libs', {}).get(self.pip_command, [])
+            for addon in self.site.get('addons', []):
+                pip_list += addon.get('pip_list', [])
+                apt_list += addon.get('apt_list', [])
 
+        if apt_list:
+            apt_list = list(set(apt_list))
+        if pip_list:
+            pip_list = list(set(pip_list))
+        if self.opts.verbose:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('apt_list:%s' % apt_list)
+            print('pip_list:%s' % pip_list)
+            print(bcolors.ENDC)
+        return apt_list, pip_list
+
+
+    def handle_addons(self):
+        """read the list of addons from the site description
+        """
+        site_addons = self.site.get('addons', [])
+        _construct_sa(
+            self.site_name, deepcopy(site_addons), skip_list)
+        
+        self._site_addons = site_addons
+        
+
+    def handle_pip_modules(self):
+        """read the list of pip modules from the site description
+        """
+        _, pip_modules = self.collect_extra_libs()
+        #pip_modules = self.site.get('extra_libs', {}).get('pip', [])
+        # every add on module can have its own pip module that must be used
+        for addon in self._site_addons:
+            pip_modules += addon.get('pip_list', [])
+        pm = '\n'
+        if pip_modules:
+            pip_modules = list(set(pip_modules))  # make them unique
+            for m in pip_modules:
+                pm += '%s\n' % m
+        self._site_pip_modules = pm
+
+    def handle_apt_modules(self):
+        """read the list of apt libraries to instll in the base image from the site description
+        """
+        apt_modules, _ = self.collect_extra_libs()
+        # apt_modules = self.site.get('extra_libs', {}).get('apt', [])
+        # every add on module can have its own pip module that must be used
+        for addon in self._site_addons:
+            apt_modules += addon.get('apt_list', [])
+        self._site_apt_modules = apt_modules
+
+    def handle_skip_list(self):
+        """read the list of addons from the site description
+        """
+        skip_list = self.site.get('skip', {}).get('addons', [])
+        self._site_skip_list = skip_list
 
     def prepare_properties(self, running_site):
         """collect information from yaml files and the site description
@@ -283,7 +369,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.set_passwords(running_site)
         # construct the addons path
         self._site_addons_path = collect_addon_paths(self)
-
 
     # ----------------------------------
     # construct_defaults
@@ -296,8 +381,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
     # class variables 
     def construct_defaults(self):
         """
-        construct defaultvalues for a site
-        @site_name        : name of the site
+        construct default values for a site
+        these values are used to replace the placeholders
+        within templates with actual values
         """
         # construct a dictonary with default values
         default_values = self._default_values
@@ -337,30 +423,13 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # if we are using docker, the addon path is very different
         default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
         default_values['skeleton'] = self.skeleton_path
-        # add modules that must be installed using pip
-        print(bcolors.OKBLUE)
-        print('*' * 80)
-        print('collecting of addons, piplist usw must be refactored into own methods')
-        print(bcolors.ENDC)
-        _s = self.site
-        site_addons = _s.get('addons', [])
-        pip_modules = _s.get('extra_libs', {}).get('pip', [])
-        skip_list = _s.get('skip', {}).get('addons', [])
-        # every add on module can have its own pip module that must be used
-        for addon in _s.get('addons', []):
-            pip_modules += addon.get('pip_list', [])
-        pm = '\n'
-        if pip_modules:
-            pip_modules = list(set(pip_modules)) # make them uniqu
-            for m in pip_modules:
-                pm += '%s\n' % m
-        default_values['pip_modules'] = pm
-        # the site addons will only contain paths to download
-        # if from one of the downloaded addon folders more than one addon should be installed ??????
-        default_values['site_addons'] = _construct_sa(
-            self.site_name, deepcopy(site_addons), skip_list)
 
-        default_values['skip_list'] = skip_list
+        # modules we have to deal with in a special way
+        default_values['site_addons'] = self.site_addons
+        default_values['skip_list'] = self.site_skip_list
+        default_values['pip_modules'] = self.site_pip_modules
+        default_values['apt_modules'] = self.site_apt_modules
+        default_values['skip_list'] = self.site_skip_list
 
         # make sure that all placeholders are replaced
         m = re.compile(r'.*%\(.+\)s')
