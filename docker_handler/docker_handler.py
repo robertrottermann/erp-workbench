@@ -413,8 +413,6 @@ class DockerHandler(InitHandler, DBUpdater):
             'server_wide_modules' : self.docker_server_wide_modules,
             # elements to contruct volum paths
             'remote_data_path' : self.remote_data_path,
-            'erp_image_version' : self.erp_image_version,
-            'erp_server_data_path' : self.erp_server_data_path,
             'logrotate' : self.docker_logrotate,
             'syslog' : self.docker_syslog,
         }

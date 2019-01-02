@@ -66,8 +66,9 @@ class RemoteHandler(InitHandler):
         #template = template % d
     
         print(template)
-        apa = '%s/sites-available/%s.conf' % (APACHE_PATH, site_name )
-        ape = '%s/sites-enabled/%s.conf' % (APACHE_PATH, site_name )
+        apa = '%s/sites-available/%s.conf' % (
+            self.http_server_fs_path, site_name)
+        ape = '%s/sites-enabled/%s.conf' % (self.http_server_fs_path, site_name )
         try:
             open(apa, 'w').write(template)
             if os.path.exists(ape):

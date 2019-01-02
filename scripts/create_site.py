@@ -12,12 +12,7 @@ if not os.environ.get('VIRTUAL_ENV') and not os.environ.get('WINGDB_ACTIVE') and
     print('workon workbench')
     sys.exit()
 from argparse import RawTextHelpFormatter, ArgumentParser
-import readline, glob
-import subprocess
-#import xml.dom.minidom
-import re
 import argparse
-import argcomplete
 
 try:
     from scripts.bcolors import bcolors
@@ -30,15 +25,14 @@ from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
 try:
-    from tests.config import SITES, SITES_LOCAL
+    from tests.config import SITES
 except ImportError:
     from config import sites_handler
     sites_handler.check_and_create_sites_repo()
-    from config import SITES, SITES_LOCAL
+    from config import SITES
 
-from config import ACT_USER, BASE_PATH, FOLDERNAMES, \
-    BASE_INFO, MARKER, LOGIN_INFO_FILE_TEMPLATE, \
-    REQUIREMENTS_FILE_TEMPLATE, DOCKER_DEFAULTS
+from config import BASE_INFO
+    
 from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.project_info import PROJECT_DEFAULTS
 

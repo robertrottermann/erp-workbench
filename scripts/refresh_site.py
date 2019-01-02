@@ -24,7 +24,7 @@ DATA_HOME = BASE_INFO['erp_server_data_path']
 
 
 # bin/c docker -duo all  afbstest -skip afbs_survey,partner_firstname,mapper,afbs_workgroups
- 
+ xxx
 def main(opts, site_name):
     site = SITES.get(site_name)
     dev = site.get('develop', {}).get('addons', ['all'])

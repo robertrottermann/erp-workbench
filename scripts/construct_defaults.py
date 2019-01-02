@@ -26,7 +26,7 @@ def read_yaml_file(path, vals={}):
         try:
             line % vals
             raw_yaml_data_stripped.append(line)
-        except Exception as e:
+        except Exception:
             print(bcolors.FAIL)
             print('*' * 80)
             print('file %s' % path)

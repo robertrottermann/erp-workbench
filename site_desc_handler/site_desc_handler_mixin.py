@@ -230,7 +230,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             self._docker_base_image = docker.get('base_image', 'camptocamp/odoo-project:%s-latest' % self.erp_version)
             erp_image_version = docker.get('erp_image_version', docker.get('odoo_image_version'))
             if not erp_image_version:
-                erp_image_version = 'no-erp_image_version-defined'
+                erp_image_version = self.docker_defaults.get('erp_image_version', 'no-erp_image_version-defined')
             self._docker_image_version = erp_image_version
             self._docker_container_name = docker.get('container_name', self.site_name)
             self._docker_rpc_port = docker.get(

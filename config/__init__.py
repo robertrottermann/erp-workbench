@@ -4,26 +4,20 @@ import sys
 import getpass
 from scripts.bcolors import bcolors
 
-"""
-rename files config/localdata.py -> confid/local_data/servers_info.py
-    GLOBALDEFAULTS --> docker_info.DOCKER_DEFAULTS
-
-"""
-
 # ACT_USER is the actualy logged in user
 ACT_USER = getpass.getuser()
 # BASE_PATH is the home directory of erp_workbench
-BASE_PATH  = os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
+BASE_PATH = os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
 SITES_HOME = BASE_PATH #os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
 # migrate folder will be used when migrating to a new odoo version
 MIGRATE_FOLDER = '%s/upgrade/' % BASE_PATH
 BASE_INFO = {}
 #DB_USER = ACT_USER
 DB_PASSWORD = 'admin'
-SITES, SITES_LOCAL = {},{}
+SITES, SITES_LOCAL = {}, {}
 MARKER = ''
 # what folders do we need to create in odoo_sites for a new site
-FOLDERNAMES = ['addons','dump','etc','filestore', 'log', 'ssl', 'start-entrypoint.d', 'presets']
+FOLDERNAMES = ['addons', 'dump', 'etc', 'filestore', 'log', 'ssl', 'start-entrypoint.d', 'presets']
 
 # first thing we do, is make sure there exists all *.yaml files
 # if it does not exist, we copy it from ??.yaml.in
@@ -32,9 +26,9 @@ data_path = os.path.normpath('%s/config_data' % BASE_PATH)
 user_home = os.path.expanduser('~')
 yaml_dic = {}
 for y_info in  (
-        ('config', 'base_info.py'), 
-        ('servers', 'servers_info.py'), 
-        ('docker', 'docker_info.py'), 
+        ('config', 'base_info.py'),
+        ('servers', 'servers_info.py'),
+        ('docker', 'docker_info.py'),
         ('project', 'project_info.py')
     ):
     y_name, file_name = y_info
@@ -46,15 +40,15 @@ for y_info in  (
     yaml_dic[y_name] = (
         config_yaml,
         '%s/config/config_data/%s' % (BASE_PATH, file_name),
-        '%s/templates/%s.yaml' % (BASE_PATH, y_name), 
+        '%s/templates/%s.yaml' % (BASE_PATH, y_name),
     )
 
-# the base info we need to access the various parts of erp-workbench 
+# the base info we need to access the various parts of erp-workbench
 # it is in the config.yaml file in the erp-workbench config folder
 from scripts.construct_defaults import check_and_update_base_defaults
 construct_result = {}
 vals = {
-    'USER_HOME' : user_home, 
+    'USER_HOME' : user_home,
     'BASE_PATH' : BASE_PATH,
     'ACT_USER'  : ACT_USER,
     'DB_USER'   : ACT_USER,
@@ -102,7 +96,7 @@ if must_reload and construct_result[yaml_dic['servers'][0]]:
     REMOTE_SERVERS = construct_result[yaml_dic['servers'][0]]['REMOTE_SERVERS']
 else:
     from config.config_data.servers_info import REMOTE_SERVERS
-    
+
 from site_desc_handler.sdesc_utilities import AttrDict
 BASE_INFO = AttrDict(BASE_INFO)
 DOCKER_DEFAULTS = AttrDict(DOCKER_DEFAULTS)
@@ -146,7 +140,7 @@ except:
     version_info = None
 
 
-# need name and target 
+# need name and target
 NEED_TARGET = [
     'copy_admin_pw',
 ]
@@ -157,19 +151,19 @@ NO_NEED_SERVER_IP = [
 ]
 FLECTRA_VERSIONS = {
     '1.0' : {
-        'python_ver' : 'python3', 
+        'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
         'branch' : '1.0',
         'tag' : 'v1.0.0',
     },
     '1.1.0' : {
-        'python_ver' : 'python3', 
+        'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
         'branch' : '1.0',
         'tag' : 'v1.1.0',
     },
     '1.2.0' : {
-        'python_ver' : 'python3', 
+        'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
         'branch' : '1.0',
         'tag' : 'v1.2.0',
