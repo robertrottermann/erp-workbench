@@ -54,7 +54,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             data = open(REQUIREMENTS_FILE_TEMPLATE %
                         self.default_values['inner'], 'r').read()
             # we want to preserve changes in the requirements.txt
-            print('---------------------------------->>', self.default_values['pip_modules'])
             data = '\n'.join(
                 list(
                     dict(enumerate(

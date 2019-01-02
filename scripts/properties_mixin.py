@@ -652,8 +652,11 @@ class PropertiesMixin(object):
 
     # site_name is the name of the site we are acting on
     # its value has been passed as a command line option when executing a wp command
+    site_names = []
     @property
     def site_name(self):
+        return self.site_names and self.site_names[0] or ''
+        # what for wa that following ???
         if self.sites:
             return self.site_names and self.site_names[0] or ''
         return ''

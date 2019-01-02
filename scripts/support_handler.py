@@ -113,6 +113,10 @@ class SupportHandler(InitHandler):
         site_name, subsite_name = (opts.name.split(':') + [''])[:2]
         # make sure all other processes pick the rigth name
         self.site_names = [site_name]
+        # when testing, we not allways call the main module, so just make sure
+        # we have the site_name set
+        if not self.site_name and self.site_names:
+            self.site_name = self.site_names[0]
         if len(siteinfo_names) == 1:
             # if we have one subsite, use it
             subsite_name = siteinfo_names[0]
@@ -185,7 +189,10 @@ class SupportHandler(InitHandler):
             pvals = {} # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
             if 1: #preset_values:
-                sites_handler.reset_values() # force to reread the vlues, they were read when no site_name was yet known
+                if not sites_handler.site_name and self.opts.name:
+                    # this can happen while testing ..
+                    sites_handler.site_name = self.opts.name.split(':')[0]                
+                sites_handler.reset_values() # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
                 result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=subsite_name)#, preset_values=preset_values)
                 if result:

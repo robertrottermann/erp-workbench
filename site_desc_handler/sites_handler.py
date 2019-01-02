@@ -368,7 +368,7 @@ class SitesHandler(SiteDescHandlerMixin):
             with open('%s/newsite.py' % templates.__path__[0], 'r') as f:
                 template = f.read() % handler.default_values
             template = template.replace('127.0.0.1', remote_url)
-        # make sure do have a site name
+        # make sure we have a site name
         if not handler.site_name:
             print(bcolors.FAIL)
             print('*' * 80)
@@ -397,6 +397,9 @@ class SitesHandler(SiteDescHandlerMixin):
 
     def _add_site(self, where, template, no_outer, sublist):
         site_name = self.handler.site_name
+        if not site_name:
+            print("trying to create a site without nome")
+            return
         if self.handler.sites.get(site_name):
             print("site %s allready defined" % site_name)
             return
