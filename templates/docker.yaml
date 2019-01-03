@@ -9,21 +9,20 @@ DOCKER_DEFAULTS:
     # docker_hub_name:
     # what is the name of the dockerhub to use
     docker_hub_name: 'robertredcor'
-
+    
     # docker_port:
     # this is the default posrt we assign to a docker container to use
     # it has to be adapted in the site description depending on what
     # server the site is running
     docker_port: 9000
-
+    
     # docker_postgres_port
     # port at which the db container exports its port
     docker_postgres_port: 55432
 
-    # docker_db_container_name
-    # the name of the container in which all database are created
+    # the name of the containe in which all database are created
     docker_db_container_name: 'db'
-
+    
     # docker_db_user is used to access the database  in the database container
     docker_db_user: 'odoo'
     
@@ -37,13 +36,7 @@ DOCKER_DEFAULTS:
     # this is in most cases NOT 'admin'
     # you can overrule it with -ddbpw
     docker_rpc_user_pw: 'admin'
-
-    # erp_image_version
-    # is used when creating a new site description, do determine 
-    # from what image a container for the site-description should be created
-    # IMPORTANT: the version should be the same as the erp_version in config.yaml
-    erp_image_version: 'odoo-project:12.0-latest'
-
+    
     # dumper_image:
     # when dumping a container based erp site site to its backup structure
     # a docker container is used that has access to databse container
@@ -58,6 +51,13 @@ DOCKER_DEFAULTS:
     # is used when creating the db image to define what postgres version to use
     use_postgres_version: '10.0'
 
+    # erp_image_version
+    # is used when creating a new site description, do determine 
+    # from what image a container for the site-description should be created
+    # IMPORTANT: the version should be the same as the erp_version in config.yaml
+    erp_image_version: 'odoo-project:12.0-latest'
+
+
     # docker_local_user_id
     # the user id assigned to the odoo user within the running docker container
     # normally just leave it at its default
@@ -65,7 +65,8 @@ DOCKER_DEFAULTS:
 
     # values to be added to the config file
     # docker_addons_base_path will allways be prepended to the addons_path
-    docker_addons_base_path: /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,$DOCKER_EXTRA_ADDONS
+    # it could contain also $DOCKER_EXTRA_ADDONS which would be expanded
+    docker_addons_base_path: /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,
     docker_logrotate': True
     docker_syslog':  False
     docker_db_sslmode: 'prefer'
@@ -92,7 +93,7 @@ DOCKER_DEFAULTS:
 # ----------------------------
 DOCKER_IMAGE:
     environment:
-        ADDONS_PATH: '/odoo/local-src,/odoo/src/addons,/mnt/extra-addons,$DOCKER_EXTRA_ADDONS'
+        DUMMY: for nothing, just a sample
 
     # commands to use within a dockerfile to pull aditional libraries
     apt_command: apt

@@ -244,7 +244,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 return()
             
             allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
-            if not delete_container:
+            if not delete_container and container_name != 'db':
                 # make sure we have valid elements
                 for k,v in info_dic.items():
                     if k == 'erp_image_version':
@@ -349,10 +349,10 @@ class DockerHandler(InitHandler, DBUpdater):
                     self.run_commands([logout_template], user=self.user, pw='')
                 except:
                     pass 
-                # no create the db container
+                # now create the db container
                 try:
                     self.run_commands([docker_template], user=self.user, pw='')
-                    print('created container: %s' % name)
+                    print('created database container')
                 except:
                     pass # did exist allready ??
             if self.opts.verbose:
