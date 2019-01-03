@@ -170,10 +170,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 else:
                     try:
                         # as this is a docker handler instance, try to create it
-                        self.check_and_create_container(container_name='db')
-                        db_container_list = self.docker_containers(filters = {'name' : docker_db_container_name})
-                        if db_container_list:
-                            docker_db_container = db_container_list[0]                        
+                        # but not if we are executing the command -dcdb to create a db container
+                        if not self.opts.docker_create_db_container:
+                            self.check_and_create_container(container_name='db')
+                            db_container_list = self.docker_containers(filters = {'name' : docker_db_container_name})
+                            if db_container_list:
+                                docker_db_container = db_container_list[0]                        
                     except Exception as e:
                         print(bcolors.FAIL)
                         print('*' * 80)
@@ -419,7 +421,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['db_name'] = self.site_name
         default_values['outer'] = self.outer_path
         default_values['inner'] = self.inner_path
-        default_values['addons_path'] = self.do_collect_addon_paths()
+        default_values['addons_path'] = self.site_addons_path
         # if we are using docker, the addon path is very different
         default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
         default_values['skeleton'] = self.skeleton_path

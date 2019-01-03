@@ -66,7 +66,26 @@ Caveats
 -------
 
 When for some reason a container was created but not started up properly, chances are that the containers database was only created partially.
-Such a partial database **MUST** be deleted for the container to start up properly.
+Such a partial database **MUST** be deleted for the container to start up properly. The database must be deleted in the postgres db server 
+running in the db container. This you can do by executing:
+
+::
+    
+    # stop container XXX (where XXX is the no performing container)
+    docker stop XXX
+
+    # to open a bash shell in the db container:
+    docker exec -it db bash
+
+    # become postgres superuser
+    su postgres
+
+    # delete database XXX
+    dropdb XXX
+
+    # exit twice
+    exit
+    exit
 
 Troubleshooting
 ---------------

@@ -133,7 +133,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if name and self.sites.get(name):
             #erp_provider  = self.erp_provider
             if not self.docker_container_name:
-                print('the site description for %s has no docker description or no container_name' % self.site_name)
+                #print('the site description for %s has no docker description or no container_name' % self.site_name)
                 return
             if self.subparser_name == 'docker':
                 if not self.opts.docker_build_image:
@@ -244,7 +244,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 return()
             
             allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
-            if not delete_container:
+            if not delete_container and container_name != 'db':
                 # make sure we have valid elements
                 for k,v in info_dic.items():
                     if k == 'erp_image_version':
@@ -255,7 +255,6 @@ class DockerHandler(InitHandler, DBUpdater):
                         print('the value for %s is not set but is needed to create a docker container.' % k)
                         print('*' * 80)
                         print(bcolors.ENDC)
-                        print(info_dic)
                         sys.exit()                
             info_dic['docker_extra_addons'] = self.site_addons_path
             info_dic['docker_db_container_name'] = self.docker_db_container_name
@@ -350,10 +349,10 @@ class DockerHandler(InitHandler, DBUpdater):
                     self.run_commands([logout_template], user=self.user, pw='')
                 except:
                     pass 
-                # no create the db container
+                # now create the db container
                 try:
                     self.run_commands([docker_template], user=self.user, pw='')
-                    print('created container: %s' % name)
+                    print('created database container')
                 except:
                     pass # did exist allready ??
             if self.opts.verbose:
@@ -377,7 +376,8 @@ class DockerHandler(InitHandler, DBUpdater):
             dict -- dictionary with needed values
         """
         
-        composer_dict = {    
+        composer_dict = {
+            'addons_path' : '%s%s' % (self.docker_defaults.get('docker_addons_base_path'), self.site_addons_path),
             'erp_server_data_path' : self.erp_server_data_path,
             'site_name' : self.site_name,
             'container_name': self.docker_container_name,
