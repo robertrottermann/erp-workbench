@@ -222,9 +222,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
             docker_hub = running_site.get('docker_hub', {}).get('docker_hub', {})
             docker = running_site.get('docker', {})
             # docker hub
-            if docker_hub.get('user', ''):
-                self._docker_hub_name = docker_hub.get('user', '')
-            self._docker_hub_pw = docker_hub.get('docker_hub_pw')
+            self._docker_hub_name = docker_hub.get(
+                'user', self.docker_defaults.get('docker_hub_name', ''))
+            self._docker_hub_pw = docker_hub.get('docker_hub_pw', '' )
             
             # docker
             self._docker_base_image = docker.get('base_image', 'camptocamp/odoo-project:%s-latest' % self.erp_version)

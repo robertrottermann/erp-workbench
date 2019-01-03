@@ -264,6 +264,12 @@ class PropertiesMixin(object):
             return self.docker_defaults.get('docker_hub_name')
         return self._docker_hub_name
 
+    _docker_hub_name_pw = ''
+    @property
+    def docker_hub_name_pw(self):
+        self._cp
+        return self._docker_hub_name_pw
+
     _docker_external_user_group_id = ''
     @property
     def docker_external_user_group_id(self):
