@@ -20,7 +20,7 @@ BASE_DEFAULTS:
 
   # site_editor:
   # define what editor to use when editing site description
-  site_editor: 'code'
+  site_editor: 'pico'
 
   # sitesinfo_path:
   # Sites are defined in a sites description file

@@ -133,7 +133,7 @@ class DockerHandler(InitHandler, DBUpdater):
         if name and self.sites.get(name):
             #erp_provider  = self.erp_provider
             if not self.docker_container_name:
-                print('the site description for %s has no docker description or no container_name' % self.site_name)
+                #print('the site description for %s has no docker description or no container_name' % self.site_name)
                 return
             if self.subparser_name == 'docker':
                 if not self.opts.docker_build_image:
