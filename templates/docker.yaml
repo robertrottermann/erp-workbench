@@ -64,10 +64,11 @@ DOCKER_DEFAULTS:
     docker_local_user_id: 999
 
     # values to be added to the config file
+    # docker_addons_base_path will allways be prepended to the addons_path
+    docker_addons_base_path: /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,$DOCKER_EXTRA_ADDONS
     docker_logrotate': True
     docker_syslog':  False
     docker_db_sslmode: 'prefer'
-    #docker_dbfilter: self.dbfilter
     docker_list_db: False
     docker_db_maxconn: 64
     docker_limit_memory_soft: 2147483648

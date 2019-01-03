@@ -255,7 +255,6 @@ class DockerHandler(InitHandler, DBUpdater):
                         print('the value for %s is not set but is needed to create a docker container.' % k)
                         print('*' * 80)
                         print(bcolors.ENDC)
-                        print(info_dic)
                         sys.exit()                
             info_dic['docker_extra_addons'] = self.site_addons_path
             info_dic['docker_db_container_name'] = self.docker_db_container_name
@@ -377,7 +376,8 @@ class DockerHandler(InitHandler, DBUpdater):
             dict -- dictionary with needed values
         """
         
-        composer_dict = {    
+        composer_dict = {
+            'addons_path' : '%s%s' % (self.docker_defaults.get('docker_addons_base_path'), self.site_addons_path),
             'erp_server_data_path' : self.erp_server_data_path,
             'site_name' : self.site_name,
             'container_name': self.docker_container_name,

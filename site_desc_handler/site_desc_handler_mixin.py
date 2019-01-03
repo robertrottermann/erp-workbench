@@ -419,7 +419,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['db_name'] = self.site_name
         default_values['outer'] = self.outer_path
         default_values['inner'] = self.inner_path
-        default_values['addons_path'] = self.do_collect_addon_paths()
+        default_values['addons_path'] = self.site_addons_path
         # if we are using docker, the addon path is very different
         default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
         default_values['skeleton'] = self.skeleton_path
