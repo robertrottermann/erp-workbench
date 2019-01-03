@@ -20,7 +20,7 @@ server {
   access_log    /var/log/nginx/%(site_name)s.access.log combined;
   error_log     /var/log/nginx/%(site_name)s.error.log;
   location / {
-    proxy_pass http://odoo;
+    proxy_pass http://odoo_%(site_name)s;
   }
 }
 
