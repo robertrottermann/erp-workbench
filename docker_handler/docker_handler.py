@@ -595,11 +595,6 @@ class DockerHandler(InitHandler, DBUpdater):
         if not hub_name:
             print(DOCKER_IMAGE_CREATE_MISING_HUB_INFO % self.site_name)
             return
-        print(bcolors.WARNING)
-        print('*' * 80)
-        print(bcolors.FAIL, '-' * 80)
-        print("please adapt build_image to use the new properties mixin")
-        print(bcolors.ENDC)
         dockerhub_user = self.site.get('docker_hub', {}).get(hub_name, {}).get('user')
         dockerhub_user_pw = self.site.get('docker_hub', {}).get(hub_name, {}).get('docker_hub_pw')
         if not dockerhub_user or not dockerhub_user_pw:
