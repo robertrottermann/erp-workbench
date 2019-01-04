@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os, sys
 import subprocess
 from argparse import ArgumentParser
@@ -53,6 +54,32 @@ def get_instance_list(opts, quiet = False):
                 if not quiet:
                     print(d, 'db:', get_value_from_config(p, 'db_name'))
     return result
+
+DB_LIST_SELECT = 'SELECT datname FROM pg_database;'
+
+
+def list_databases(opts):
+    from socket import gethostbyname
+    try:
+        import psycopg2
+    except:
+        print('could not import psycopg2')
+
+    verbose = opts.verbose
+    c_string = "user='%s' host='%s' password='%s'" % ('odoo', gethostbyname('db'), 'odoo')
+    #
+    try:
+        conn = psycopg2.connect(c_string)
+    except:
+        print("I am unable to connect to the database using")
+        print(c_string)
+    cur = conn.cursor()
+    cur.execute(DB_LIST_SELECT)
+    print("These databases exist:")
+    for row in cur.fetchall():
+        if row[0] not in ['odoo', 'postgres', 'template0', 'template1']:
+            print( "   ", row[0])
+    return
 
 def reload_instance(opts):
     dbname = opts.reload
@@ -115,6 +142,67 @@ def reload_instance(opts):
         else:
             p.communicate()
 
+
+def reload_instance(opts):
+    dbname = opts.reload
+    verbose = opts.verbose
+    if verbose:
+        print('*' * 80)
+        print('make sure container is stopped !!!')
+    # collect list of dictionaries with all sites
+    # known in this environment
+    data = get_instance_list(opts, quiet = True)
+    instances = []
+    names = list(data.keys())
+    # all allows us do restore all backups
+    if dbname == 'all':
+        instances = names
+    else:
+        instances = [n for n in dbname.split(',') if n in names]
+    #print data
+    for instance in instances:
+        # drop database
+        dbname = data[instance]
+        cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD, '/usr/bin/psql',
+            "-h", POSTGRES_HOST, '-U', POSTGRES_USER, '-d', 'postgres',
+            '-c', '"drop database IF EXISTS %s;"' % dbname  ]
+        cmdline = ' '.join(cmds)
+        if verbose:
+            print('*' * 80)
+            print(cmdline)
+        # list databases
+        p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True)
+        if verbose:
+            print(p.communicate())
+        else:
+            p.communicate()
+
+def drop_instance(opts):
+    dbname = opts.drop
+    data = get_instance_list(opts, quiet = True)
+    instances = []
+    names = list(data.keys())
+    instances = [n for n in dbname.split(',') if n in names]
+    verbose = opts.verbose
+    for instance in instances:
+        dbname = data[instance]
+        dpath = ''
+        # drop database
+        dbname = data[instance]
+        cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD, '/usr/bin/psql',
+            "-h", POSTGRES_HOST, '-U', POSTGRES_USER, '-d', 'postgres',
+            '-c', '"drop database IF EXISTS %s;"' % dbname ]
+        cmdline = ' '.join(cmds)
+        if verbose:
+            print('*' * 80)
+            print(cmdline)
+        # recreate database
+        p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True)
+        if verbose:
+            print(p.communicate())
+        else:
+            p.communicate()
+
 def dump_instance(opts):
     dbname = opts.dump
     data = get_instance_list(opts, quiet = True)
@@ -142,6 +230,7 @@ def dump_instance(opts):
             print('dumped:', dpath)
         else:
             print('not existing:', dpath)
+
 def main():
     usage = "dumper.py -h for help on usage"
     parser = ArgumentParser(usage=usage)
@@ -150,9 +239,17 @@ def main():
                     action="store", dest="dump", default='',
                     help="dump database, use all to dump all or comma separated list of sites")
 
+    parser.add_argument("-dd", "--drop",
+                    action="store", dest="drop", default='',
+                    help="drop database, name nust be provided")
+
     parser.add_argument("-l", "--list",
                     action="store_true", dest="list_sites", default=False,
                     help="list existing sites")
+
+    parser.add_argument("-ldb", "--listdb",
+                    action="store_true", dest="list_databases", default=False,
+                    help="list existing databases within the db container")
 
     parser.add_argument("-r", "--reload",
                     action="store", dest="reload", default=False,
@@ -176,6 +273,10 @@ def main():
         subprocess.call('bash', shell=True, executable='/bin/bash')
     elif opts.list_sites:
         get_instance_list(opts)
+    elif opts.list_databases:
+        list_databases(opts)
+    elif opts.drop:
+        drop_instance(opts)
     elif opts.dump:
         dump_instance(opts)
     elif opts.reload:

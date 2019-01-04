@@ -12,19 +12,19 @@ create dbdumper image:
         cd dumper
         # make sure that the ubuntu version used in the dockerfile
         # employs the same postgres version, as the one running in the container named 'db'
-        docker build  -t dumper . # this creates the image
+        docker build  -t dbdumper . # this creates the image
 
         afterwards you have to tag the image with:
-        docker tag dumper(or image id) robertredcor/dumper
+        docker tag dbdumper(or image id) robertredcor/dbdumper
 
         maybe it is
 
         test it:
             dbdumper assumes a directory layout as described under "use dbdumper image:"
-            assuming that your odoo instances are in the folder /root/erp_workbench/root/erp_workbench
             you can run the following command:
-                docker run -v /root/erp_workbench:/mnt/sites --rm=true --link db:db -it dbdumper -h
+                docker run -v $HOME/erp-workbench/:/mnt/sites --rm=true --link db:db -it dbdumper -h 
 
+            
 use dbdumper image:
 -------------------
     dbdumper expects the following directory layout
