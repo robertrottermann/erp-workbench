@@ -650,6 +650,11 @@ class DockerHandler(InitHandler, DBUpdater):
             result.write(docker_file)
         # construct folder layout as expected by the base image
         # see https://github.com/camptocamp/docker-odoo-project/tree/master/example
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print("Building folder structure exepected by the build process in %s" %
+              docker_target_path)
+        print(bcolors.ENDC)
         for f in ['external-src', 'local-src', 'data', 'features', 'songs']:
             try:
                 td = '%s%s' % (docker_target_path, f)
@@ -664,7 +669,7 @@ class DockerHandler(InitHandler, DBUpdater):
             ('setup.py', docker_erp_setup_script),]:
             # do not overwrite anything ..
             fp = '%s%s' % (docker_target_path, f[0])
-            if not os.path.exists(fp):
+            if 0: #not os.path.exists(fp):
                 open(fp, 'w').write(f[1])
             else:
                 print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
@@ -684,6 +689,11 @@ class DockerHandler(InitHandler, DBUpdater):
         if minor:
             version = ('%s.%s' % (version, minor)).replace('..', '.')
                 
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print("Git clonig odoo source V%s to be included in the image to %s/src" %
+              (version, os.getcwd()))
+        print(bcolors.ENDC)
         cmd_lines = [
             'git init .',
             'git submodule init',

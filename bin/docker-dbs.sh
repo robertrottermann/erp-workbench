@@ -24,6 +24,7 @@ if [ $1 ]; then
         docker run -v $DIR/:/mnt/sites --rm=true --link db:db -it dbdumper -ldb
     else
         echo "Drop database $P1 in db docker container"
+        docker stop $P1
         docker run -v $DIR/:/mnt/sites --rm=true --link db:db -it dbdumper -dd $@
     fi
 else

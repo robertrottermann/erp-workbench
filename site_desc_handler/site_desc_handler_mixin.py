@@ -326,7 +326,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         """
         site_addons = self.site.get('addons', [])
         _construct_sa(
-            self.site_name, deepcopy(site_addons), skip_list)
+            self.site_name, deepcopy(site_addons), self.site_skip_list)
         
         self._site_addons = site_addons
         
@@ -339,12 +339,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # every add on module can have its own pip module that must be used
         for addon in self._site_addons:
             pip_modules += addon.get('pip_list', [])
-        pm = '\n'
         if pip_modules:
             pip_modules = list(set(pip_modules))  # make them unique
-            for m in pip_modules:
-                pm += '%s\n' % m
-        self._site_pip_modules = pm
+        self._site_pip_modules = pip_modules
 
     def handle_apt_modules(self):
         """read the list of apt libraries to instll in the base image from the site description
@@ -371,7 +368,11 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.set_passwords(running_site)
         # construct the addons path
         self._site_addons_path = collect_addon_paths(self)
-
+        self.handle_skip_list()
+        self.handle_apt_modules()
+        self.handle_pip_modules()
+        self.handle_addons()
+        
     # ----------------------------------
     # construct_defaults
     # construct defaultvalues for a site
