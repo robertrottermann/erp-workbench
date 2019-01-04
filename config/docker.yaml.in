@@ -2,7 +2,7 @@
 # to find its data
 
 # Variables that can be used in the values
-# %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
+# %(BASE_PATH)s will be replaced with the actual folder where erp-workbench is installed
 # %(USER_HOME)s the home folder of the logged in user
 
 DOCKER_DEFAULTS:
@@ -11,7 +11,7 @@ DOCKER_DEFAULTS:
     docker_hub_name: 'robertredcor'
     
     # docker_port:
-    # this is the default posrt we assign to a docker container to use
+    # this is the default port we assign to a docker container to use
     # it has to be adapted in the site description depending on what
     # server the site is running
     docker_port: 9000
@@ -20,19 +20,19 @@ DOCKER_DEFAULTS:
     # port at which the db container exports its port
     docker_postgres_port: 55432
 
-    # the name of the containe in which all database are created
+    # the name of the container in which all database are created
     docker_db_container_name: 'db'
     
     # docker_db_user is used to access the database  in the database container
     docker_db_user: 'odoo'
     
-    # docker_db_user_pw is the dockerdbuser's password
+    # docker_db_user_pw is the docker db user's password
     docker_db_user_pw: 'odoo'
     
     # docker_rpc_user is the user with which we want to login to the erp site running in the container
     docker_rpc_user: 'admin'
 
-    # docker_rpc_user_pw dockerrpcuser's password
+    # docker_rpc_user_pw docker rpc user's password
     # this is in most cases NOT 'admin'
     # you can overrule it with -ddbpw
     docker_rpc_user_pw: 'admin'
@@ -40,7 +40,7 @@ DOCKER_DEFAULTS:
     # dumper_image:
     # when dumping a container based erp site site to its backup structure
     # a docker container is used that has access to databse container
-    # where the sites data is maintained (normally this continer is named db)
+    # where the sites data is maintained (normally this container is named db)
     # to create a this dumper container we need an image which uses pgdump
     # to dump the db.
     # since pgdump is database version dependent, the database container
@@ -64,11 +64,11 @@ DOCKER_DEFAULTS:
     docker_local_user_id: 999
 
     # values to be added to the config file
-    # docker_addons_base_path will allways be prepended to the addons_path
+    # docker_addons_base_path will always be prepended to the addons_path
     # it could contain also $DOCKER_EXTRA_ADDONS which would be expanded
     docker_addons_base_path: /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,
-    docker_logrotate': True
-    docker_syslog':  False
+    docker_logrotate: True
+    docker_syslog:  False
     docker_db_sslmode: 'prefer'
     docker_list_db: False
     docker_db_maxconn: 64
@@ -98,3 +98,16 @@ DOCKER_IMAGE:
     # commands to use within a dockerfile to pull aditional libraries
     apt_command: apt
     pip_command: pip
+
+# ----------------------------
+# host mapping
+# ----------------------------
+# all path are relative to the sites data folder
+HOST_MAPPING:
+    /etc: /etc/odoo/
+    /start-entrypoint.d: /opt/odoo/start-entrypoint.d/
+    /addons: /mnt/extra-addons/
+    /dump: /mnt/dump/
+    /filestore: /var/lib/odoo/filestore/
+    /: /var/lib/odoo/
+    /log: /var/log/odoo/

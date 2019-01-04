@@ -1,0 +1,9 @@
+docker stop coobysaas
+rm -rf coobysaas
+bin/c -m coobysaas
+mkdir coobysaas/sessions -p
+chown 1000:1000 coobysaas/sessions/*
+chown 1000:1000 coobysaas/sessions -R
+chown 104:107 coobysaas/filestore/ -R
+chown 1000:1000 coobysaas/log/ -R
+de db
