@@ -65,7 +65,6 @@ def list_databases(opts):
     except:
         print('could not import psycopg2')
 
-    verbose = opts.verbose
     c_string = "user='%s' host='%s' password='%s'" % ('odoo', gethostbyname('db'), 'odoo')
     #
     try:
@@ -186,7 +185,6 @@ def drop_instance(opts):
     verbose = opts.verbose
     for instance in instances:
         dbname = data[instance]
-        dpath = ''
         # drop database
         dbname = data[instance]
         cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD, '/usr/bin/psql',

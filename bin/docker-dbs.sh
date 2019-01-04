@@ -1,19 +1,19 @@
 #!/bin/bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
-# ckeck wheter $1 ends in /
-LAST="${1: -1}"
-echo '...' $LAST, $1
-P1=$1
-if [ $LAST == '/' ]; then
-    P1="${1::-1}"
-fi
-if [ $P1 ]; then
+
+if [ $1 ]; then
+    # ckeck whether $1 ends in /
+    LAST="${1: -1}"
+    P1=$1
+    if [ $LAST == '/' ]; then
+        P1="${1::-1}"
+    fi
     if [ $P1 = '-h' ]
     then
-        echo 'Drop database in db docker container'
+        echo 'Drop database in from db docker container'
         echo '-h for help'
         echo '-hh for help on dumper'
-        echo '-l for list on databases in the docker container'
+        echo '-l for a list of databases from the docker container'
     elif [ $P1 = '-hh' ]
     then
         echo 'List help on dumper'
