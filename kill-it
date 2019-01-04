@@ -1,9 +1,25 @@
-docker stop coobysaas
-rm -rf coobysaas
-bin/c -m coobysaas
-mkdir coobysaas/sessions -p
-chown 1000:1000 coobysaas/sessions/*
-chown 1000:1000 coobysaas/sessions -R
-chown 104:107 coobysaas/filestore/ -R
-chown 1000:1000 coobysaas/log/ -R
-de db
+#!/bin/bash
+if [ $1 ]; then
+    docker stop $1
+    rm -rf $1
+    bin/c -m $1
+    mkdir $1/sessions -p
+    chown 104:107 $1
+    chmod 777 $1 -R
+    chown 1000:1000 $1/sessions/*
+    chown 1000:1000 $1/sessions -R
+    chown 104:107 $1/filestore/ -R
+    chown 1000:1000 $1/log/ -R
+    if  bin/dropdb.sh $1 ; then
+        echo droped $1
+    else
+        echo
+        echo 'An error occured !!!!!!!!!!'
+        echo 'probably dbdumber is not installed'
+        echo 'have a look at dumper/README.txt'
+    fi
+    docker start $1
+else
+    echo 'You must provide a site name to kill'
+fi
+
