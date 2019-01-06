@@ -3,22 +3,21 @@ import os
 import sys
 import getpass
 from scripts.bcolors import bcolors
-import templates
 
 # ACT_USER is the actualy logged in user
 ACT_USER = getpass.getuser()
 # BASE_PATH is the home directory of erp_workbench
-BASE_PATH  = os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
+BASE_PATH = os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
 SITES_HOME = BASE_PATH #os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
 # migrate folder will be used when migrating to a new odoo version
 MIGRATE_FOLDER = '%s/upgrade/' % BASE_PATH
 BASE_INFO = {}
 #DB_USER = ACT_USER
 DB_PASSWORD = 'admin'
-SITES, SITES_LOCAL = {},{}
+SITES, SITES_LOCAL = {}, {}
 MARKER = ''
 # what folders do we need to create in odoo_sites for a new site
-FOLDERNAMES = ['addons','dump','etc','filestore', 'log', 'ssl', 'start-entrypoint.d', 'presets']
+FOLDERNAMES = ['addons', 'dump', 'etc', 'filestore', 'log', 'ssl', 'start-entrypoint.d', 'presets']
 
 # first thing we do, is make sure there exists all *.yaml files
 # if it does not exist, we copy it from ??.yaml.in
@@ -27,36 +26,35 @@ data_path = os.path.normpath('%s/config_data' % BASE_PATH)
 user_home = os.path.expanduser('~')
 yaml_dic = {}
 for y_info in  (
-        ('config', 'base_info.py'), 
-        ('servers', 'servers_info.py'), 
-        ('docker', 'docker_info.py'), 
+        ('config', 'base_info.py'),
+        ('servers', 'servers_info.py'),
+        ('docker', 'docker_info.py'),
         ('project', 'project_info.py')
     ):
     y_name, file_name = y_info
     config_yaml = '%s/config/%s.yaml' % (BASE_PATH, y_name)
-    config_yaml_in = '%s.in' % (config_yaml)
     if not os.path.exists(config_yaml):
         from shutil import copyfile
-        if not os.path.exists(config_yaml_in):
-            tmp_path = '%s/%s.yaml' % (templates.__path__[0], y_name)
-            copyfile('%s' % tmp_path, config_yaml_in)
-        copyfile(config_yaml_in, config_yaml)
+        copyfile('%s.in' % config_yaml, config_yaml)
     # build a list to be sent to check_and_update_base_defaults
     yaml_dic[y_name] = (
+        y_name,
         config_yaml,
         '%s/config/config_data/%s' % (BASE_PATH, file_name),
-        '%s/templates/%s.yaml' % (BASE_PATH, y_name), 
+        '%s/%s.yaml.in' % (BASE_PATH, y_name),
     )
 
-# the base info we need to access the various parts of erp-workbench 
+# the base info we need to access the various parts of erp-workbench
 # it is in the config.yaml file in the erp-workbench config folder
 from scripts.construct_defaults import check_and_update_base_defaults
 construct_result = {}
 vals = {
-    'USER_HOME' : user_home, 
+    'USER_HOME' : user_home,
     'BASE_PATH' : BASE_PATH,
     'ACT_USER'  : ACT_USER,
     'DB_USER'   : ACT_USER,
+    'ODOO_INSTALL_HOME' : '%(odoo_install_home)s',
+    'SITE_DATA_DIR' : '%(site_data_dir)s'
 }
 # from pprint import pformat
 # print(pformat(yaml_dic))
@@ -83,25 +81,25 @@ except ImportError:
 if NEED_BASEINFO or must_reload:
     print(BASEINFO_CHANGED)
 if must_reload:
-    if construct_result[yaml_dic['config'][0]]:
-        BASE_INFO = construct_result[yaml_dic['config'][0]]['BASE_DEFAULTS']
+    if construct_result[yaml_dic['config'][1]]:
+        BASE_INFO = construct_result[yaml_dic['config'][1]]['BASE_DEFAULTS']
 # load docker info
-if must_reload and construct_result[yaml_dic['docker'][0]]:
-    DOCKER_DEFAULTS = construct_result[yaml_dic['docker'][0]]['DOCKER_DEFAULTS']
+if must_reload and construct_result[yaml_dic['docker'][1]]:
+    DOCKER_DEFAULTS = construct_result[yaml_dic['docker'][1]]['DOCKER_DEFAULTS']
 else:
     from config.config_data.docker_info import DOCKER_DEFAULTS
 from config.config_data.docker_info import DOCKER_IMAGE
 # load project defaults
-if must_reload and construct_result[yaml_dic['project'][0]]:
-    PROJECT_DEFAULTS = construct_result[yaml_dic['project'][0]]['PROJECT_DEFAULTS']
+if must_reload and construct_result[yaml_dic['project'][1]]:
+    PROJECT_DEFAULTS = construct_result[yaml_dic['project'][1]]['PROJECT_DEFAULTS']
 else:
     from config.config_data.project_info import PROJECT_DEFAULTS
 # load servers
-if must_reload and construct_result[yaml_dic['servers'][0]]:
-    REMOTE_SERVERS = construct_result[yaml_dic['servers'][0]]['REMOTE_SERVERS']
+if must_reload and construct_result[yaml_dic['servers'][1]]:
+    REMOTE_SERVERS = construct_result[yaml_dic['servers'][1]]['REMOTE_SERVERS']
 else:
     from config.config_data.servers_info import REMOTE_SERVERS
-    
+
 from site_desc_handler.sdesc_utilities import AttrDict
 BASE_INFO = AttrDict(BASE_INFO)
 DOCKER_DEFAULTS = AttrDict(DOCKER_DEFAULTS)
@@ -145,7 +143,7 @@ except:
     version_info = None
 
 
-# need name and target 
+# need name and target
 NEED_TARGET = [
     'copy_admin_pw',
 ]
@@ -156,19 +154,19 @@ NO_NEED_SERVER_IP = [
 ]
 FLECTRA_VERSIONS = {
     '1.0' : {
-        'python_ver' : 'python3', 
+        'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
         'branch' : '1.0',
         'tag' : 'v1.0.0',
     },
     '1.1.0' : {
-        'python_ver' : 'python3', 
+        'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
         'branch' : '1.0',
         'tag' : 'v1.1.0',
     },
     '1.2.0' : {
-        'python_ver' : 'python3', 
+        'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
         'branch' : '1.0',
         'tag' : 'v1.2.0',

@@ -3,6 +3,8 @@ import os
 import sys
 import getpass
 from scripts.bcolors import bcolors
+import shutil
+import templates
 
 # ACT_USER is the actualy logged in user
 ACT_USER = getpass.getuser()
@@ -35,12 +37,16 @@ for y_info in  (
     config_yaml = '%s/config/%s.yaml' % (BASE_PATH, y_name)
     if not os.path.exists(config_yaml):
         from shutil import copyfile
-        copyfile('%s.in' % config_yaml, config_yaml)
+        in_file = '%s.in' % config_yaml
+        if not os.path.exists(in_file):
+            shutil.copyfile('%s/%s.yaml' % (templates.__path__[0], y_name), in_file)
+        copyfile(in_file, config_yaml)
     # build a list to be sent to check_and_update_base_defaults
     yaml_dic[y_name] = (
+        y_name,
         config_yaml,
         '%s/config/config_data/%s' % (BASE_PATH, file_name),
-        '%s/templates/%s.yaml' % (BASE_PATH, y_name),
+        '%s/%s.yaml.in' % (BASE_PATH, y_name),
     )
 
 # the base info we need to access the various parts of erp-workbench
@@ -52,6 +58,8 @@ vals = {
     'BASE_PATH' : BASE_PATH,
     'ACT_USER'  : ACT_USER,
     'DB_USER'   : ACT_USER,
+    'ODOO_INSTALL_HOME' : '%(odoo_install_home)s',
+    'SITE_DATA_DIR' : '%(site_data_dir)s'
 }
 # from pprint import pformat
 # print(pformat(yaml_dic))
@@ -78,22 +86,22 @@ except ImportError:
 if NEED_BASEINFO or must_reload:
     print(BASEINFO_CHANGED)
 if must_reload:
-    if construct_result[yaml_dic['config'][0]]:
-        BASE_INFO = construct_result[yaml_dic['config'][0]]['BASE_DEFAULTS']
+    if construct_result[yaml_dic['config'][1]]:
+        BASE_INFO = construct_result[yaml_dic['config'][1]]['BASE_DEFAULTS']
 # load docker info
-if must_reload and construct_result[yaml_dic['docker'][0]]:
-    DOCKER_DEFAULTS = construct_result[yaml_dic['docker'][0]]['DOCKER_DEFAULTS']
+if must_reload and construct_result[yaml_dic['docker'][1]]:
+    DOCKER_DEFAULTS = construct_result[yaml_dic['docker'][1]]['DOCKER_DEFAULTS']
 else:
     from config.config_data.docker_info import DOCKER_DEFAULTS
 from config.config_data.docker_info import DOCKER_IMAGE
 # load project defaults
-if must_reload and construct_result[yaml_dic['project'][0]]:
-    PROJECT_DEFAULTS = construct_result[yaml_dic['project'][0]]['PROJECT_DEFAULTS']
+if must_reload and construct_result[yaml_dic['project'][1]]:
+    PROJECT_DEFAULTS = construct_result[yaml_dic['project'][1]]['PROJECT_DEFAULTS']
 else:
     from config.config_data.project_info import PROJECT_DEFAULTS
 # load servers
-if must_reload and construct_result[yaml_dic['servers'][0]]:
-    REMOTE_SERVERS = construct_result[yaml_dic['servers'][0]]['REMOTE_SERVERS']
+if must_reload and construct_result[yaml_dic['servers'][1]]:
+    REMOTE_SERVERS = construct_result[yaml_dic['servers'][1]]['REMOTE_SERVERS']
 else:
     from config.config_data.servers_info import REMOTE_SERVERS
 

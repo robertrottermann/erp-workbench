@@ -105,13 +105,9 @@ def main(opts):  # nosetup=False, onlysetup=False):
     # now do the install
     if is_venv():
         # where is python
-        cmd = ['/bin/bash', '-c', 'echo $(which python)']
-        p = Popen(cmd, stdout=PIPE)
-        python_cmd = p.communicate()[0].strip()
+        python_cmd = shutil.which('python')
         # where is pip
-        cmd = ['/bin/bash', '-c', 'echo $(which pip)']
-        p = Popen(cmd, stdout=PIPE)
-        pip_cmd = p.communicate()[0].strip()
+        pip_cmd = shutil.which('pip')
 
         if not opts.noinstall:
             print ('about to install odoo')

@@ -4,7 +4,8 @@
 # Variables that can be used in the values
 # %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
 # %(USER_HOME)s the home folder of the logged in user
-# %(SITE_DATA_DIR)s the home folder of the logged in user
+# %(SITE_DATA_DIR)s the folder where the sites data is stored
+# %(ODOO_INSTALL_HOME)s where the sites local odoo is installed
 
 BASE_DEFAULTS:
   # erp_version:
@@ -106,7 +107,7 @@ BASE_DEFAULTS:
   # %%(ODOO_INSTALL_HOME)s is only expanded by bin/dosetup_odoo.py
   # in the site's project folder
   local_base_addons:
-    %%(ODOO_INSTALL_HOME)s/odoo/addons
+    '%%(ODOO_INSTALL_HOME)s/odoo/addons'
   
   # docker_base_addons:
   # path to the odoo addons in a docker installation
@@ -116,7 +117,7 @@ BASE_DEFAULTS:
   # local_addon_path_prefix:
   # prefix added to each addon element in a local installation
   local_addon_path_prefix:
-    $(SITE_DATA_DIR)s/addons/
+    '%%(SITE_DATA_DIR)s/addons/'
 
   # docker_addon_path_prefix:
   # prefix added to each addon element in a docker installation

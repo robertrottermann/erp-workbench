@@ -3,6 +3,8 @@ from io import StringIO
 from pprint import pformat
 from scripts.bcolors import bcolors
 import os
+import shutil
+import templates
 
 """this module provides functionality to read and write yaml files
 """
@@ -24,6 +26,7 @@ def read_yaml_file(path, vals={}):
         if line.strip().startswith('#'):
             continue
         try:
+            # just provoke an error if a value is used not in vals
             line % vals
             raw_yaml_data_stripped.append(line)
         except Exception:
@@ -35,7 +38,8 @@ def read_yaml_file(path, vals={}):
             raise
     raw_yaml_data = '\n'.join(raw_yaml_data_stripped) % vals
     try:
-        return yaml.load(StringIO(raw_yaml_data))
+        result = yaml.load(StringIO(raw_yaml_data))
+        return result
     except yaml.parser.ParserError as e:
         print(bcolors.FAIL)
         print('*' * 80)
@@ -82,10 +86,12 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
 
     must_restart = False
     for yaml_data in yaml_files:
-        if len(yaml_data) == 3:
-            # we have to construct a yaml file with its variable replaced
-            yaml_file_path, data_file_path, yaml_file_path_defaults = yaml_data
+        if len(yaml_data) == 4:
+            # we have to construct a yaml file with its variables replaced
+            yaml_name, yaml_file_path, data_file_path, yaml_file_path_defaults = yaml_data
         elif len(yaml_data) == 2:
+            raise ValueError('robert thinks this should never happen')
+            yaml_name = ''
             yaml_file_path_defaults = ''
             yaml_file_path, data_file_path = yaml_data
         else:
@@ -95,37 +101,40 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
             print(yaml_data)
             print(bcolors.ENDC)
             raise ValueError
-        if os.path.exists(yaml_file_path):
-            # compare file dates
-            # check if folder exists:
-            if not os.path.exists(os.path.dirname(data_file_path)):
-                os.makedirs(os.path.dirname(data_file_path))
-            if os.path.exists(data_file_path) and  \
-                os.path.getmtime(data_file_path) >= os.path.getmtime(yaml_file_path):
-                # we have to flag, that we did not load this module
-                results[yaml_file_path] = {}
-                continue
-            # read defaults 
-            yaml_data = {}
-            if yaml_file_path_defaults and os.path.exists(yaml_file_path_defaults):
-                yaml_data = read_yaml_file(yaml_file_path_defaults, vals)
-            # red the real thing, update defaults
-            yaml_data.update(read_yaml_file(yaml_file_path, vals))
-            new_line = '%s = %s\n'
-            new_yaml_data = ""
-            for k,v in yaml_data.items():
-                new_yaml_data += new_line % (k, pformat(v))
-            with open(data_file_path, 'w') as f:
-                f.write(new_yaml_data)
-
+        if not os.path.exists(yaml_file_path):
+            # we copy the file from the template folder 
+            # to the config folder
+            shutil.copyfile('%s/%s.yaml' % (templates.__path__[0], yaml_name), yaml_file_path_defaults)
+        # compare file dates
+        # check if folder exists:
+        if not os.path.exists(os.path.dirname(data_file_path)):
+            os.makedirs(os.path.dirname(data_file_path))
+            with open('%s/__init__.py' % data_file_path, 'w') as f:
+                pass
             must_restart = True
-            results[yaml_file_path] = yaml_data
+        if not os.path.exists(data_file_path) or os.path.exists(data_file_path) and  \
+            os.path.getmtime(data_file_path) <= os.path.getmtime(yaml_file_path):
+            # from datetime import datetime
+            # print('data file: %s, yaml_file:%s' % (datetime.fromtimestamp(os.path.getmtime(data_file_path)).strftime('%Y-%m-%d %H:%M:%S'), datetime.fromtimestamp(os.path.getmtime(yaml_file_path)).strftime('%Y-%m-%d %H:%M:%S')))
+            # we have to flag, that we did not load this module
+            results[yaml_file_path] = {}
         else:
-            print(bcolors.WARNING)
-            print('*' * 80)
-            print('%s does not exist', yaml_file_path)
-            print(bcolors.ENDC)
             continue
+        # read defaults 
+        yaml_data = {}
+        if yaml_file_path_defaults and os.path.exists(yaml_file_path_defaults):
+            yaml_data = read_yaml_file(yaml_file_path_defaults, vals)
+        # red the real thing, update defaults
+        yaml_data.update(read_yaml_file(yaml_file_path, vals))
+        new_line = '%s = %s\n'
+        new_yaml_data = ""
+        for k,v in yaml_data.items():
+            new_yaml_data += new_line % (k, pformat(v))
+        with open(data_file_path, 'w') as f:
+            f.write(new_yaml_data)
+
+        must_restart = True
+        results[yaml_file_path] = yaml_data
 
     return must_restart
     

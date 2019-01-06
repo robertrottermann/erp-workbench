@@ -381,7 +381,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         """
         self.set_passwords(running_site)
         # construct the addons path
-        self._site_addons = self.collect_addons() 
+        self._site_addons_list = self.collect_addons() 
         self.handle_skip_list()
         self.handle_apt_modules()
         self.handle_pip_modules()
@@ -443,10 +443,14 @@ class SiteDescHandlerMixin(PropertiesMixin):
 
         # modules we have to deal with in a special way
         default_values['site_addons'] = self.site_addons
+        default_values['docker_site_addons_path'] = self.docker_site_addons_path        
+        default_values['local_site_addons_path'] = self.local_site_addons_path        
         default_values['skip_list'] = self.site_skip_list
         default_values['pip_modules_str'] = '\n'.join(self.site_pip_modules)
         default_values['apt_modules'] = self.site_apt_modules
         default_values['skip_list'] = self.site_skip_list
+        default_values['odoo_install_home'] = self.odoo_install_home
+        default_values['site_data_dir'] = self.site_data_dir
 
         # make sure that all placeholders are replaced
         m = re.compile(r'.*%\(.+\)s')
@@ -479,7 +483,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.default_values['erp_admin_pw'] = self.erp_admin_pw
         self.default_values['create_database'] = True
         self.default_values['foldernames'] = self.foldernames
-        # self.default_values['add_path'] = self.site_addons_path
         self.default_values['projectname'] = self.projectname
 
     def remove_virtual_env(self, site_name):

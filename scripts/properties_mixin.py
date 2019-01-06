@@ -468,7 +468,7 @@ class PropertiesMixin(object):
         self._cp
         return self._docker_long_polling_port
 
-    # the local odoo instances are installed from the odoo nithly server
+    # the local odoo instances are installed from the odoo nigthly server
     # the nigthly variable helps to constructe the url to the correct version
     _erp_nightly = ''
     @property
@@ -489,6 +489,14 @@ class PropertiesMixin(object):
     def erp_minor(self):
         self._cp
         return self._erp_minor
+
+    # odoos install folder
+    @property
+    def odoo_install_home(self):
+        self._cp
+        erp_src = 'https://nightly.odoo.com/%s/nightly/src/odoo_%s%s.latest.zip' % (
+            self._erp_nightly, self.erp_version, self.erp_minor)       
+        return erp_src
 
     # -----------------------------------------------------
     # properties for handling the remote server on which 
@@ -606,30 +614,26 @@ class PropertiesMixin(object):
     @property
     def docker_site_addons_path(self):
         self._cp
-        addons_path = '%s/%s' % (self.docker_base_addons, self.docker_addon_path_prefix.join(self.site_addons))
+        addons_path = '%s/%s' % (self.docker_base_addons, self.docker_addon_path_prefix.join(self._site_addons_list))
         return addons_path
 
     @property
     def local_site_addons_path(self):
         self._cp
         addons_path = '%s/%s' % (self.local_base_addons,
-                                 self.local_addon_path_prefix.join(self.site_addons))
+                                 self.local_addon_path_prefix.join(self._site_addons_list))
         return addons_path
 
-    # _site_addons_path = ''
-    # @property
-    # def site_addons_path(self):
-    #     self._cp
-    #     if not self._site_addons_path and self.site_name:
-    #         # it will set at __init__ when ther migth be no site_name known yet
-    #         self._site_addons_path = self.do_collect_addon_paths()
-    #     return self._site_addons_path
-
     # site_addons is the list of addons_entries in the odoo config
-    _site_addons = []
+    _site_addons = {}
     @property
     def site_addons(self):
         return self._site_addons
+
+    _site_addons_list = []
+    @property
+    def site_addons_list(self):
+        return self._site_addons_list
 
     # when constructing a docker image, we need to know
     # what non odoo standard python libraries we need to install
