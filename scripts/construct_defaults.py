@@ -109,7 +109,7 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
         # check if folder exists:
         if not os.path.exists(os.path.dirname(data_file_path)):
             os.makedirs(os.path.dirname(data_file_path))
-            with open('%s/__init__.py' % data_file_path, 'w') as f:
+            with open('%s/__init__.py' % os.path.dirname(data_file_path), 'w') as f:
                 pass
             must_restart = True
         if not os.path.exists(data_file_path) or os.path.exists(data_file_path) and  \
