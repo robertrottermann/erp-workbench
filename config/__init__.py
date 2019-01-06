@@ -86,21 +86,21 @@ except ImportError:
 if NEED_BASEINFO or must_reload:
     print(BASEINFO_CHANGED)
 if must_reload:
-    if construct_result[yaml_dic['config'][1]]:
+    if construct_result.get(yaml_dic['config'][1]):
         BASE_INFO = construct_result[yaml_dic['config'][1]]['BASE_DEFAULTS']
 # load docker info
-if must_reload and construct_result[yaml_dic['docker'][1]]:
+if must_reload and construct_result.get(yaml_dic['docker'][1]):
     DOCKER_DEFAULTS = construct_result[yaml_dic['docker'][1]]['DOCKER_DEFAULTS']
 else:
     from config.config_data.docker_info import DOCKER_DEFAULTS
 from config.config_data.docker_info import DOCKER_IMAGE
 # load project defaults
-if must_reload and construct_result[yaml_dic['project'][1]]:
+if must_reload and construct_result.get(yaml_dic['project'][1]):
     PROJECT_DEFAULTS = construct_result[yaml_dic['project'][1]]['PROJECT_DEFAULTS']
 else:
     from config.config_data.project_info import PROJECT_DEFAULTS
 # load servers
-if must_reload and construct_result[yaml_dic['servers'][1]]:
+if must_reload and construct_result.get(yaml_dic['servers'][1]):
     REMOTE_SERVERS = construct_result[yaml_dic['servers'][1]]['REMOTE_SERVERS']
 else:
     from config.config_data.servers_info import REMOTE_SERVERS

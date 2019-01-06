@@ -93,9 +93,10 @@ DOCKER_DEFAULTS:
 # ----------------------------
 DOCKER_IMAGE:
     environment:
-        DUMMY: for nothing, just a sample
+        # be careful to protect variables with spaces like follows:
+        DUMMY: '"for nothing, just a sample"'
 
-    # commands to use within a dockerfile to pull aditional libraries
+        # commands to use within a dockerfile to pull aditional libraries
     apt_command: apt
     pip_command: pip
 

@@ -669,7 +669,7 @@ class DockerHandler(InitHandler, DBUpdater):
             ('setup.py', docker_erp_setup_script),]:
             # do not overwrite anything ..
             fp = '%s%s' % (docker_target_path, f[0])
-            if 0: #not os.path.exists(fp):
+            if not os.path.exists(fp):
                 open(fp, 'w').write(f[1])
             else:
                 print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
