@@ -4,18 +4,17 @@
 # Variables that can be used in the values
 # %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
 # %(USER_HOME)s the home folder of the logged in user
+# %(SITE_DATA_DIR)s the home folder of the logged in user
 
 BASE_DEFAULTS:
   # erp_version:
-  # define what erp version should be uses for a new site
+  # define what erp version should be used for a new site
   # this only affects the generation of new site descriptions
-  # and can be easily changed in the generated site description
+  # and can be easily changed in these new site description
   erp_version: '11'
 
   # erp_minor:
-  # define what erp minor version should be uses for a new site
-  # this only affects the generation of new site descriptions
-  # and can be easily changed in the generated site description
+  # define what erp minor version should be used for a new site
   erp_minor: '.0'
 
   # site_editor:
@@ -25,10 +24,10 @@ BASE_DEFAULTS:
   # sitesinfo_path:
   # Sites are defined in a sites description file
   # There exist local sites, which are not managed using a source
-  # controll system (git), and gloabal sites which are managed with 
-  # git and normaly describe sites that eventuall run on remote servers.
+  # controll system (git), and global sites which are managed with 
+  # git and normaly describe sites that run on remote servers.
   # the sitesinfo_path points to a folder, where these site descriptions 
-  # are kept in several subfolders
+  # are kept
   # by default it is kept within the erp-workbench folder
   # %s(BASE_PATH)
   sitesinfo_path: '%(BASE_PATH)s/sites_list/'
@@ -42,9 +41,9 @@ BASE_DEFAULTS:
   # }
   # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
 
-  # sitesinfo_url:
-  # sitesinfo_url is the url where git repositories can be found
-  # in which the sites are maintained 
+  # sitesinfos:
+  # sitesinfos provide an name and an associated the url where git repositories 
+  # can be found in which the sites are maintained 
   siteinfos:
     localhost:
       'localhost'
@@ -55,13 +54,13 @@ BASE_DEFAULTS:
 
   # project_path:
   # path to the projects
-  # Here a structure for each erp site is created to build and run an erp/odoo servers
+  # Here a structure for each erp site is created to build and run a local erp/odoo server
   project_path: '%(USER_HOME)s/projects'
 
   # erp_server_data_path
   # path to server data. Here for every site a set of folders is created
-  # that will contain the servers config filestore, log- and dump-files.
-  # the folders created are
+  # that will contain the servers config, filestore, log- and dump-files.
+  # these folders created are
   # addons:     here the addons of the sites are to be found
   # etc:        here the config files for the site is writen to
   # file_store: here the external files of the file are stored
@@ -69,6 +68,7 @@ BASE_DEFAULTS:
   # dump:       here the a running site can dump its data
   # start-entrypoint.d:
   #             here files to support the starting process of the site can be put
+  #
   # by default erp_server_dta_path points to the same folder where erp-workbench resides
   # however if you create many site, this can quickly become confusing
   erp_server_data_path: '%(BASE_PATH)s'
@@ -76,22 +76,21 @@ BASE_DEFAULTS:
   # local_user_mail:
   # sometimes you want to avoid sending mails to real user
   # when you have copied a life server to your local environment
-  # this setting is only used when rederict_emil is installed
+  # this setting is only used when the redirect_email addon is installed
   local_user_mail: 'info@company.com'
 
   # db_user:
-  # this is the default data base user, if no db user is defined in the
-  # server description file from the sites.yaml file
+  # this is the default data base user, its value can be overruled in the
+  # server description file in the servers.yaml file
   db_user: '%(DB_USER)s'
 
   # db_user_pw:
   # this is the default password, if it is not defined in the
-  # server description file from the sites.yaml file
+  # server description file in the servers.yaml file
   db_user_pw: 'admin'
 
   # sites_autopull:
   # should the list of sites be pulled automatically
-  # if set to False, you have to do it manually
   sites_autopull: True
 
   # print_banner:
@@ -99,6 +98,28 @@ BASE_DEFAULTS:
   print_banner: True
 
   # postgres_port:
-  # this is the default password, if it is not defined in the
-  # server description file from the sites.yaml file
+  # to be used to access the postgres db server in a non dockerized local installation
   postgres_port: 5432
+
+  # local_base_addons:
+  # path to the odoo addons in a local installation
+  # %%(ODOO_INSTALL_HOME)s is only expanded by bin/dosetup_odoo.py
+  # in the site's project folder
+  local_base_addons:
+    %%(ODOO_INSTALL_HOME)s/odoo/addons
+  
+  # docker_base_addons:
+  # path to the odoo addons in a docker installation
+  docker_base_addons:
+    /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,/mnt/extra-addons/
+
+  # local_addon_path_prefix:
+  # prefix added to each addon element in a local installation
+  local_addon_path_prefix:
+    $(SITE_DATA_DIR)s/addons/
+
+  # docker_addon_path_prefix:
+  # prefix added to each addon element in a docker installation
+  docker_addon_path_prefix:
+    /mnt/extra-addons/
+ 

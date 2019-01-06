@@ -3,8 +3,6 @@ odoorpc
 gdata
 pysftp
 pydot
-#evdev
 mock
-#pyinotify
 html2text
-%(pip_modules)s
+%(pip_modules_str)s

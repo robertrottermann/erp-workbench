@@ -97,31 +97,6 @@ def collect_options(opts):
 
 
 # ----------------------------------
-# collect_addon_paths
-# go trough the addons in syte.py and collect
-# addon_path info for the actual site. This info
-# is stored in default_values
-def collect_addon_paths(handler):
-    """
-    go trough the addons in syte.py and collect
-    addon_path info for the actual site. This info
-    is stored in default_values
-    """
-    addons = handler.site.get('addons', [])
-    base_path = handler.site.get('docker', {}).get(
-        'base_path', '/mnt/extra-addons')
-    apps = []
-    for addon in addons:
-        if addon.get('add_path'):
-            apps.append('%s/%s' % (base_path, addon['add_path']))
-
-    result = ''
-    if apps:
-        result = ',' + ','.join(apps)
-
-    return result
-
-# ----------------------------------
 # create_server_config
 # create server config file in erp_workbench/SITENAME/openerp.conf
 # @default_values   : default value
@@ -168,7 +143,6 @@ def create_server_config(handler):
     erp_admin_pw = handler.site.get('odoo_admin_pw', '')
     base_info = handler.base_info 
     p = os.path.normpath('%s/%s' % (base_info['erp_server_data_path'], name))
-    collect_addon_paths(handler)
     # now copy a template openerp-server.conf
     handler.default_values['erp_admin_pw'] = erp_admin_pw
     template = open(

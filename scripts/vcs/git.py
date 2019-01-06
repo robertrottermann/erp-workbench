@@ -342,7 +342,7 @@ class GitRepo(BaseRepo):
                     print('Target_dir:', target_dir)
                     print(str(e))
                     print('*' * 80)
-                    raise
+                    raise UpdateError(e.returncode, e.cmd)
             else:
                 raise NotImplementedError(
                     "Unknown remote reference type %r" % rtype)
@@ -438,4 +438,4 @@ class GitRepo(BaseRepo):
         # if this fails, we have a seriously corrupted repo
         branches = update_check_output(["git", "branch"])
         branches = branches.split()
-        return revision in branches
+        return revision in [b.decode('utf8') for b in branches]

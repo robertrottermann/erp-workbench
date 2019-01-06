@@ -175,7 +175,7 @@ RUN apt-get update &&  apt-get install postgresql-client-%(postgres_version)s vi
 ENTRYPOINT ["/usr/bin/python", "/mnt/sites/dumper/dumper.py"]
 """
 
-docker_common = """-e ADDONS_PATH=/odoo/local-src,/odoo/src/addons,/mnt/extra-addons/,%(addons_path)s\\
+docker_common = """-e ADDONS_PATH=%(docker_site_addons_path)s\\
     -e LOCAL_USER_ID=1000 \\
     -e DB_NAME=%(site_name)s \\
     -e PYTHONIOENCODING=utf-8 \\
@@ -205,5 +205,4 @@ docker_common = """-e ADDONS_PATH=/odoo/local-src,/odoo/src/addons,/mnt/extra-ad
     -e SYSLOG=%(syslog)s \\
     -e RUNNING_ENV=%(running_env)s \\
     -e WITHOUT_DEMO=%(without_demo)s \\
-    -e SERVER_WIDE_MODULES=%(server_wide_modules)s\\
-    -e DOCKER_EXTRA_ADDONS=%(docker_extra_addons)s"""
+    -e SERVER_WIDE_MODULES=%(server_wide_modules)s"""

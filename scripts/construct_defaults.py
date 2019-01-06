@@ -42,6 +42,13 @@ def read_yaml_file(path, vals={}):
         print('file %s can not be parsed' % path)
         print(bcolors.ENDC)
         raise
+    except Exception as e:        
+        print(bcolors.FAIL)
+        print('*' * 80)
+        print('file %s can not be parsed' % path)
+        print(bcolors.ENDC)
+        raise
+       
 
 
 

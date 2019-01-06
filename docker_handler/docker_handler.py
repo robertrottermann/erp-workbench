@@ -243,7 +243,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 print(DOCKER_INVALID_PORT % (name, name))
                 return()
             
-            allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog', 'docker_extra_addons']
+            allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog']
             if not delete_container and container_name != 'db':
                 # make sure we have valid elements
                 for k,v in info_dic.items():
@@ -256,7 +256,7 @@ class DockerHandler(InitHandler, DBUpdater):
                         print('*' * 80)
                         print(bcolors.ENDC)
                         sys.exit()                
-            info_dic['docker_extra_addons'] = self.site_addons_path
+            info_dic['docker_site_addons_path'] = self.docker_site_addons_path
             info_dic['docker_db_container_name'] = self.docker_db_container_name
             # some of the docker templates have many elements in common, get them
             from templates.docker_templates import docker_common as DC
@@ -377,7 +377,7 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         
         composer_dict = {
-            'addons_path' : '%s%s' % (self.docker_defaults.get('docker_addons_base_path'), self.site_addons_path),
+            # 'addons_path' : '%s%s' % (self.docker_defaults.get('docker_addons_base_path'), self.docker_site_addons_path),
             'erp_server_data_path' : self.erp_server_data_path,
             'site_name' : self.site_name,
             'container_name': self.docker_container_name,

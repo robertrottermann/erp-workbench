@@ -1,4 +1,4 @@
 if [ -d "sites_lists" ]; then
   rm -rf sites_lists
 fi
-python -m unittest $@
+python -m nose $@

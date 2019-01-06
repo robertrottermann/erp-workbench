@@ -6,8 +6,6 @@ from scripts.create_handler import InitHandler
 from config import LOGIN_INFO_FILE_TEMPLATE, REQUIREMENTS_FILE_TEMPLATE, MODULES_TO_ADD_LOCALLY
 from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
 
-LOGIN_INFO_TEMPLATE_FILE = '%s/login_info.cfg.in'
-
 class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
 
     def __init__(self, opts, sites):
@@ -48,22 +46,22 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         if self.site_name:
             existed = self.check_project_exists()
             # construct list of addons read from site
-            with  open(LOGIN_INFO_FILE_TEMPLATE % self.default_values['inner'], 'w') as f:
+            with  open(LOGIN_INFO_FILE_TEMPLATE % self.inner_path, 'w') as f:
                 f.write(config_info) # % self.default_values)
             # overwrite requrements.txt with values from systes.py
             data = open(REQUIREMENTS_FILE_TEMPLATE %
-                        self.default_values['inner'], 'r').read()
+                        self.inner_path, 'r').read()
             # we want to preserve changes in the requirements.txt
             data = '\n'.join(
                 list(
                     dict(enumerate(
                         [d for d in data.split('\n') if d] +
-                        self.default_values['pip_modules'])).values()))
+                        self.site_pip_modules)).values()))
             # MODULES_TO_ADD_LOCALLY are allways added to a local installation
             # these are tools to help testing and such
             s = data.split('\n') + (MODULES_TO_ADD_LOCALLY and MODULES_TO_ADD_LOCALLY or [])
             s = set(s)
-            open(REQUIREMENTS_FILE_TEMPLATE % self.default_values['inner'], 'w').write(
+            open(REQUIREMENTS_FILE_TEMPLATE % self.inner_path, 'w').write(
                 '\n'.join(s))  # 25.7.17 robert % self.default_values)
         return existed
 
@@ -75,7 +73,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         if reset:
             self.reset_values()
         default_values = self.default_values
-        p2 = LOGIN_INFO_TEMPLATE_FILE % default_values['skeleton']
+        p2 = '%s/login_info.cfg.in' % self.skeleton_path
         with open(p2, 'r') as f:
             return f.read() % default_values
 

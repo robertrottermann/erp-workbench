@@ -6,10 +6,9 @@ import re
 import shutil
 import subprocess
 from scripts.properties_mixin import PropertiesMixin
-from scripts.utilities import collect_addon_paths
 from scripts.bcolors import bcolors 
 from argparse import Namespace
-
+from scripts.messages import SITE_NOT_EXISTING, SITE_HAS_NO_REMOTE_INFO, SITE_UNKNOW_IP
 
 class DummyNamespace(Namespace):
     # we need a namespace that just ignores unknow options
@@ -280,14 +279,17 @@ class SiteDescHandlerMixin(PropertiesMixin):
         we collect them from the actual site, and all sites named with the option -sites
         """
         extra_libs = self.site.get('extra_libs', {})
-        if self.opts.use_collect_sites:
-            erp_version = self.erp_version
-            more_sites = []
-            for k, v in list(self.sites.items()):
-                if v.get('erp_version') == erp_version:
-                    more_sites.append(k)
-        else:
-            more_sites = (self.opts.use_sites or '').split(',')
+        if 0:
+            # this is not yet re-implemented
+            if self.opts.use_collect_sites:
+                erp_version = self.erp_version
+                more_sites = []
+                for k, v in list(self.sites.items()):
+                    if v.get('erp_version') == erp_version:
+                        more_sites.append(k)
+            else:
+                more_sites = (self.opts.use_sites or '').split(',')
+        more_sites = []
         # libraries we need to install using apt
         apt_list = extra_libs.get(self.apt_command, [])
         # libraries we need to install using pip
@@ -359,6 +361,18 @@ class SiteDescHandlerMixin(PropertiesMixin):
         skip_list = self.site.get('skip', {}).get('addons', [])
         self._site_skip_list = skip_list
 
+    def collect_addons(self):
+        """
+        go trough the addons in syte.py and collect
+        addon_path info for the actual site. 
+        """
+        addons = self.site.get('addons', [])
+        apps = []
+        for addon in addons:
+            if addon.get('add_path'):
+                apps.append( addon['add_path'])
+        return apps
+
     def prepare_properties(self, running_site):
         """collect information from yaml files and the site description
         
@@ -367,7 +381,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         """
         self.set_passwords(running_site)
         # construct the addons path
-        self._site_addons_path = collect_addon_paths(self)
+        self._site_addons = self.collect_addons() 
         self.handle_skip_list()
         self.handle_apt_modules()
         self.handle_pip_modules()
@@ -422,7 +436,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['db_name'] = self.site_name
         default_values['outer'] = self.outer_path
         default_values['inner'] = self.inner_path
-        default_values['addons_path'] = self.site_addons_path
+        default_values['local_site_addons_path'] = self.local_site_addons_path
         # if we are using docker, the addon path is very different
         default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
         default_values['skeleton'] = self.skeleton_path
@@ -430,7 +444,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # modules we have to deal with in a special way
         default_values['site_addons'] = self.site_addons
         default_values['skip_list'] = self.site_skip_list
-        default_values['pip_modules'] = self.site_pip_modules
+        default_values['pip_modules_str'] = '\n'.join(self.site_pip_modules)
         default_values['apt_modules'] = self.site_apt_modules
         default_values['skip_list'] = self.site_skip_list
 
@@ -465,7 +479,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.default_values['erp_admin_pw'] = self.erp_admin_pw
         self.default_values['create_database'] = True
         self.default_values['foldernames'] = self.foldernames
-        self.default_values['add_path'] = self.site_addons_path
+        # self.default_values['add_path'] = self.site_addons_path
         self.default_values['projectname'] = self.projectname
 
     def remove_virtual_env(self, site_name):
@@ -495,7 +509,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         return collect_addon_paths(self)
 
     #_did_run_create_login = False
-    def _create_login_info(self, login_info):
+    def XX_create_login_info(self, login_info):
         # ----------------------------------
         # what login do we need
         # local:
@@ -520,7 +534,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
         # local
         # -----------------
         # actual user
-        xx
         if self.opts.__dict__.get('delete_site_local') or self.opts.__dict__.get('drop_site'):
             return
         if self.site:
@@ -536,20 +549,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 site_server_ip = socket.gethostbyname(site_server_ip)
             except:
                 pass
-            # robert restructure
-            #if site_server_ip == 'xx.xx.xx.xx':
-                #if self.default_values['is_local']:
-                #p = '%s/sites_local/%s.py' % (
-                #self.base_info['sitesinfo_path'], self.site_name)
-                #print(SITE_NOT_EDITED % (self.site_name, os.path.normpath(p)))
-                #selections = self.selections
-                #must_exit = True
-                #if selections:
-                #for s in selections:
-                #if s[0] in NO_NEED_SERVER_IP:
-                #must_exit = False
-                #if must_exit:
-                #sys.exit()
             if self.site and not self.remote_servers.get(site_server_ip):
                 selections = self.selections
                 must_exit = True
@@ -562,8 +561,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
                                             self.site_name, self.user, site_server_ip))
                     sys.exit()
             login_info['user'] = self.user
-            # access to the local database
-            # access to the local docker
 
     def create_virtual_env(self, target, python_version='python2.7', use_workon=True):
         """
@@ -575,13 +572,13 @@ class SiteDescHandlerMixin(PropertiesMixin):
         if 1:  # erp_provider == 'flectra' or use_workon:
             # need to find virtualenvwrapper.sh
             virtualenvwrapper = shutil.which('virtualenvwrapper.sh')
-            os.chdir(self.default_values['inner'])
+            os.chdir(self.inner_path)
             cmd_list = [
                 'export WORKON_HOME=%s/.virtualenvs' % os.path.expanduser("~"),
                 'export PROJECT_HOME=/home/robert/Devel',
                 'source %s' % virtualenvwrapper,
                 'mkvirtualenv -a %s -p %s %s' % (
-                    self.default_values['inner'],
+                    self.inner_path,
                     python_version,
                     self.site_name
                 )
