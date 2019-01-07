@@ -590,26 +590,31 @@ class PropertiesMixin(object):
     # in the siteses project folder
     @property
     def local_base_addons(self):
-        return ''
-        #return self.base_info.get('local_base_addons')
+        base_addon = self.base_info.get('local_base_addons' '')
+        return base_addon or '' # make sure it is a string
 
     # docker_base_addons:
     # path to the odoo addons in a docker installation
     @property
     def docker_base_addons(self):
-        return self.base_info.get('docker_base_addons')
+        base_addon =  self.base_info.get('docker_base_addons' '')
+        return base_addon or '' # make sure it is a string
 
     # local_addon_path_prefix:
     # prefix added to each addon element in a local installation
     @property
     def local_addon_path_prefix(self):
-        return self.base_info.get('local_addon_path_prefix')
+        prefix =  self.base_info.get('local_addon_path_prefix', ',')
+        if not prefix.strip().startswith(','):
+            prefix = ',%s' % prefix.strip()
+        return prefix % {'site_data_dir' : self.site_data_dir}
 
     # docker_addon_path_prefix:
     # prefix added to each addon element in a docker installation
     @property
     def docker_addon_path_prefix(self):
-        return self.base_info.get('docker_addon_path_prefix', '')
+        prefix = self.base_info.get('docker_addon_path_prefix', '')
+        return prefix or '' # make sure it is a string
 
     @property
     def docker_site_addons_path(self):
@@ -620,9 +625,12 @@ class PropertiesMixin(object):
     @property
     def local_site_addons_path(self):
         self._cp
-        addons_path = '%s/%s' % (self.local_base_addons,
+        if self.local_base_addons:
+            addons_path = '%s,%s' % (self.local_base_addons,
                                  self.local_addon_path_prefix.join(self._site_addons_list))
-        return addons_path
+        else:
+            addons_path = self.local_addon_path_prefix.join(self._site_addons_list)
+        return self.local_addon_path_prefix + addons_path
 
     # site_addons is the list of addons_entries in the odoo config
     _site_addons = {}
