@@ -262,7 +262,11 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # ------------------------------------
             # db
             # ------------------------------------
-            self._db_host = running_site.get('db_host', self._remote_server_ip)
+            if self.subparser_name == 'docker':
+                self._db_host = running_site.get('db_host', self._remote_server_ip)
+            else:
+                self._db_host = 'localhost'
+                
             # ------------------------------------
             # docker db
             # ------------------------------------
@@ -449,7 +453,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['pip_modules_str'] = '\n'.join(self.site_pip_modules)
         default_values['apt_modules'] = self.site_apt_modules
         default_values['skip_list'] = self.site_skip_list
-        default_values['odoo_install_home'] = self.odoo_install_home
+        default_values['inner_path'] = self.inner_path
         default_values['site_data_dir'] = self.site_data_dir
 
         # make sure that all placeholders are replaced

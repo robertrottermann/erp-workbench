@@ -1082,9 +1082,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
         site = self.site
         # addons decalared in addons are the ones not available from odoo directly
-        site_addons = site.get('addons')
+        site_addons = self.site_addons
         # addons declared in the erp_addons stanza are the ones we can get from odoo
-        erp_addons = site.get('erp_addons')
+        erp_addons = self.erp_addons
         local_install = info_dic.get('local_install', [])
         req = []
         module_obj = None

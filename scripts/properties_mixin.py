@@ -490,13 +490,13 @@ class PropertiesMixin(object):
         self._cp
         return self._erp_minor
 
-    # odoos install folder
-    @property
-    def odoo_install_home(self):
-        self._cp
-        erp_src = 'https://nightly.odoo.com/%s/nightly/src/odoo_%s%s.latest.zip' % (
-            self._erp_nightly, self.erp_version, self.erp_minor)       
-        return erp_src
+    # # odoos install folder
+    # @property
+    # def odoo_install_home(self):
+    #     self._cp
+    #     erp_src = 'https://nightly.odoo.com/%s/nightly/src/odoo_%s%s.latest.zip' % (
+    #         self._erp_nightly, self.erp_version, self.erp_minor)       
+    #     return erp_src
 
     # -----------------------------------------------------
     # properties for handling the remote server on which 
@@ -587,11 +587,11 @@ class PropertiesMixin(object):
  
     # local_base_addons:
     # path to the odoo addons in a local installation
-    # %%(ODOO_INSTALL_HOME)s is only expanded by bin/dosetup_odoo.py
     # in the siteses project folder
     @property
     def local_base_addons(self):
-        return self.base_info.get('local_base_addons')
+        return ''
+        #return self.base_info.get('local_base_addons')
 
     # docker_base_addons:
     # path to the odoo addons in a docker installation
@@ -634,6 +634,12 @@ class PropertiesMixin(object):
     @property
     def site_addons_list(self):
         return self._site_addons_list
+
+    _site_addons_list = []
+
+    @property
+    def erp_addons(self):
+        return self.site.get('erp_addons', [])
 
     # when constructing a docker image, we need to know
     # what non odoo standard python libraries we need to install
