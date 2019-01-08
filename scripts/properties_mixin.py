@@ -647,7 +647,7 @@ class PropertiesMixin(object):
 
     @property
     def erp_addons(self):
-        return self.site.get('erp_addons', [])
+        return self.site.get('erp_addons', self.site.get('odoo_addons', []))
 
     # when constructing a docker image, we need to know
     # what non odoo standard python libraries we need to install
