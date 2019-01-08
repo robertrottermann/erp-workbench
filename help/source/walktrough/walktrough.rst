@@ -4,7 +4,7 @@ A quick walk trough the erp-workbench
 
 erp-workbench lets you create erp-sites locally and remotely with ease. It tries to blur the distinction of a site running locally or in a remote docker context.
 
-I this walktrough you learn: 
+In this walktrough you learn: 
 
 - Explanation of terms used
 - Define what type of erp you handle

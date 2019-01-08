@@ -7,3 +7,4 @@ Quick Walk Trough
     :caption: Contents:
 
     walktrough
+    troubleshooting

@@ -420,6 +420,13 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['db_user'] = self.db_user
         default_values['site_name'] = self.site_name
         default_values.update(self.base_info)
+        # make sure site descriptions with odoo instead of erp ar fixed
+        if self.site.get('odoo_version'):
+            # hoppalla, we need to adapt this
+            print(bcolors.BOLD, bcolors.OKBLUE)
+            print('*' * 80)
+            print('the site %s uses "odoo_version" but should use "erp_version", please fix' % self.site_name)
+            print(bcolors.ENDC)
         default_values.update(self.site)
         # now we try to replace the %(xx)s element with values we connected from 
         # the yaml files
