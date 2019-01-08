@@ -152,9 +152,9 @@ def main(opts, parsername, need_names_dic):
         if opts.create or opts.modules_update or opts.module_update:
             info_dic = {
                 'project_path' : handler.default_values['inner'],
-                'erp_version': BASE_INFO.get('erp_version', BASE_INFO.get('odoo_version')),
+                'erp_version': handler.erp_version,
                 'site_name' : handler.site_name,
-                'erp_provider' : PROJECT_DEFAULTS.get('erp_provider'),
+                'erp_provider' : handler.erp_provider,
             }
             if opts.create:
                 existed = handler.create_or_update_site()

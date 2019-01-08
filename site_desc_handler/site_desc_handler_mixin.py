@@ -150,7 +150,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             self._docker_rpc_user_pw = docker_rpc_user_pw
 
             # ------------------------------------
-            # data not from site_description
+            # database
             # ------------------------------------
             db_container_name = ''
             if self.subparser_name == 'docker':
@@ -200,19 +200,24 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # odoo version, minor, nightly
             # ------------------------------------
             # version
-            erp_version = running_site.get('erp_version')
+            erp_version = running_site.get('erp_version', running_site.get('odoo_version'))
             if not erp_version:
                 erp_version = self.project_defaults.get('erp_version', '12')
             self._erp_version = erp_version
             # minor
             erp_minor = running_site.get('erp_minor')
             if not erp_minor:
-                erp_minor = self.project_defaults.get('erp_minor', '12')
+                erp_minor = self.project_defaults.get('erp_minor', '.0')
             self._erp_minor = erp_minor
+            # make sure version has no minor
+            try:
+                self._erp_version = str(int(float(self._erp_version)))
+            except ValueError:
+                pass
             # nightly
             erp_nightly = running_site.get('erp_nightly')
             if not erp_nightly:
-                erp_nightly = self.project_defaults.get('erp_nightly', '12')
+                erp_nightly = '%s%s' % (self.erp_version, self.erp_minor)
             self._erp_nightly = erp_nightly
             # provider
             self._erp_provider = running_site.get('erp_provider',  'odoo')

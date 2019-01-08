@@ -48,10 +48,10 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             # construct list of addons read from site
             with  open(LOGIN_INFO_FILE_TEMPLATE % self.inner_path, 'w') as f:
                 f.write(config_info) # % self.default_values)
-            # overwrite requrements.txt with values from systes.py
+            # overwrite requrements.txt with values we collected from the site descrition
+            # but we want to preserve changes in the requirements.txt
             data = open(REQUIREMENTS_FILE_TEMPLATE %
                         self.inner_path, 'r').read()
-            # we want to preserve changes in the requirements.txt
             data = '\n'.join(
                 list(
                     dict(enumerate(
@@ -60,7 +60,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             # MODULES_TO_ADD_LOCALLY are allways added to a local installation
             # these are tools to help testing and such
             s = data.split('\n') + (MODULES_TO_ADD_LOCALLY and MODULES_TO_ADD_LOCALLY or [])
-            s = set(s)
+            s = set(s) # make them unique
             open(REQUIREMENTS_FILE_TEMPLATE % self.inner_path, 'w').write(
                 '\n'.join(s))  # 25.7.17 robert % self.default_values)
         return existed

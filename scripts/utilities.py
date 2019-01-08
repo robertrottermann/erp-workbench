@@ -129,6 +129,8 @@ CONFIG_NAME = {
 def create_server_config(handler):
     """
     create server config file in $erp_server_data_path$/SITENAME/openerp.conf
+    this is the config file used by docker, or not at all ??
+    with all variables set as environment variables
     @default_values   : default value
     @foldernames      : list of folders to create within the site foler
     """
