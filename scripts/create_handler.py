@@ -1535,7 +1535,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         """create one alias per siteslist, to easily cd into it
         """
         sitelist_names = []
-        sites_list_path = self.base_info.get('sitesinfo_path')
+        sites_list_path = self.sitesinfo_path
         siteinfos = self.siteinfos
         alias_line = ALIAS_LINE
         sitelist_names = list(siteinfos.keys())
