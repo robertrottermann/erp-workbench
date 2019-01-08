@@ -1218,7 +1218,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         m.demo = True
                 if opts.single_step:
                     for module in modules:
-                        print('installing: %s' % module.name)
+                        print('installing:%s%s%s' % (bcolors.OKGREEN, module.name, bcolors.ENDC))
                         module.button_immediate_install()
                 else:
                     modules.button_immediate_install()
@@ -1425,7 +1425,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             data = f.read()
         data = data.split('\n')
         alias_str = ''
-        # loop over data and add lines to the result untill we see the marker
+        # loop over data and add lines to the result until we see the marker
         # then we loop untill we get the endmarker or the end of the file
         start_found = False
         for line in data:
@@ -1451,7 +1451,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
     def add_aliases(self):
         """
-        construct aliases to access the workbenchdirectories easily
+        construct aliases to access the workbench directories easily
         """
         if not self.site_name:
             # we need a sitename to do anything sensible
@@ -1535,7 +1535,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         """create one alias per siteslist, to easily cd into it
         """
         sitelist_names = []
-        sites_list_path = self.sitesinfo_path
+        sites_list_path = self.base_info.get('sitesinfo_path')
         siteinfos = self.siteinfos
         alias_line = ALIAS_LINE
         sitelist_names = list(siteinfos.keys())
