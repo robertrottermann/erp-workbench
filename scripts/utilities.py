@@ -448,7 +448,15 @@ def checkout_sa(opts, handler):
             continue
         names = find_addon_names(site_addon)
         # name
-        url = site_addon['url'] % sa_dic
+        try:
+            url = site_addon['url'] % sa_dic
+        except KeyError as e:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('Error: is the config.yaml/repo_mapper in place?')
+            print(str(e))
+            print(bcolors.ENDC)
+            sys.exit()
         # 'ssh://git@gitlab.redcor.ch:10022//afbs/afbs_extra_data.git'
         addon_name = site_addon.get('addon_name', url.split('/')[-1].split('.git')[0])
         # if we want to handle only some modules

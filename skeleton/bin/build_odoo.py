@@ -104,10 +104,15 @@ def main(opts):  # nosetup=False, onlysetup=False):
         p.communicate()
     # now do the install
     if is_venv():
+        try:
         # where is python
-        python_cmd = shutil.which('python')
-        # where is pip
-        pip_cmd = shutil.which('pip')
+            python_cmd = shutil.which('python')
+            # where is pip
+            pip_cmd = shutil.which('pip')
+        except AttributeError:
+            from distutils.spawn import find_executable
+            python_cmd = find_executable('python') 
+            pip_cmd = find_executable('pip')  
 
         if not opts.noinstall:
             print ('about to install odoo')

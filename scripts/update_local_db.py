@@ -75,7 +75,7 @@ def getlines(fd):
         if c is None:
             return
         line += c
-        if c == '\n':
+        if c in ['\n', b'\n']:
             yield str(line)
             del line[:]
 
@@ -395,7 +395,7 @@ class DBUpdater(object):
             fi
             """
             os.system('%s/scripts/updatedb.sh %s %s %s %s %s %s %s' % (
-                self.default_values['sites_home'],  # no param
+                self.sites_home,  # no param
                 site_name,                         # param 1
                 remote_url,                        # param 2
                 remote_data_path,                   # param 3
@@ -444,7 +444,7 @@ class DBUpdater(object):
                 # it copies needed files to the users home and changes ownership
                 remote_user_data_path = remote_data_path  # self.remote_user_data_path
                 os.system('%s/scripts/updatedb_remote.sh %s %s %s %s %s' % (
-                    self.default_values['sites_home'],
+                    self.sites_home,
                     site_name,
                     remote_url,
                     remote_user_data_path,
@@ -477,12 +477,12 @@ class DBUpdater(object):
                 remote_user_data_path = remote_data_path
                 #remote_data_path = self.remote_user_data_path
             os.system('%s/scripts/rsync_remote_local.sh %s %s %s %s %s %s' % (
-                self.default_values['sites_home'],
+                self.sites_home,
                 site_name,
                 remote_url,
                 remote_data_path,
                 remote_user,
-                BASE_INFO['erp_server_data_path'],
+                self.erp_server_data_path,
                 use_site_name,
             ))
             if not os.path.exists(dpath):
@@ -502,8 +502,8 @@ class DBUpdater(object):
             if not os.path.exists(fp) and os.path.isdir(fp):
                 print(bcolors.FAIL + '%s is not yet created, can not be updated' % use_site_name + bcolors.ENDC)
                 return
-            pw = self.login_info['db_password']
-            user = self.login_info['db_user']
+            pw = self.db_user_pw
+            user = self.db_user
             shell = False
             # mac needs absolute path to psql
             where = os.path.split(which('psql'))[0]
@@ -562,7 +562,7 @@ class DBUpdater(object):
             os.chdir(actual_pwd)
 
     def create_db_demo(self):
-        os.chdir(self.default_values['inner'])
+        os.chdir(self.inner_path)
         # create a new config file with nothing changed but db stuff
         found = False
         for f_name in ['openerp.cfg', 'odoo.cfg', 'flectra.cfg', 'odoo.conf']:
@@ -587,7 +587,7 @@ class DBUpdater(object):
         if not found:
             print('no executable script found')
             return
-        process_info = get_process_id(p_name, self.default_values['inner'])
+        process_info = get_process_id(p_name, self.inner_path)
         if process_info:
             p = psutil.Process(process_info[0][0])
             p.terminate()
@@ -597,13 +597,13 @@ class DBUpdater(object):
         # if we are running under virtualenv, we have to use this one
         p = subprocess.Popen(
             [
-                hunt_python('%s/bin/python' % self.default_values['inner']),
+                hunt_python('%s/bin/python' % self.inner_path),
                 'bin/%s' % p_name,
                 '-c',
-                '%s/etc/no_db_%s' % (self.default_values['inner'], f_name)
+                '%s/etc/no_db_%s' % (self.inner_path, f_name)
             ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         # no wait for 10 secs to allow odoo to spinn up
-        process_info = get_process_id(p_name, self.default_values['inner'])
+        process_info = get_process_id(p_name, self.inner_path)
         if not process_info:
             print(bcolors.FAIL, '\n------------------------------')
             print('could not start', 'bin/%s' % p_name)
@@ -647,7 +647,7 @@ class DBUpdater(object):
         print('killing the procces', end=' ')
         print(bcolors.ENDC)
 
-        process_info = get_process_id(p_name, self.default_values['inner'])
+        process_info = get_process_id(p_name, self.inner_path)
         if process_info and process_info[0]:
             psutil.Process(process_info[0][0]).terminate()
         print(bcolors.OKGREEN, '------------------------------')
@@ -688,7 +688,7 @@ class DBUpdater(object):
             # determine what erp command to execute
             for process_name in PROCESS_NAMES:
                 process_info = get_process_id(
-                    process_name, self.default_values['inner'])
+                    process_name, self.inner_path)
                 if process_info:
                     break
             if set_local:
@@ -704,7 +704,7 @@ class DBUpdater(object):
                            opts.verbose and ' -v' or '', extra_data=server_dic)
             if set_local:
                 # restart process
-                os.chdir(self.default_values['inner'])
+                os.chdir(self.inner_path)
                 prossess_pid = None
                 for process_name in PROCESS_NAMES:
                     run_cmd = 'bin/%s' % process_name
@@ -722,7 +722,7 @@ class DBUpdater(object):
                             else:
                                 # good old start_openerp
                                 p = subprocess.Popen(
-                                    ['%s/bin/python' % self.default_values['inner'], run_cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                                    ['%s/bin/python' % self.inner_path, run_cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                         lcounter = 0
                         for line in getlines(p.stdout):
                             lcounter +=1
@@ -742,7 +742,7 @@ class DBUpdater(object):
                                 break
                         prossess_pid = p.pid
                 except:
-                    print('could not chdir to:%s' % self.default_values['inner'])
+                    print('could not chdir to:%s' % self.inner_path)
                     pass
                 if not opts.noupdatedb:
                     try:
@@ -759,7 +759,7 @@ class DBUpdater(object):
                             p.kill()
                     # just to be sure ..
                     process_info = get_process_id(
-                        PROCESS_NAMES_DIC[process_name], self.default_values['inner'])
+                        PROCESS_NAMES_DIC[process_name], self.inner_path)
                     if process_info:
                         p = psutil.Process(process_info[0][0])
                         print('about to terminate %s' % ','.join(p.cmdline()[-1]))
@@ -843,7 +843,7 @@ class DBUpdater(object):
             self.doUpdate(db_update=False, names=[master_name])
             # rsync -avzC --delete /home/robert/erp_workbench/afbs/filestore/afbs/ /home/robert/erp_workbench/afbstest/filestore/afbstest/
             ddiC = {
-                'base_path': self.default_values['sites_home'],
+                'base_path': self.sites_home,
                 'master_name': master_name,
                 'master_db_name': master_db_data['db_name'],
                 'slave_name': site_name,
