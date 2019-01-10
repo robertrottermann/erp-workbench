@@ -305,7 +305,7 @@ def main(opts, parsername, need_names_dic):
         # running on localhost
         if opts.dataupdate  or opts.dataupdate_close_connections:
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
-            set_local = True
+            set_local = opts.startafterupdate
             handler.doUpdate(db_update = not opts.noupdatedb, norefresh=opts.norefresh, set_local = set_local)
             did_run_a_command = True
         if opts.dump_local:

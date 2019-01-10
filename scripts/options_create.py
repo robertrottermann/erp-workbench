@@ -83,6 +83,11 @@ def add_options_create(parser, result_dic):
         help='update local server from remote server, Force close of all connection to the db'
     )
     parser_manage.add_argument(
+        "-su", "--startafterupdate",
+        action="store_true", dest="startafterupdate", default=False,
+        help='Start after having restored the data'
+    )
+    parser_manage.add_argument(
         "-dump", "--dump-local",
         action="store_true", dest="dump_local", default=False,
         help="""

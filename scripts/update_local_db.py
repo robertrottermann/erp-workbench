@@ -289,14 +289,23 @@ class DBUpdater(object):
         cursor = conn.cursor()
         conn.autocommit = True
         print('drop db %s' % site_name)
+        no_error = True
         try:
             cursor.execute(SQL2 % site_name)
         except psycopg2.ProgrammingError as e:
-            pass
+            if e.pgcode == '3D000':
+                pass
+            else:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print(str(e))
+                no_error = False
         except Exception as e:
+            no_error = False
             print(str(e))
         conn.commit()
         conn.close()
+        return no_error
 
     def _doUpdate(self, db_update=True, norefresh=None, site_name='', verbose='', extra_data={}):
         """
@@ -683,7 +692,11 @@ class DBUpdater(object):
                     use_site_name =  opts.new_target_site
                 else:
                     use_site_name = site_name
-                self.close_db_connections_and_delete_db(use_site_name)
+                # result is the no_error flag.
+                # if set, all is fine
+                result = self.close_db_connections_and_delete_db(use_site_name)
+                if not result:
+                    return
 
             # determine what erp command to execute
             for process_name in PROCESS_NAMES:
