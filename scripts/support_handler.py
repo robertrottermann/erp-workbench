@@ -462,7 +462,7 @@ class SupportHandler(InitHandler):
         if not os.path.exists(target_inner):
             print(bcolors.FAIL)
             print('*' * 80)
-            print('%s does not exist' % target_inner)
+            print('%s folders do not exist' % target_inner)
             print('please create it by executing bin/c -c %s' % target_site)
             print(bcolors.ENDC)
             return
@@ -471,7 +471,7 @@ class SupportHandler(InitHandler):
         # construct the command line like:
         # -C /home/robert/projects/breitschtraeff10/breitschtraeff10/etc/odoo.cfg -D breitschtraeff10 -B migrations -R "11.0" 
         config_path = '%s/etc/odoo.cfg' % self.default_values['inner']
-        target_version = self.sites[target_site]['erp_version']
+        target_version = self.sites[target_site].get('erp_version', self.sites[target_site].get('odoo_version'))
         if not os.path.exists(config_path):
             print(bcolors.FAIL)
             print('*' * 80)
@@ -523,7 +523,7 @@ class SupportHandler(InitHandler):
         process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
         while True:
             output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
+            if output in ['', b''] and process.poll() is not None:
                 break
             if output:
                 last_line = output.strip()

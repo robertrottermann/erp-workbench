@@ -499,12 +499,24 @@ def main(opts, parsername, need_names_dic):
             did_run_a_command = True
             return
  
+        # upgrade
+        # ----------
+        # migrate to new odoo version
+        # ----------------------------------
+        if opts.upgrade:
+            handler.upgrade(target_site=opts.upgrade)
+            did_run_a_command = True
+            return
+
+        
         if not did_run_a_command:
             print(bcolors.WARNING)
             print('*' * 80)
             print('The selected support option is either invalid or not yet implemented')
             print(bcolors.ENDC)
         return
+
+
    
     # ----------------------
     # remote commands
