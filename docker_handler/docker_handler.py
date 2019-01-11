@@ -573,6 +573,12 @@ class DockerHandler(InitHandler, DBUpdater):
 
         return is_ok
 
+    def build_image_bitnami(self):
+        """[summary]
+        """
+        pass
+
+
     def build_image(self):
         """
         build image that has all python modules installed mentioned in the site description

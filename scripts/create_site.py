@@ -363,6 +363,14 @@ def main(opts, parsername, need_names_dic):
         
         # build image
         # ----------
+        # build docker image according to bitnami
+        if opts.build_image_bitnami:
+            handler.build_image_bitnami()
+            did_run_a_command = True
+            return
+            
+        # build image
+        # ----------
         # build docker image used by a site
         if opts.docker_build_image:
             handler.build_image()

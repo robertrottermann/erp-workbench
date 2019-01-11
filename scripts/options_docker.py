@@ -94,6 +94,14 @@ def add_options_docker(parser, result_dic):
         need_name=True,
         name_valid=True,
     )
+    # -----------------------------------------------
+    # manage bitnami
+    # -----------------------------------------------
+    parser_docker.add_argument(
+        "-dbib", "--build-image-bitnami",
+        action="store_true", dest="build_image_bitnami", default=False,
+        help='Build an image after the holi gospel of bitnami',
+    )
     parser_docker.add_argument(
         "-dE", "--execute-script",
         action="store", dest="executescript",
