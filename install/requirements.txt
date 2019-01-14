@@ -49,4 +49,7 @@ argcomplete
 # deasy # a odoo handler to handle databases
 reload
 autopep8
+# 2019
 nose
+kubernetes
+pint
