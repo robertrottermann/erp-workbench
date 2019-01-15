@@ -378,8 +378,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
         addons = self.site.get('addons', [])
         apps = []
         for addon in addons:
-            if addon.get('add_path'):
-                apps.append( addon['add_path'])
+            elem = addon.get('add_path', addon.get('group'))
+            if elem:
+                apps.append(elem)
         return apps
 
     def prepare_properties(self, running_site):

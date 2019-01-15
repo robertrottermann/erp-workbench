@@ -478,21 +478,109 @@ class SupportHandler(InitHandler):
             print('the base project does not yet exist please create it')
             print(bcolors.ENDC)
             return
-        result_code, result_line = self.run_upgrade('bin/python %s/migrate.py -C %s -D %s -N %s -B %s -R "%s"' % (
-            MIGRATE_FOLDER,
-            config_path, 
-            self.site_name, 
-            target_site,
-            MIGRATE_FOLDER, 
-            target_version)
-        )
-        # now a copy of the database has been created we can migrate migrate with openmigrate
+        info_dic = {
+            'migrate_folder' : MIGRATE_FOLDER, # path to the folder into which the migrate templates are git cloned
+            'config_path' : config_path,      # path to the odoo.cfg config 
+            'site_name' : self.site_name,
+            'target_site' : target_site,
+            'migrate_folder' : MIGRATE_FOLDER,
+            'target_version' : target_version
+        }
+        cmd_line = 'bin/python %(migrate_folder)s/migrate.py -C %(config_path)s -D %(site_name)s -N %(target_site)s -B %(migrate_folder)s -R "%(target_version)s"'
+        cmd_line = cmd_line % info_dic
+        # running migrate.py will download the actual open upgrade environment to
+        # ~/workbench/upgrade/11.0/
+        # where 11.0 is the target version
+        # in the above folder (11.0/server) the odoo source is checked out to
+        # also a link to the target odoos addons is created
+        # plus a config named server.cfg
+        # 
+        # when this setting is created, the new database is deleted if it exists
+        # and the old database is copied using
+        # print("Copying the database using 'with template'")
+        # cur.execute('create database "%(db_new)s" with template "%(db_old)s"' %
+        #             {'db_new': db_new, 'db_old': db_old})
+        # cur.close()  
+        #
+        # next a config file is constructed and written to:
+        # '~/workbench/upgrade/11.0/server.cfg'
+        # its content is similar to:
+        #
+        # [options]
+        # addons_path = /home/robert/workbench/upgrade/11.0/server/odoo/addons,/home/robert/workbench/upgrade/11.0/addons/
+        # admin_passwd = Redo2ooOnAlice2NewPw
+        # create_database = True
+        # current_user = robert
+        # data_dir = /home/robert/workbench/redo2oo
+        # db_host = localhost
+        # db_name = redo2oo
+        # dbfilter = redo2oo
+        # db_password = admin
+        # log_db_level = False
+        # erp_version = 10.0
+        # erp_minor = .0
+        # erp_nightly = 10.0
+        # without_demo = True
+        # xmlrpc_port = False
+        # csv_internal_sep = ,
+        # db_maxconn = 64
+        # db_port = False
+        # db_template = template1
+        # db_user = False
+        # demo = {}
+        # email_from = False
+        # geoip_database = /usr/share/GeoIP/GeoLite2-City.mmdb
+        # import_partial = 
+        # limit_memory_hard = 2684354560
+        # limit_memory_soft = 2147483648
+        # limit_request = 8192
+        # limit_time_cpu = 60
+        # limit_time_real = 120
+        # limit_time_real_cron = -1
+        # list_db = True
+        # log_db = False
+        # log_handler = :INFO
+        # log_level = info
+        # logfile = /home/robert/workbench/upgrade/migration.log
+        # logrotate = False
+        # longpolling_port = 8072
+        # max_cron_threads = 2
+        # osv_memory_age_limit = 1.0
+        # osv_memory_count_limit = False
+        # pg_path = None
+        # pidfile = False
+        # proxy_mode = False
+        # reportgz = False
+        # server_wide_modules = web,web_kanban
+        # smtp_password = False
+        # smtp_port = 25
+        # smtp_server = localhost
+        # smtp_ssl = False
+        # smtp_user = False
+        # syslog = False
+        # test_commit = False
+        # test_enable = False
+        # test_file = False
+        # test_report_directory = False
+        # translate_modules = ['all']
+        # unaccent = False
+        # workers = 0
+        # xmlrpc = True
+        # xmlrpc_interface = 
+        # port = False
+        # netport = False
+        # netrpc_port = False
+        # root_path = /home/robert/workbench/upgrade/11.0/server/
+        # 
+        # odoo is started with 
+        result_code, result_line = self.run_upgrade(cmd_line)
+        # now a copy of the database has been created we can migrate with openmigrate
         # this will be done in the target sites project environment
         # so we have to write out a script that can do this
         from templates.update_script import UPDATE_SCRIPT_TEMPLATE
         target_data = {
             'upgrade_folder' : MIGRATE_FOLDER,
-            'upgrade_line' : result_line,
+            'upgrade_line' : result_line.decode('utf8'),
         }
         update_script = UPDATE_SCRIPT_TEMPLATE % target_data
         # write it out

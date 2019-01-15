@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 from future.utils import iteritems
-
+import wingdbstub
 import os
 import sys
 from io import StringIO
