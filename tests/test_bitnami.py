@@ -50,3 +50,24 @@ class TestGetBitnamiData(unittest.TestCase):
         """
         self.dHandler.build_image_bitnami()
 
+
+class TestKuberHandler(unittest.TestCase):
+
+    def setUp(self):
+        super().setUp()
+        from kuber_handler.kuber_handler import KuberHandler
+        self.kHandler = KuberHandler({'port' : 8069})
+
+    def test_get_tiller(self):
+        """ create a docker image according to the gospel of bitnami
+        here we just create it and check whether it exists
+        
+        """
+        self.assertTrue(self.kHandler.tserver)
+        
+    def test_get_chart(self):
+        """ create a docker image according to the gospel of bitnami
+        here we just create it and check whether it exists
+        
+        """
+        self.assertTrue(self.kHandler.install())

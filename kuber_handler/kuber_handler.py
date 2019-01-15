@@ -1,6 +1,7 @@
 #!bin/python
 # -*- encoding: utf-8 -*-
 import os
+import sys
 
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
@@ -38,17 +39,147 @@ concepts:
     questions to dave:
         how do we structure our namespace?
 
+1.
+from pyhelm.repo import from_repo
+
+chart_path = chart_versions = from_repo('https://kubernetes-charts.storage.googleapis.com/', 'mariadb')
+print(chart_path)
+
+2.
+from pyhelm.chartbuilder import ChartBuilder
+
+chart = ChartBuilder({'name': 'mongodb', 'source': {'type': 'directory', 'location': '/tmp/pyhelm-kibwtj8d/mongodb'}})
+
+# than we can get chart meta data etc
+In [9]: chart.get_metadata()
+Out[9]:
+name: "mongodb"
+version: "0.4.0"
+description: "Chart for MongoDB"
+
+3.
+from pyhelm.chartbuilder import ChartBuilder
+from pyhelm.tiller import Tiller
+
+chart = ChartBuilder({'name': 'mongodb', 'source': {'type': 'directory', 'location': '/tmp/pyhelm-kibwtj8d/mongodb'}})
+t.install_release(chart.get_helm_chart(), dry_run=False, namespace='default')
+
 """
 
+from scripts.bcolors import bcolors
 
-import pint
-from kubernetes import client as ku_cli
-from kubernetes import config as ku_con
-from kubernetes import watch as ku_watch
+try:
+    import pint
+    from kubernetes import client as ku_cli
+    from kubernetes import config as ku_con
+    from kubernetes import watch as ku_watch
+except ImportError:
+    print(xxx)
 
-import os
-import pint
-from kubernetes import client, config, watch
+try:
+    import grpc
+    from pyhelm import tiller
+    from pyhelm import chartbuilder
+    HAS_PYHELM = True
+except ImportError as exc:
+    HAS_PYHELM = False
+    raise
+
+class KuberHandler(object):
+
+
+    def __init__(self, params={}):
+             self._host = params.get('host', 'localhost')
+             self._port = params.get('port', 'localhost')
+             self._release_name = params.get('name', 'localhost')
+             self._chart = params.get('chart', {})
+             self._state = params.get('state', '')
+             self._values = params.get('values', {})
+             self._namespace = params.get('namespace', 'default')
+             self._disable_hooks = params.get('disable_hooks', False)
+             self._tserver = tiller.Tiller(self.host, self.port)
+
+
+    _chart = ''
+    @property
+    def chart(self):
+        return self._chart
+        
+    _host = ''
+    @property
+    def host(self):
+        return self._host
+
+    _namespace = ''
+    @property
+    def namespace(self):
+        return self._namespace
+
+    _port = ''
+    @property
+    def port(self):
+        return self._port
+
+    _release_name = ''
+    @property
+    def release_name(self):
+        return self._release_name
+
+    _tserver = ''
+    @property
+    def tserver(self):
+        return self._tserver
+
+    _values = ''
+    @property
+    def values(self):
+        return self._values
+
+    def install(self, tserver=None):
+        if not tserver:
+            tserver = self.tserver
+        changed = False
+        name = self.release_name
+        values = self.values
+        chart = self.chart
+        namespace = self.namespace
+
+        chartb = chartbuilder.ChartBuilder(chart)
+        r_matches = (x for x in tserver.list_releases()
+                    if x.name == name and x.namespace == namespace)
+        installed_release = next(r_matches, None)
+        if installed_release:
+            if installed_release.chart.metadata.version != chart['version']:
+                tserver.update_release(chartb.get_helm_chart(), False,
+                                    namespace, name=name, values=values)
+                changed = True
+        else:
+            tserver.install_release(chartb.get_helm_chart(), namespace,
+                                    dry_run=False, name=name,
+                                    values=values)
+            changed = True
+
+        return dict(changed=changed)
+
+
+    def delete(self, module, tserver, purge=False):
+        changed = False
+        params = module.params
+
+        if not module.params['name']:
+            module.fail_json(msg='Missing required field name')
+
+        name = module.params['name']
+        disable_hooks = params['disable_hooks']
+
+        try:
+            tserver.uninstall_release(name, disable_hooks, purge)
+            changed = True
+        except grpc._channel._Rendezvous as exc:
+            if 'not found' not in str(exc):
+                raise exc
+
+        return dict(changed=changed)
 
 
 def main():
