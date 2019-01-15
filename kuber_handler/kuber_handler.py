@@ -2,7 +2,10 @@
 # -*- encoding: utf-8 -*-
 import os
 import sys
+<<<<<<< HEAD
 from scripts.bcolors import bcolors
+=======
+>>>>>>> 54c4fda70a96891812fb1e5901770e8ca50872cc
 
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
@@ -40,7 +43,34 @@ concepts:
     questions to dave:
         how do we structure our namespace?
 
+1.
+from pyhelm.repo import from_repo
+
+chart_path = chart_versions = from_repo('https://kubernetes-charts.storage.googleapis.com/', 'mariadb')
+print(chart_path)
+
+2.
+from pyhelm.chartbuilder import ChartBuilder
+
+chart = ChartBuilder({'name': 'mongodb', 'source': {'type': 'directory', 'location': '/tmp/pyhelm-kibwtj8d/mongodb'}})
+
+# than we can get chart meta data etc
+In [9]: chart.get_metadata()
+Out[9]:
+name: "mongodb"
+version: "0.4.0"
+description: "Chart for MongoDB"
+
+3.
+from pyhelm.chartbuilder import ChartBuilder
+from pyhelm.tiller import Tiller
+
+chart = ChartBuilder({'name': 'mongodb', 'source': {'type': 'directory', 'location': '/tmp/pyhelm-kibwtj8d/mongodb'}})
+t.install_release(chart.get_helm_chart(), dry_run=False, namespace='default')
+
 """
+
+from scripts.bcolors import bcolors
 
 try:
     import pint

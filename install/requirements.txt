@@ -53,3 +53,9 @@ autopep8
 nose
 kubernetes
 pint
+grpcio
+boto3
+supermutes
+protobuf
+grpcio-tools
+ 
