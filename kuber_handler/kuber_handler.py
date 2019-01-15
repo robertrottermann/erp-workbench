@@ -1,6 +1,8 @@
 #!bin/python
 # -*- encoding: utf-8 -*-
 import os
+import sys
+from scripts.bcolors import bcolors
 
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
@@ -40,15 +42,29 @@ concepts:
 
 """
 
+try:
+    import pint
+    from kubernetes import client as ku_cli
+    from kubernetes import config as ku_con
+    from kubernetes import watch as ku_watch
+except ImportError as e:
+    print(bcolors.FAIL)
+    print('*' * 80)
+    print('some library could not be installed')
+    print('please run: pip install -r install/requirements.txt')
+    print(str(e))
+    sys.exit()
 
-import pint
-from kubernetes import client as ku_cli
-from kubernetes import config as ku_con
-from kubernetes import watch as ku_watch
-
-import os
-import pint
-from kubernetes import client, config, watch
+try:
+    import pyhelm
+except ImportError as e:
+    print(bcolors.FAIL)
+    print('*' * 80)
+    print('pyhelm could not be installed')
+    print('please download and install it from:')
+    print('https://github.com/redcor/pyhelm.git')
+    print(str(e))
+    sys.exit()
 
 
 def main():
