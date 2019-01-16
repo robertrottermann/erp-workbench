@@ -2,10 +2,7 @@
 # -*- encoding: utf-8 -*-
 import os
 import sys
-<<<<<<< HEAD
 from scripts.bcolors import bcolors
-=======
->>>>>>> 54c4fda70a96891812fb1e5901770e8ca50872cc
 
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
@@ -86,7 +83,10 @@ except ImportError as e:
     sys.exit()
 
 try:
-    import pyhelm
+    import grpc
+    from pyhelm import tiller
+    from pyhelm import chartbuilder
+    from pyhelm.repo import from_repo
 except ImportError as e:
     print(bcolors.FAIL)
     print('*' * 80)
@@ -95,6 +95,105 @@ except ImportError as e:
     print('https://github.com/redcor/pyhelm.git')
     print(str(e))
     sys.exit()
+
+
+class KuberHandler(object):
+    def __init__(self, config_data = {}):
+        self._host = config_data.get('host', 'localhost')
+        self._port = config_data.get('port', '8069')
+        self._resource_name = config_data.get('resource_name', '')
+        self._chart = config_data.get('chart', {})
+        self._values = config_data.get('values', {})
+        self._namespace = config_data.get('namespace', 'default')
+        
+        self._tserver = tiller.Tiller(self.host, self.port)
+
+    _host = 'localhost'
+    @property
+    def host(self):
+        return self._host
+    
+    _port = '8069'
+    @property
+    def port(self):
+        return self._port
+    
+    _resource_name = ''
+    @property
+    def resource_name(self):
+        return self._resource_name
+    
+    _chart = {}
+    @property
+    def chart(self):
+        return self._chart
+    
+    _values = {}
+    @property
+    def values(self):
+        return self._values
+    
+    _namespace = ''
+    @property
+    def namespace(self):
+        return self._namespace
+    
+    _tserver = None
+    @property
+    def tserver(self):
+        return self._tserver
+        
+
+
+    def install(self, tserver = None):
+        if not tserver:
+            tserver = self.tserver
+        changed = False
+        name = self.resource_name
+        values = self.values
+        chart = self.chart
+        namespace = self.namespace
+
+        if chart:
+            url, cart_name = chart
+            chart_path = chart_versions = from_repo(url, cart_name)
+            chartb = chartbuilder.ChartBuilder(chart)
+            r_matches = (x for x in tserver.list_releases()
+                        if x.name == name and x.namespace == namespace)
+            installed_release = next(r_matches, None)
+            if installed_release:
+                if installed_release.chart.metadata.version != chart['version']:
+                    tserver.update_release(chartb.get_helm_chart(), False,
+                                        namespace, name=name, values=values)
+                    changed = True
+            else:
+                tserver.install_release(chartb.get_helm_chart(), namespace,
+                                        dry_run=False, name=name,
+                                        values=values)
+                changed = True
+
+        return changed
+
+
+    def delete(self, tserver, purge=False):
+        changed = False
+        params = module.params
+
+        if not module.params['name']:
+            module.fail_json(msg='Missing required field name')
+
+        name = module.params['name']
+        disable_hooks = params['disable_hooks']
+
+        try:
+            tserver.uninstall_release(name, disable_hooks, purge)
+            changed = True
+        except grpc._channel._Rendezvous as exc:
+            if 'not found' not in str(exc):
+                raise exc
+
+        return dict(changed=changed)
+
 
 
 def main():

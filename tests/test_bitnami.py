@@ -53,10 +53,14 @@ class TestGetBitnamiData(unittest.TestCase):
 
 class TestKuberHandler(unittest.TestCase):
 
+    _chart = ''
     def setUp(self):
         super().setUp()
         from kuber_handler.kuber_handler import KuberHandler
-        self.kHandler = KuberHandler({'port' : 8069})
+        config_data = {'port' : 8069}
+        if self._chart:
+            config_data['chart'] = self._chart
+        self.kHandler = KuberHandler(config_data)
 
     def test_get_tiller(self):
         """ create a docker image according to the gospel of bitnami
@@ -65,9 +69,20 @@ class TestKuberHandler(unittest.TestCase):
         """
         self.assertTrue(self.kHandler.tserver)
         
+class TestKuberHandler2(unittest.TestCase):
+
+    _chart = ('https://kubernetes-charts.storage.googleapis.com/', 'mariadb')
+    def setUp(self):
+        super().setUp()
+        from kuber_handler.kuber_handler import KuberHandler
+        config_data = {'port' : 8069}
+        if self._chart:
+            config_data['chart'] = self._chart
+        self.kHandler = KuberHandler(config_data)
+        
     def test_get_chart(self):
         """ create a docker image according to the gospel of bitnami
         here we just create it and check whether it exists
         
         """
-        self.assertTrue(self.kHandler.install())
+        self.assertFalse(self.kHandler.install())
