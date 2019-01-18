@@ -8,6 +8,7 @@ from scripts.bcolors import bcolors
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
 """
 """
+https://github.com/ljakimczuk/pyhelm is using pyhelm
 concepts:
     a pod runs an docker image!!
         it runs a docker container

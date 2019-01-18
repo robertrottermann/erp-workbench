@@ -101,11 +101,12 @@ Create objects:
 
     - **-ls**
         list all projects
-    - **-c** *project_name* 
+    - **-c** *project_name* [-b=[all][module,module]:branch]
         | generate local project *project_name* in the project folder
         |   generate the needed folder structure
         |   download or upgrade all addons as mentioned in the *project_name*'s site-descriptions
         |   generate all aliases
+        use -b list-of-modules:branch to checkout a branch. List-of-modules is a comma separated list of module names or all.
     - **-lo** *project_name* 
         | list own modules mentioned in the *project_name*'s site-descriptions
     - **-I** *project_name* 
