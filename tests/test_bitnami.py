@@ -69,8 +69,9 @@ class TestKuberHandler(unittest.TestCase):
         """
         self.assertTrue(self.kHandler.tserver)
         
-class TestKuberHandler2(unittest.TestCase):
-
+class TestKuberHandlerInstall(unittest.TestCase):
+    
+    #_chart = 'https://github.com/bitnami/bitnami-docker-odoo'
     _chart = ('https://kubernetes-charts.storage.googleapis.com/', 'mariadb')
     def setUp(self):
         super().setUp()
@@ -80,9 +81,31 @@ class TestKuberHandler2(unittest.TestCase):
             config_data['chart'] = self._chart
         self.kHandler = KuberHandler(config_data)
         
-    def test_get_chart(self):
+    def xtest_get_chart(self):
         """ create a docker image according to the gospel of bitnami
         here we just create it and check whether it exists
         
         """
         self.assertFalse(self.kHandler.install())
+
+class TestKuberHandler2_fetch(unittest.TestCase):
+    
+    def do_setUp(self, config_data={}):
+        from kuber_handler.kuber_handler import KuberHandlerHelm
+        self.kHandler = KuberHandlerHelm(config_data)
+        
+    def test_crete_handler(self):
+        """ create a docker image according to the gospel of bitnami
+        here we just create it and check whether it exists
+        
+        """
+        self.do_setUp()
+        self.assertTrue(self.kHandler)
+
+    def test_fetch_chart(self):
+        """ create a docker image according to the gospel of bitnami
+        here we just create it and check whether it exists
+        
+        """
+        self.do_setUp()
+        self.kHandler.fetch()

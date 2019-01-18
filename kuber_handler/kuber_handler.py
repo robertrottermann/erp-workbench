@@ -2,7 +2,10 @@
 # -*- encoding: utf-8 -*-
 import os
 import sys
+import shutil
+
 from scripts.bcolors import bcolors
+from docker_handler.docker_handler import DockerHandler
 
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
@@ -96,6 +99,61 @@ except ImportError as e:
     print(str(e))
     sys.exit()
 
+class KuberHandlerHelm(DockerHandler):
+    """KuberHandlerHelm
+    just calls helm using popen calls
+    
+    Arguments:
+        object {[type]} -- [description]
+    """
+    def __init__(self, config_data = {}):
+        """initialize KuberHandlerHelm 
+        with an url to the repository and a name of the chart to deal with      
+        
+        Arguments:
+            url {string} -- either an url starting with http[s]:// or a well known helm repo like stable
+            chart_name {string} -- name of the chart we deal with
+        """
+        self._chart_url = config_data.get('chart_url', 'stable')
+        self._chart_name = config_data.get('chart_name', 'odoo')
+        default_target = os.path.normpath('%s/%s/helm' % (self.site_data_dir, self.site_name))
+        helm_target = config_data.get('helm_target', default_target)
+        self._helm_target = helm_target
+        # make sure the target path exists
+        os.makedirs(helm_target, exist_ok=True)
+    
+    _chart_url = ''
+    @property
+    def chart_url(self):
+        return self._chart_url
+
+    _chart_name = ''
+    @property
+    def chart_name(self):
+        return self._chart_name
+
+    _helm_target = ''
+    @property
+    def helm_target(self):
+        return self._helm_target        
+
+    def fetch(self, target=None):
+        """execute the helm fetch command
+        
+        Keyword Arguments:
+            target {string} -- target folder to extract the cahsrt into (default: {None})
+                               If target is none, install it in the sitedescriptions helm folder
+        """
+        # construct what chart to download
+        if self.chart_url.startswith('http://') or self.chart_url.startswith('https://'):
+            cart_path = '' # FIX!!
+        else:
+            cart_path = '%s/%s' % (self.chart_url, self.chart_name)
+        helm_cmd = shutil.which('helm')
+        cmd_line = [helm_cmd, 'fetch', cart_path, '-d', self._helm_target]
+
+        result = self.run_commands([[helm_cmd, 'init'],cmd_line])
+    
 
 class KuberHandler(object):
     def __init__(self, config_data = {}):
@@ -142,8 +200,6 @@ class KuberHandler(object):
     @property
     def tserver(self):
         return self._tserver
-        
-
 
     def install(self, tserver = None):
         if not tserver:
@@ -157,7 +213,8 @@ class KuberHandler(object):
         if chart:
             url, cart_name = chart
             chart_path = chart_versions = from_repo(url, cart_name)
-            chartb = chartbuilder.ChartBuilder(chart)
+            chart_obj = chartbuilder.ChartBuilder({'name': 'mongodb', 'source': {'type': 'directory', 'location': chart_path}})
+            #chartb = chartbuilder.ChartBuilder(chart_path)
             r_matches = (x for x in tserver.list_releases()
                         if x.name == name and x.namespace == namespace)
             installed_release = next(r_matches, None)
