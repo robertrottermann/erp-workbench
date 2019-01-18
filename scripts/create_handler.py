@@ -17,7 +17,6 @@ from config.config_data.servers_info import REMOTE_SERVERS
 from scripts.bcolors import bcolors
 from scripts.name_completer import SimpleCompleter
 import stat
-import shutil
 import psycopg2
 import psycopg2.extras
 import urllib.request, urllib.error, urllib.parse
@@ -1332,34 +1331,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     # =============================================================
     # handle docker stuff
     # =============================================================
-    # ef run_commands(self, cmd_lines, shell=True, pw ='', user=''):
-        # ""
-        # andle docker stuff
-        # ""
-        # rom localdata import DB_USER, DB_PASSWORD
-        # f not pw:
-            # w   = self.db_password # B_PASSWORD
-        # f not user:
-            # ser = self.db_user # B_USER
-        # ounter = 0
-        # or cmd_line in cmd_lines:
-            # ounter +=1
-            # f self.opts.verbose:
-                # rint 'counter:', counter
-            # f not cmd_line:
-                # ontinue
-            # rint '-' * 80
-            # rint cmd_line
-            #  = subprocess.Popen(
-                # md_line,
-                # tdout=PIPE,
-                # nv=dict(os.environ, PGPASSWORD=pw,  PATH='/usr/bin'),
-                # hell=shell)
-            # f self.opts.verbose:
-                # rint p.communicate()
-            # lse:
-                # .communicate()
-
+ 
     def run_commands(self, cmd_lines, user='', pw='', shell=True):
         """
         """
@@ -1407,6 +1379,46 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 print(errors.decode('utf8'))
                 print('*' * 80)
                 print(bcolors.ENDC)          
+
+    def run_commands_run(self, cmd_lines, user='', pw='', shell=True):
+        """
+        similar like run_commands, but use run instead of popen
+        """
+        opts = self.opts
+        if not pw:
+            pw = self.db_password  # B_PASSWORD
+        if not user:
+            user = self.db_user  # B_USER
+        counter = 0
+        is_builtin = False
+        for cmd_line in cmd_lines:
+            counter += 1
+            if opts.verbose:
+                print('counter:', counter)
+            if not cmd_line:
+                continue
+            if opts.verbose:
+                print('-' * 80)
+                print(cmd_line)
+            p = subprocess.run(
+                cmd_line,
+                stdout=PIPE,
+                stderr=PIPE,
+                shell=shell)
+            if opts.verbose:
+                output, errors = p.communicate()
+                if output:
+                    print(output.decode('utf8'))
+            else:
+                output, errors = p.communicate()
+            if p.returncode:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print(cmd_line)
+                print('resulted in an error or warning')
+                print(errors.decode('utf8'))
+                print('*' * 80)
+                print(bcolors.ENDC)
 
     def add_aliases_to_git_exclude(self):
         """
