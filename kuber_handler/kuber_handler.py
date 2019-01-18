@@ -69,7 +69,69 @@ from pyhelm.tiller import Tiller
 chart = ChartBuilder({'name': 'mongodb', 'source': {'type': 'directory', 'location': '/tmp/pyhelm-kibwtj8d/mongodb'}})
 t.install_release(chart.get_helm_chart(), dry_run=False, namespace='default')
 
+
+
+Chart.yaml:
+-----------
+appVersion: 11.0.20181215
+description: A suite of web based open source business apps.
+engine: gotpl
+home: https://www.odoo.com/
+icon: https://bitnami.com/assets/stacks/odoo/img/odoo-stack-110x117.png
+keywords:
+- odoo
+- crm
+- www
+- http
+- web
+maintainers:
+- email: containers@bitnami.com
+  name: Bitnami
+name: odoo
+sources:
+- https://github.com/bitnami/bitnami-docker-odoo
+version: 5.0.2
+
+    The above lines have the following meaning:
+    -------------------------------------------
+    appVersion: 11.0.20181215:
+        It is a way of specifying the version of the application
+        Has nothing to do with the version field.
+
+    description: ...
+
+    engine: gotpl
+        The name of the template engine (optional, defaults to gotpl)
+
+    home: https://www.odoo.com/
+        The URL of this project's home page (optional)
+    
+    icon: ...
+
+    keywords:
+        A list of keywords about this project (optional)
+
+    name: odoo ..
+    maintainers: ..
+
+    sources:
+        A list of URLs to source code for this project (optional)
+
+    version: 5.0.2
+        Charts and Versioning
+
+        Every chart must have a version number. 
+        A version must follow the SemVer 2 standard. Unlike Helm Classic, Kubernetes Helm uses 
+        version numbers as release markers. Packages in repositories are identified by name plus version.
+
+        For example, an nginx chart whose version field is set to version: 1.2.3 will be named:
+
+        nginx-1.2.3.tgz
+
+
 """
+
+
 
 from scripts.bcolors import bcolors
 
