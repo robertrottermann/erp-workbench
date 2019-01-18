@@ -107,7 +107,8 @@ class KuberHandlerHelm(DockerHandler):
     Arguments:
         object {[type]} -- [description]
     """
-    def __init__(self, config_data = {}):
+    def __init__(self, opts, sites, parsername='', config_data = {}):
+        super().__init__(opts, sites, parsername)
         """initialize KuberHandlerHelm 
         with an url to the repository and a name of the chart to deal with      
         
@@ -117,11 +118,12 @@ class KuberHandlerHelm(DockerHandler):
         """
         self._chart_url = config_data.get('chart_url', 'stable')
         self._chart_name = config_data.get('chart_name', 'odoo')
-        default_target = os.path.normpath('%s/%s/helm' % (self.site_data_dir, self.site_name))
+        default_target = os.path.normpath('%s/helm' % (self.site_data_dir))
         helm_target = config_data.get('helm_target', default_target)
         self._helm_target = helm_target
         # make sure the target path exists
         os.makedirs(helm_target, exist_ok=True)
+        self._config_data = config_data
     
     _chart_url = ''
     @property
@@ -133,31 +135,40 @@ class KuberHandlerHelm(DockerHandler):
     def chart_name(self):
         return self._chart_name
 
+    _config_data = ''
+    @property
+    def config_data(self):
+        return self._config_data
+    
     _helm_target = ''
     @property
     def helm_target(self):
-        return self._helm_target        
+        return self._helm_target
 
-    def fetch(self, target=None):
+    def fetch(self, target=None, result={}):
         """execute the helm fetch command
         
         Keyword Arguments:
             target {string} -- target folder to extract the cahsrt into (default: {None})
                                If target is none, install it in the sitedescriptions helm folder
+            result {dict} -- container to return used settings, mostly for testing
         """
         # construct what chart to download
         if self.chart_url.startswith('http://') or self.chart_url.startswith('https://'):
-            cart_path = '' # FIX!!
+            chart_path = '' # FIX!!
         else:
-            cart_path = '%s/%s' % (self.chart_url, self.chart_name)
+            chart_path = '%s/%s' % (self.chart_url, self.chart_name)
         helm_cmd = shutil.which('helm')
-        cmd_line = [helm_cmd, 'fetch', cart_path, '-d', self._helm_target]
-
-        result = self.run_commands([[helm_cmd, 'init'],cmd_line])
+        cmd_line = [helm_cmd, 'fetch', chart_path, '-d', self.helm_target]
+        if self.config_data.get('untar'):
+            cmd_line.append('--untar')
+        result = self.run_commands_run([cmd_line])
+        return {'result' : result, 'cmd_line' : cmd_line, 'chart_path' : chart_path, 'helm_target' : self.helm_target}
     
 
 class KuberHandler(object):
-    def __init__(self, config_data = {}):
+    def __init__(self, opts, sites, parsername='', config_data = {}):
+        super.__init__(opts, sites, parsername)
         self._host = config_data.get('host', 'localhost')
         self._port = config_data.get('port', '8069')
         self._resource_name = config_data.get('resource_name', '')

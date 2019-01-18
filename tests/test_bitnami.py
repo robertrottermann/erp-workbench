@@ -5,6 +5,7 @@ import shutil
 import unittest
 import random
 import string
+import glob
 from importlib import reload
 import unittest
 from tests.name_space import MyNamespace
@@ -92,20 +93,58 @@ class TestKuberHandler2_fetch(unittest.TestCase):
     
     def do_setUp(self, config_data={}):
         from kuber_handler.kuber_handler import KuberHandlerHelm
-        self.kHandler = KuberHandlerHelm(config_data)
+        import sites_list
+        args = MyNamespace()
+        args.name = ''
+        args.subparser_name = 'docker'
+        args.skip_name = True
+        args.quiet = True
+        args.name = 'demo_global'
+        self.args = args
+        self.kHandler = KuberHandlerHelm(args, sites_list.SITES_G, config_data=config_data)
+        helm_target = self.kHandler.helm_target
+        if helm_target and os.path.exists(helm_target):
+            if helm_target.endswith('/helm'):
+                shutil.rmtree('%s/*' % helm_target, ignore_errors = True)
+        
+        
+    def do_tearDown(self, result={}):
+        helm_target = result.get('helm_target')
+        if helm_target and os.path.exists(helm_target):
+            if helm_target.endswith('/helm'):
+                shutil.rmtree(helm_target, ignore_errors = True)
         
     def test_crete_handler(self):
         """ create a docker image according to the gospel of bitnami
-        here we just create it and check whether it exists
-        
+        this test just creates the handler
         """
         self.do_setUp()
         self.assertTrue(self.kHandler)
 
     def test_fetch_chart(self):
         """ create a docker image according to the gospel of bitnami
-        here we just create it and check whether it exists
-        
+        downloads the default chart which is odoo and downloads it
+        to the default server which is localhost and checks whether 
+        it was downloaded
+        the download folder is:
+        ~/workbench/demo_global/helm
         """
         self.do_setUp()
-        self.kHandler.fetch()
+        result = self.kHandler.fetch()
+        self.assertTrue(result)
+        self.assertTrue(glob.glob(result.get('helm_target')))
+        self.do_tearDown(result)
+        
+    def test_fetch_chart_untar(self):
+        """ create a docker image according to the gospel of bitnami
+        downloads the default chart which is odoo and downloads it
+        to the default server which is localhost and checks whether 
+        it was downloaded and unpacked
+        the download folder is:
+        ~/workbench/demo_global/helm/odoo
+        """
+        self.do_setUp(config_data={'untar' : True})
+        result = self.kHandler.fetch()
+        self.assertTrue(glob.glob('%s/odoo/' % result.get('helm_target')))
+        self.do_tearDown(result)
+        

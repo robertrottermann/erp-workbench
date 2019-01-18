@@ -1400,23 +1400,23 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             if opts.verbose:
                 print('-' * 80)
                 print(cmd_line)
-            p = subprocess.run(
-                cmd_line,
-                stdout=PIPE,
-                stderr=PIPE,
-                shell=shell)
+            p = subprocess.run(cmd_line)
+                #cmd_line,
+                #stdout=PIPE,
+                #stderr=PIPE,
+                #shell=shell)
+            output = p.stdout
+            errors = p.stderr
             if opts.verbose:
-                output, errors = p.communicate()
                 if output:
                     print(output.decode('utf8'))
-            else:
-                output, errors = p.communicate()
             if p.returncode:
                 print(bcolors.FAIL)
                 print('*' * 80)
                 print(cmd_line)
                 print('resulted in an error or warning')
-                print(errors.decode('utf8'))
+                if errors:
+                    print(errors.decode('utf8'))
                 print('*' * 80)
                 print(bcolors.ENDC)
 
