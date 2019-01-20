@@ -1,4 +1,6 @@
 from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
+import socket
+from scripts.bcolors import bcolors
 
 class PropertiesMixin(object):
     _login_info = {}
@@ -534,7 +536,15 @@ class PropertiesMixin(object):
     _remote_server_ip = ''
     @property
     def remote_server_ip(self):
-        return self._remote_server_ip
+        try:
+            remote_ip = socket.gethostbyname(self._remote_server_ip)
+        except socket.gaierror as e:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print(str(e))
+            print(bcolors.ENDC)
+            remote_ip = '0.0.0.0'
+        return remote_ip
 
     # as what user are we accessing the remote server
     # _remote_user = ''
