@@ -3,10 +3,11 @@
 import os
 import sys
 import shutil
+import docker
 
 from scripts.bcolors import bcolors
 from docker_handler.docker_handler import DockerHandler
-
+from scripts.messages import DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, DOCKER_BITNAMI_IMAGE_CREATE_DONE
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
 """
@@ -292,8 +293,67 @@ class KuberHandlerHelm(DockerHandler):
         result = self.run_commands_run([cmd_line])
         return {'result' : result, 'cmd_line' : cmd_line, 'chart_path' : chart_path, 'helm_target' : self.helm_target}
 
-    
-    
+    def build_image(self):
+        """
+        build image using the bitnamy docker file
+        """
+
+        # get path to the bitnami github path
+        bitnami_git_url = self.bitnamy_defaults.get('bitnami_git_url')
+        bitnami_folder = self.bitnamy_defaults.get('bitnami_folder_name')
+        bitnami_docker_file_path = self.bitnamy_defaults.get('bitnami_docker_file_path')
+
+        # make sure bitnami_folder exists
+        os.makedirs(bitnami_folder, exist_ok=True)
+        # cd into this folder
+        act_dir = os.getcwd()
+        os.chdir(bitnami_folder)
+
+        version = self.erp_version
+        minor = self.erp_minor
+        try:
+            version = str(int(float(version)))
+        except:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
+            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (version, self.site))
+            print(bcolors.ENDC)
+        if minor:
+            version = ('%s.%s' % (version, minor)).replace('..', '.')
+
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print("Git clonig odoo source V%s to be included in the image to %s/src" %
+              (version, os.getcwd()))
+        print(bcolors.ENDC)
+        cmd_lines = [
+            'git init .',
+            'git submodule init',
+            'git submodule add %s' % bitnami_git_url
+        ]
+        self.run_commands(cmd_lines=cmd_lines)
+        print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
+        tag = self.erp_image_version
+        return_info = []
+        try:
+            docker_target_path = os.path.normpath('%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
+            os.chdir(docker_target_path)
+            docker_file = '%s/Dockerfile' % docker_target_path
+            result = self.docker_client.build(
+                docker_target_path, 
+                tag = tag, 
+                dockerfile=docker_file)
+            is_ok = self._print_docker_result(result, docker_file, docker_target_path, return_info)
+            if not is_ok:
+                return
+        except docker.errors.NotFound:
+            print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
+        else:
+            result = return_info[0].split(' ')[-1]
+            # the last line is something like:
+            # {"stream":"Successfully built 97cea8884220\n"}
+            print(DOCKER_BITNAMI_IMAGE_CREATE_DONE % (self.site_name, result))
 
 class KuberHandler(object):
     def __init__(self, opts, sites, parsername='', config_data = {}):

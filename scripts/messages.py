@@ -452,8 +452,7 @@ bin/s --edit-site %%s
 DOCKER_IMAGE_CREATE_PLEASE_WAIT = """
 %s--------------------------------------------
 About to create a new docker image. Please be patient
-This process will take up to some minutes, and no output
-will be provided until it is done.
+This process will take up to some minutes.
 ---------------------------------------------%s
 """ % (bcolors.WARNING, bcolors.ENDC)
 
@@ -482,7 +481,14 @@ execute:
     bin/d -dc %%s
 ---------------------------------------------%s
 """ % (bcolors.OKGREEN, bcolors.ENDC)
+DOCKER_BITNAMI_IMAGE_CREATE_DONE = """
+%s--------------------------------------------
+Finished to create docker image for site 
 
+    %%s
+    %%s
+---------------------------------------------%s
+"""
 # -------------------------------------
 # missing modules
 # -------------------------------------

@@ -1,4 +1,4 @@
-from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
+from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, BITNAMI_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
 import socket
 from scripts.bcolors import bcolors
 
@@ -48,10 +48,26 @@ class PropertiesMixin(object):
     # values read from the yaml files
     # -------------------------------------------------------------
 
+    def _pep_up(self, value_dic):
+        # some of the values migth have yet placeholders
+        for k,v in value_dic.items():
+            try:
+                value_dic[k] = v % self.default_values
+            except:
+                pass
+            
     @property
     def base_info(self):
         return BASE_INFO
 
+    _bitnamy_defaults = ''
+    @property
+    def bitnamy_defaults(self):
+        if not self._bitnamy_defaults:
+            self._pep_up(BITNAMI_DEFAULTS)
+            self._bitnamy_defaults = BITNAMI_DEFAULTS
+        return self._bitnamy_defaults
+    
     @property
     def docker_defaults(self):
         return DOCKER_DEFAULTS
