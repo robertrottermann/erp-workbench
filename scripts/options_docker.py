@@ -19,6 +19,11 @@ def add_options_docker(parser, result_dic):
     # -----------------------------------------------
     #parser_support_s = parser_support.add_subparsers(title='docker commands', dest="docker_commands")
     parser_docker.add_argument(
+        "-dBI", "--use_bitnami",
+        action="store_true", dest="docker_use_bitnami", default=False,
+        help='Use bitnami settings when handling docker or kubernetes',
+    )
+    parser_docker.add_argument(
         "-dbi", "--build_image",
         action="store_true", dest="docker_build_image", default=False,
         help='create a docker image. Name must be provided',

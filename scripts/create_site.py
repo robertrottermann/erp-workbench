@@ -35,6 +35,8 @@ from config.config_data.project_info import PROJECT_DEFAULTS
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler
+#from config.handlers import KuberHandlerHelm
+from kuber_handler.kuber_handler import KuberHandlerHelm
 from config.handlers import SupportHandler
 from config.handlers import RemoteHandler
 #from config.handlers import MailHandler
@@ -85,8 +87,9 @@ def set_default_subparser(self, name, args=None):
             name_to_return = name
     return name_to_return
 
-def main(opts, parsername, need_names_dic):
+def main(opts, parsername, need_names_dic, return_handler = False):
     """
+    return_handler is used while testing
     """
     # default_handler = SiteCreator
     try:
@@ -104,13 +107,19 @@ def main(opts, parsername, need_names_dic):
     elif parsername == 'remote':
         handler = RemoteHandler(opts, SITES)
     elif parsername == 'docker':
-        handler = DockerHandler(opts, SITES)
+        if opts.docker_use_bitnami:
+            handler = KuberHandlerHelm(opts, SITES)
+        else:
+            handler = DockerHandler(opts, SITES)
     # elif parsername == 'mail':
     #     handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
        # _subparser_name = 'docker'
-
+    # return handler to the test process if asked to
+    if return_handler == 1:
+        return handler
+    
     # ckeck whether the used option needs a name to work
     handler.check_name(need_names_dic=need_names_dic)
 

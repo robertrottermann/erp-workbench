@@ -539,7 +539,7 @@ class DockerHandler(InitHandler, DBUpdater):
         
         Arguments:
             result {stream} -- what the docker build returned
-            docker_file {strin} -- in fact the Dockerfile to be build
+            docker_file {string} -- in fact the Dockerfile to be build
             docker_target_path {string} -- the path to the Dockerfile
         
         Keyword Arguments:
@@ -584,7 +584,7 @@ class DockerHandler(InitHandler, DBUpdater):
         build image that has all python modules installed mentioned in the site description
         the base odo image is also read from the site description
         
-        a docker image will only be buildt when the site description has a docker_hub block.
+        a docker image will only be built when the site description has a docker_hub block.
         """
         from templates.docker_templates import docker_base_file_template, docker_run_apt_template, docker_run_no_apt_template, \
              docker_erp_setup_requirements, docker_erp_setup_version, docker_erp_setup_script

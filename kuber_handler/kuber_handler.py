@@ -130,6 +130,62 @@ version: 5.0.2
 
 
 """
+"""The following table lists the configurable parameters of the Odoo chart and their default values.
+
+|               Parameter               |                Description                                  |                   Default                      |
+|---------------------------------------|-------------------------------------------------------------|------------------------------------------------|
+| `global.imageRegistry`                | Global Docker image registry                                | `nil`                                          |
+| `image.registry`                      | Odoo image registry                                         | `docker.io`                                    |
+| `image.repository`                    | Odoo Image name                                             | `bitnami/odoo`                                 |
+| `image.tag`                           | Odoo Image tag                                              | `{VERSION}`                                    |
+| `image.pullPolicy`                    | Image pull policy                                           | `Always`                                       |
+| `image.pullSecrets`                   | Specify docker-registry secret names as an array            | `[]` (does not add image pull secrets to deployed pods) |
+| `odooUsername`                        | User of the application                                     | `user@example.com`                             |
+| `odooPassword`                        | Admin account password                                      | _random 10 character long alphanumeric string_ |
+| `odooEmail`                           | Admin account email                                         | `user@example.com`                             |
+| `smtpHost`                            | SMTP host                                                   | `nil`                                          |
+| `smtpPort`                            | SMTP port                                                   | `nil`                                          |
+| `smtpUser`                            | SMTP user                                                   | `nil`                                          |
+| `smtpPassword`                        | SMTP password                                               | `nil`                                          |
+| `smtpProtocol`                        | SMTP protocol [`ssl`, `tls`]                                | `nil`                                          |
+| `service.type`                        | Kubernetes Service type                                     | `LoadBalancer`                                 |
+| `service.port`                        | Service HTTP port                                           | `80`                                           |
+| `service.loadBalancer`                | Kubernetes LoadBalancerIP to request                        | `nil`                                          |
+| `service.externalTrafficPolicy`       | Enable client source IP preservation                        | `Cluster`                                      |
+| `service.nodePort`                    | Kubernetes http node port                                   | `""`                                           |
+| `ingress.enabled`                     | Enable ingress controller resource                          | `false`                                        |
+| `ingress.hosts[0].name`               | Hostname to your Odoo installation                          | `odoo.local`                                   |
+| `ingress.hosts[0].path`               | Path within the url structure                               | `/`                                            |
+| `ingress.hosts[0].tls`                | Utilize TLS backend in ingress                              | `false`                                        |
+| `ingress.hosts[0].certManager`        | Add annotations for cert-manager                            | `false`                                        |
+| `ingress.hosts[0].tlsSecret`          | TLS Secret (certificates)                                   | `odoo.local-tls-secret`                        |
+| `ingress.hosts[0].annotations`        | Annotations for this host's ingress record                  | `[]`                                           |
+| `ingress.secrets[0].name`             | TLS Secret Name                                             | `nil`                                          |
+| `ingress.secrets[0].certificate`      | TLS Secret Certificate                                      | `nil`                                          |
+| `ingress.secrets[0].key`              | TLS Secret Key                                              | `nil`                                          |
+| `resources`                           | CPU/Memory resource requests/limits                         | Memory: `512Mi`, CPU: `300m`                   |
+| `persistence.storageClass`            | PVC Storage Class                                           | `nil` (uses alpha storage class annotation)    |
+| `persistence.accessMode`              | PVC Access Mode                                             | `ReadWriteOnce`                                |
+| `persistence.size`                    | PVC Storage Request                                         | `8Gi`                                          |
+| `postgresql.postgresqlPassword`       | PostgreSQL password                                         | `nil`                                          |
+| `postgresql.persistence.enabled`      | Enable PostgreSQL persistence using PVC                     | `true`                                         |
+| `postgresql.persistence.storageClass` | PVC Storage Class for PostgreSQL volume                     | `nil` (uses alpha storage class annotation)    |
+| `postgresql.persistence.accessMode`   | PVC Access Mode for PostgreSQL volume                       | `ReadWriteOnce`                                |
+| `postgresql.persistence.size`         | PVC Storage Request for PostgreSQL volume                   | `8Gi`                                          |
+| `livenessProbe.enabled`               | Enable/disable the liveness probe                           | `true`                                         |
+| `livenessProbe.initialDelaySeconds`   | Delay before liveness probe is initiated                    | 300                                            |
+| `livenessProbe.periodSeconds`         | How often to perform the probe                              | 30                                             |
+| `livenessProbe.timeoutSeconds`        | When the probe times out                                    | 5                                              |
+| `livenessProbe.failureThreshold`      | Minimum consecutive failures to be considered failed        | 6                                              |
+| `livenessProbe.successThreshold`      | Minimum consecutive successes to be considered successful   | 1                                              |
+| `readinessProbe.enabled`              | Enable/disable the readiness probe                          | `true`                                         |
+| `readinessProbe.initialDelaySeconds`  | Delay before readinessProbe is initiated                    | 30                                             |
+| `readinessProbe.periodSeconds   `     | How often to perform the probe                              | 10                                             |
+| `readinessProbe.timeoutSeconds`       | When the probe times out                                    | 5                                              |
+| `readinessProbe.failureThreshold`     | Minimum consecutive failures to be considered failed        | 6                                              |
+| `readinessProbe.successThreshold`     | Minimum consecutive successes to be considered successful   | 1                                              |
+
+"""
 
 
 
@@ -146,6 +202,7 @@ except ImportError as e:
     print('some library could not be installed')
     print('please run: pip install -r install/requirements.txt')
     print(str(e))
+    print(bcolors.ENDC)
     sys.exit()
 
 try:
@@ -153,6 +210,7 @@ try:
     from pyhelm import tiller
     from pyhelm import chartbuilder
     from pyhelm.repo import from_repo
+    HasPyhelm = True
 except ImportError as e:
     print(bcolors.FAIL)
     print('*' * 80)
@@ -160,7 +218,8 @@ except ImportError as e:
     print('please download and install it from:')
     print('https://github.com/redcor/pyhelm.git')
     print(str(e))
-    sys.exit()
+    HasPyhelm = False
+    print(bcolors.ENDC)
 
 class KuberHandlerHelm(DockerHandler):
     """KuberHandlerHelm
@@ -222,23 +281,32 @@ class KuberHandlerHelm(DockerHandler):
             chart_path = '%s/%s' % (self.chart_url, self.chart_name)
         helm_cmd = shutil.which('helm')
         cmd_line = [helm_cmd, 'fetch', chart_path, '-d', self.helm_target]
+        if not helm_cmd:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('helm could not be found. Is it installed?')
+            print(bcolors.ENDC)
+            return
         if self.config_data.get('untar'):
             cmd_line.append('--untar')
         result = self.run_commands_run([cmd_line])
         return {'result' : result, 'cmd_line' : cmd_line, 'chart_path' : chart_path, 'helm_target' : self.helm_target}
+
+    
     
 
 class KuberHandler(object):
     def __init__(self, opts, sites, parsername='', config_data = {}):
-        super.__init__(opts, sites, parsername)
-        self._host = config_data.get('host', 'localhost')
-        self._port = config_data.get('port', '8069')
-        self._resource_name = config_data.get('resource_name', '')
-        self._chart = config_data.get('chart', {})
-        self._values = config_data.get('values', {})
-        self._namespace = config_data.get('namespace', 'default')
-        
-        self._tserver = tiller.Tiller(self.host, self.port)
+        if     HasPyhelm:
+            super.__init__(opts, sites, parsername)
+            self._host = config_data.get('host', 'localhost')
+            self._port = config_data.get('port', '8069')
+            self._resource_name = config_data.get('resource_name', '')
+            self._chart = config_data.get('chart', {})
+            self._values = config_data.get('values', {})
+            self._namespace = config_data.get('namespace', 'default')
+            
+            self._tserver = tiller.Tiller(self.host, self.port)
 
     _host = 'localhost'
     @property
@@ -276,6 +344,12 @@ class KuberHandler(object):
         return self._tserver
 
     def install(self, tserver = None):
+        if not HasPyhelm:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('pyhelm is not installed')
+            print(bcolors.ENDC)
+            return
         if not tserver:
             tserver = self.tserver
         changed = False

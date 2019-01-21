@@ -61,9 +61,9 @@ class TestKuberHandler(unittest.TestCase):
         config_data = {'port' : 8069}
         if self._chart:
             config_data['chart'] = self._chart
-        self.kHandler = KuberHandler(config_data)
+        self.kHandler = KuberHandler(MyNamespace(), sites={}, config_data=config_data)
 
-    def test_get_tiller(self):
+    def XXtest_get_tiller(self):
         """ create a docker image according to the gospel of bitnami
         here we just create it and check whether it exists
         
@@ -80,7 +80,7 @@ class TestKuberHandlerInstall(unittest.TestCase):
         config_data = {'port' : 8069}
         if self._chart:
             config_data['chart'] = self._chart
-        self.kHandler = KuberHandler(config_data)
+        self.kHandler = KuberHandler(xx, config_data)
         
     def xtest_get_chart(self):
         """ create a docker image according to the gospel of bitnami
@@ -148,3 +148,40 @@ class TestKuberHandler2_fetch(unittest.TestCase):
         self.assertTrue(glob.glob('%s/odoo/' % result.get('helm_target')))
         self.do_tearDown(result)
         
+
+class TestKuberHandler2Data(unittest.TestCase):
+    """I want to refactor how the docker data is stored in
+    the site description
+    
+    Arguments:
+        unittest {[type]} -- [description]
+    """
+    
+    def do_setUp(self, config_data={}):
+        #from config.handlers import KuberHandler
+        #from kuber_handler.kuber_handler import KuberHandlerHelm
+        import sites_list
+        args = MyNamespace()
+        args.name = ''
+        args.subparser_name = 'docker'
+        args.skip_name = True
+        args.quiet = True
+        args.name = 'demo_global'
+        args.docker_use_bitnami = True
+        self.args = args
+        #self.kHandler = KuberHandlerHelm(args, sites_list.SITES_G, config_data=config_data)
+        #helm_target = self.kHandler.helm_target
+        #if helm_target and os.path.exists(helm_target):
+            #if helm_target.endswith('/helm'):
+                #shutil.rmtree('%s/*' % helm_target, ignore_errors = True)
+
+    def test_get_create_main(self):
+        """ we want to get the handler that was selected
+        """
+        self.do_setUp()
+        from scripts.create_site import main
+        args = self.args
+        args.create = True
+        need_names_dic = {}
+        handler = main(args, args.subparser_name, need_names_dic, return_handler=1)
+        self.assertTrue(hasattr(handler, 'chart_name'))

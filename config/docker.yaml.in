@@ -112,3 +112,11 @@ HOST_MAPPING:
     /filestore: /var/lib/odoo/filestore/
     /: /var/lib/odoo/
     /log: /var/log/odoo/
+
+# ----------------------------
+# bitnami / helm
+# ----------------------------
+# info about bitnami & helm-charts
+BITNAMI_SETTINGS:
+    bitnami_git_url: https://github.com/bitnami/bitnami-docker-odoo
+    
