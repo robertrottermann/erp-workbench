@@ -6,6 +6,7 @@ sites_list
 *.swp
 *.save
 tests/test_data/*
+tests/config/**
 config/*.yaml
 config/config_data/*_info.py
 docker/docker-odoo-project/
@@ -14,6 +15,8 @@ help/source/_build/
 dumper/Dockerfile
 bin/pip
 bin/python
+
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
