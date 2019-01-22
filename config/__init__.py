@@ -59,7 +59,8 @@ vals = {
     'ACT_USER'  : ACT_USER,
     'DB_USER'   : ACT_USER,
     'PROJECT_INSTALL': '%(inner_path)s',
-    'SITE_DATA_DIR' : '%(site_data_dir)s'
+    'SITE_DATA_DIR' : '%(site_data_dir)s',
+    'ERP_VERSION' : '%(erp_version)s',
 }
 # from pprint import pformat
 # print(pformat(yaml_dic))

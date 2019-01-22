@@ -302,7 +302,8 @@ class KuberHandlerHelm(DockerHandler):
         bitnami_git_url = self.bitnamy_defaults.get('bitnami_git_url')
         bitnami_folder = self.bitnamy_defaults.get('bitnami_folder_name')
         bitnami_docker_file_path = self.bitnamy_defaults.get('bitnami_docker_file_path')
-
+        bitnami_docker_tag = self.bitnamy_defaults.get('bitnami_docker_tag')
+        
         # make sure bitnami_folder exists
         os.makedirs(bitnami_folder, exist_ok=True)
         # cd into this folder
@@ -334,7 +335,7 @@ class KuberHandlerHelm(DockerHandler):
         ]
         self.run_commands(cmd_lines=cmd_lines)
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
-        tag = self.erp_image_version
+        tag = bitnami_docker_tag
         return_info = []
         try:
             docker_target_path = os.path.normpath('%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
@@ -353,7 +354,10 @@ class KuberHandlerHelm(DockerHandler):
             result = return_info[0].split(' ')[-1]
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_BITNAMI_IMAGE_CREATE_DONE % (self.site_name, result))
+            hubname = self.docker_hub_name or 'YOUR_DOCKERHUB_ACCOUNT'
+            print(DOCKER_BITNAMI_IMAGE_CREATE_DONE % (
+                self.site_name,result, hubname, 
+                result))                
 
 class KuberHandler(object):
     def __init__(self, opts, sites, parsername='', config_data = {}):

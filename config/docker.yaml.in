@@ -121,3 +121,4 @@ BITNAMI_DEFAULTS:
     bitnami_git_url: https://github.com/bitnami/bitnami-docker-odoo
     bitnami_folder_name: '%(SITE_DATA_DIR)s/bitnami'
     bitnami_docker_file_path: bitnami-docker-odoo/11/debian-9/
+    bitnami_docker_tag: 'bitnami-odoo-%(ERP_VERSION)s'
