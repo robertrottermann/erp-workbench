@@ -140,4 +140,12 @@ BITNAMI_DEFAULTS:
     bitnami_dockerfile_pip_line: RUN bitnami-pkg unpack odoo
     # bitnami_dockerfile_pip_install_command
     # command line to pip install the pip libraries
-    bitnami_dockerfile_pip_install_command: pip install --cache-dir=.pip
+    bitnami_dockerfile_pip_install_command: RUN pip3 install --cache-dir=.pip
+    # bitnami_dockerfile_apt_items
+    # are apt library elements we must make sure to have included
+    bitnami_dockerfile_apt_items:
+        - python
+        - python-libxslt1
+        - python-pip
+        - python3-pip
+        - python3-setuptools
