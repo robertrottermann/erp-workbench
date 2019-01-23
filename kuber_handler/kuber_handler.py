@@ -316,19 +316,19 @@ class KuberHandlerHelm(DockerHandler):
         # if there are apt modules, we add them to the ones bitnami is already getting in
         if site_apt_modules:
             what = self.bitnamy_defaults.get('bitnami_dockerfile_apt_line')
-            line, index = self._get_line_and_index(what)
+            line, index = self._get_line_and_index(docker_file_lines, what)
             if line:
                 parts = [what] + list(set(line.split(what)[-1].split() + site_apt_modules))
-                line = parts.join(parts)
+                line = ' '.join(parts)
                 docker_file_lines[index] = line
         if site_pip_modules:
             what = self.bitnamy_defaults.get(
                 'bitnami_dockerfile_pip_line')
             bitnami_dockerfile_pip_install_command = self.bitnamy_defaults.get(
                 'bitnami_dockerfile_pip_install_command')
-            line, index = self._get_line_and_index(what)
+            line, index = self._get_line_and_index(docker_file_lines, what)
             # insert a new line AFTER the index
-            line = "%s %s" % (what, ' '.join(site_pip_modules))
+            line = "%s %s" % (bitnami_dockerfile_pip_install_command, ' '.join(site_pip_modules))
             docker_file_lines.insert(index + 1, line)
         # finally write out the file
         with open(docker_file, 'w') as f:
@@ -349,10 +349,9 @@ class KuberHandlerHelm(DockerHandler):
         os.makedirs(bitnami_folder, exist_ok=True)
         # cd into this folder
         act_dir = os.getcwd()
+        os.chdir(bitnami_folder)
         docker_target_path = os.path.normpath(
             '%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
-        os.chdir(docker_target_path)
-        docker_file = '%s/Dockerfile' % docker_target_path
 
         version = self.erp_version
         minor = self.erp_minor
@@ -387,6 +386,8 @@ class KuberHandlerHelm(DockerHandler):
         # -------------------------------------------------------------
         site_apt_modules = self.site_apt_modules
         site_pip_modules = self.site_pip_modules
+        os.chdir(docker_target_path)
+        docker_file = '%s/Dockerfile' % docker_target_path
         self.adapt_bitnami_dockerfile(
             site_apt_modules, site_pip_modules, docker_file)
 
