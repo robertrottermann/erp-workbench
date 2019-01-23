@@ -7,7 +7,9 @@ import docker
 
 from scripts.bcolors import bcolors
 from docker_handler.docker_handler import DockerHandler
-from scripts.messages import DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, DOCKER_BITNAMI_IMAGE_CREATE_DONE
+from scripts.messages import DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED,\
+    DOCKER_BITNAMI_IMAGE_CREATE_DONE, DOCKER_IMAGE_CREATE_MISING_HUB_USER
+
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
 """
@@ -188,8 +190,6 @@ version: 5.0.2
 
 """
 
-
-
 from scripts.bcolors import bcolors
 
 try:
@@ -293,6 +293,47 @@ class KuberHandlerHelm(DockerHandler):
         result = self.run_commands_run([cmd_line])
         return {'result' : result, 'cmd_line' : cmd_line, 'chart_path' : chart_path, 'helm_target' : self.helm_target}
 
+    def _get_line_and_index(self, lines, what):
+        """get the index of the line within lines starting with what
+        
+        Arguments:
+            lines {list} -- lines to scrutinize
+            what {string} -- what to search
+        """
+        counter = 0
+        for line in lines:
+            if line.startswith(what):
+                return line, counter
+            counter += 1
+        return '', -1
+
+    def adapt_bitnami_dockerfile(self, site_apt_modules, site_pip_modules, docker_file):
+        docker_file_dir = os.path.dirname(docker_file)
+        # build a list with lines of the Dockerfile
+        with open(docker_file, 'r') as f:
+            docker_file_lines = f.read().splitlines()
+
+        # if there are apt modules, we add them to the ones bitnami is already getting in
+        if site_apt_modules:
+            what = self.bitnamy_defaults.get('bitnami_dockerfile_apt_line')
+            line, index = self._get_line_and_index(what)
+            if line:
+                parts = [what] + list(set(line.split(what)[-1].split() + site_apt_modules))
+                line = parts.join(parts)
+                docker_file_lines[index] = line
+        if site_pip_modules:
+            what = self.bitnamy_defaults.get(
+                'bitnami_dockerfile_pip_line')
+            bitnami_dockerfile_pip_install_command = self.bitnamy_defaults.get(
+                'bitnami_dockerfile_pip_install_command')
+            line, index = self._get_line_and_index(what)
+            # insert a new line AFTER the index
+            line = "%s %s" % (what, ' '.join(site_pip_modules))
+            docker_file_lines.insert(index + 1, line)
+        # finally write out the file
+        with open(docker_file, 'w') as f:
+            f.write("\n".join(docker_file_lines))
+
     def build_image(self):
         """
         build image using the bitnamy docker file
@@ -308,7 +349,10 @@ class KuberHandlerHelm(DockerHandler):
         os.makedirs(bitnami_folder, exist_ok=True)
         # cd into this folder
         act_dir = os.getcwd()
-        os.chdir(bitnami_folder)
+        docker_target_path = os.path.normpath(
+            '%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
+        os.chdir(docker_target_path)
+        docker_file = '%s/Dockerfile' % docker_target_path
 
         version = self.erp_version
         minor = self.erp_minor
@@ -323,6 +367,9 @@ class KuberHandlerHelm(DockerHandler):
         if minor:
             version = ('%s.%s' % (version, minor)).replace('..', '.')
 
+        # -------------------------------------------------------------
+        # git clone the odoo bitnami repo 
+        # -------------------------------------------------------------
         print(bcolors.WARNING)
         print('*' * 80)
         print("Git clonig odoo source V%s to be included in the image to %s/src" %
@@ -334,16 +381,25 @@ class KuberHandlerHelm(DockerHandler):
             'git submodule add %s' % bitnami_git_url
         ]
         self.run_commands(cmd_lines=cmd_lines)
+
+        # -------------------------------------------------------------
+        # get libraries to add to the image, adapt Dockerfile
+        # -------------------------------------------------------------
+        site_apt_modules = self.site_apt_modules
+        site_pip_modules = self.site_pip_modules
+        self.adapt_bitnami_dockerfile(
+            site_apt_modules, site_pip_modules, docker_file)
+
+        # -------------------------------------------------------------
+        # build the image
+        # -------------------------------------------------------------
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
         tag = bitnami_docker_tag
-        return_info = []
+        return_info = [] # used to get te result from building the image
         try:
-            docker_target_path = os.path.normpath('%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
-            os.chdir(docker_target_path)
-            docker_file = '%s/Dockerfile' % docker_target_path
             result = self.docker_client.build(
-                docker_target_path, 
-                tag = tag, 
+                docker_target_path,
+                tag=tag,
                 dockerfile=docker_file)
             is_ok = self._print_docker_result(result, docker_file, docker_target_path, return_info)
             if not is_ok:
@@ -352,12 +408,10 @@ class KuberHandlerHelm(DockerHandler):
             print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
         else:
             result = return_info[0].split(' ')[-1]
-            # the last line is something like:
-            # {"stream":"Successfully built 97cea8884220\n"}
             hubname = self.docker_hub_name or 'YOUR_DOCKERHUB_ACCOUNT'
             print(DOCKER_BITNAMI_IMAGE_CREATE_DONE % (
-                self.site_name,result, hubname, 
-                result))                
+                self.site_name, result, hubname,
+                result))
 
 class KuberHandler(object):
     def __init__(self, opts, sites, parsername='', config_data = {}):

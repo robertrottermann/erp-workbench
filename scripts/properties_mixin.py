@@ -28,11 +28,11 @@ class PropertiesMixin(object):
 
     def reset_values(self):
         self._all_done = False
-        self._default_values = {}        
+        self._default_values = {}
 
     # -------------------------------------------------------------
     # Some parts of erp-workbench are constructed using templates
-    # these templates carry placeholders for values that are 
+    # these templates carry placeholders for values that are
     # provisioned by the default_values
     # -------------------------------------------------------------
 
