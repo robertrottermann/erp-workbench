@@ -315,10 +315,12 @@ class KuberHandlerHelm(DockerHandler):
 
         # if there are apt modules, we add them to the ones bitnami is already getting in
         if site_apt_modules:
+            # extramodules are defined in the docker.yaml
+            extra_modules = self.bitnamy_defaults.get('bitnami_dockerfile_apt_items')
             what = self.bitnamy_defaults.get('bitnami_dockerfile_apt_line')
             line, index = self._get_line_and_index(what)
             if line:
-                parts = [what] + list(set(line.split(what)[-1].split() + site_apt_modules))
+                parts = [what] + extra_modules + list(set(line.split(what)[-1].split() + site_apt_modules))
                 line = parts.join(parts)
                 docker_file_lines[index] = line
         if site_pip_modules:
