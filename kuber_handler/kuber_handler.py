@@ -285,7 +285,7 @@ class KuberHandlerHelm(DockerHandler):
     def helm_target(self):
         return self._helm_target
 
-    def fetch(self, target=None, refetch=False):
+    def fetch(self, target=None, refetch=False, untar=True):
         """execute the helm fetch command
 
         Keyword Arguments:
@@ -307,9 +307,11 @@ class KuberHandlerHelm(DockerHandler):
             print('helm could not be found. Is it installed?')
             print(bcolors.ENDC)
             return
-        if self.config_data.get('untar'):
+        if not untar:
+            untar = self.config_data.get('untar')
+        if untar:
             cmd_line.append('--untar')
-        if refetch or not glob.glob(self.helm_target):
+        if refetch or not glob.glob('%s/%s' % (self.helm_target, self._chart_name)):
             result = self.run_commands_run([cmd_line])
             return {
                 'result' : result,
@@ -337,13 +339,16 @@ class KuberHandlerHelm(DockerHandler):
         refetch = self.opts.refetch_helm_chart
         result = self.fetch(refetch=refetch)
         helm_target = result['helm_target']
+        act_dir = os.getcwd()
+        os.chdir(helm_target)
         helm_cmd = shutil.which('helm')
         settings = 'image.repository=%s' % self.bitnamy_defaults.get(
             'bitnami_docker_tag')
         settings += ',image.tag=%s' % self.docker_hub_name
         settings += ',odooUsername=%s' % 'admin'
         settings += ',odooPassword=%s' % 'admin'
-        cmd_line = [helm_cmd, 'install', '--set', settings]
+        cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--set', settings]
+        result = self.run_commands_run([cmd_line])
 
     def _get_line_and_index(self, lines, what):
         """get the index of the line within lines starting with what

@@ -76,6 +76,7 @@ class TestKuberHandler2Data(unittest.TestCase):
         from scripts.create_site import main
         args = self.args
         args.create = True
+        args.verbose = True
         need_names_dic = {}
         handler = main(args, args.subparser_name,
                        need_names_dic, return_handler=1)
