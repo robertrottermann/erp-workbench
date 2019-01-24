@@ -347,7 +347,7 @@ class KuberHandlerHelm(DockerHandler):
         settings += ',image.tag=%s' % self.docker_hub_name
         settings += ',odooUsername=%s' % 'admin'
         settings += ',odooPassword=%s' % 'admin'
-        cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--set', settings]
+        cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name', self.site_name.replace('_', '-'), '--set', settings]
         result = self.run_commands_run([cmd_line])
 
     def _get_line_and_index(self, lines, what):

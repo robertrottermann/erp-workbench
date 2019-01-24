@@ -340,7 +340,10 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         #   container can be reached. must be unique for each remote server
         if opts.docker_create_container:
             # "docker -dc", "--create_container",
-            handler.check_and_create_container()
+            if opts.docker_use_bitnami:
+                handler.create_binami_container()
+            else:
+                handler.check_and_create_container()
             did_run_a_command = True
         if opts.docker_create_update_container:
             # "docker -dcu", "--create_update_container",
@@ -370,13 +373,13 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
         
-        # build image
-        # ----------
-        # build docker image according to bitnami
-        if opts.build_image_bitnami:
-            handler.build_image_bitnami()
-            did_run_a_command = True
-            return
+        # # build image
+        # # ----------
+        # # build docker image according to bitnami
+        # if opts.build_image_bitnami:
+        #     handler.build_image_bitnami()
+        #     did_run_a_command = True
+        #     return
             
         # build image
         # ----------
