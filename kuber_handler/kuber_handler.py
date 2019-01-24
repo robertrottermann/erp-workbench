@@ -4,6 +4,7 @@ import os
 import sys
 import shutil
 import docker
+import glob
 
 from scripts.bcolors import bcolors
 from docker_handler.docker_handler import DockerHandler
@@ -190,7 +191,6 @@ version: 5.0.2
 
 """
 
-from scripts.bcolors import bcolors
 
 try:
     import pint
@@ -225,21 +225,21 @@ except ImportError as e:
 class KuberHandlerHelm(DockerHandler):
     """KuberHandlerHelm
     just calls helm using popen calls
-    
+
     Arguments:
         object {[type]} -- [description]
     """
     def __init__(self, opts, sites, parsername='', config_data = {}):
         super().__init__(opts, sites, parsername)
-        """initialize KuberHandlerHelm 
+        """initialize KuberHandlerHelm
         with an url to the repository and a name of the chart to deal with      
         
         Arguments:
             url {string} -- either an url starting with http[s]:// or a well known helm repo like stable
             chart_name {string} -- name of the chart we deal with
         """
-        self._chart_url = config_data.get('chart_url', 'stable')
-        self._chart_name = config_data.get('chart_name', 'odoo')
+        self._chart_url = self.bitnamy_defaults.get('bitnami_chart_url')
+        self._chart_name = self.bitnamy_defaults.get('bitnami_chart_name')
         default_target = os.path.normpath('%s/helm' % (self.site_data_dir))
         helm_target = config_data.get('helm_target', default_target)
         self._helm_target = helm_target
@@ -247,6 +247,24 @@ class KuberHandlerHelm(DockerHandler):
         os.makedirs(helm_target, exist_ok=True)
         self._config_data = config_data
     
+    @property
+    def version(self):
+
+        version = self.erp_version
+        minor = self.erp_minor
+        try:
+            version = str(int(float(version)))
+        except:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
+            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (
+                version, self.site))
+            print(bcolors.ENDC)
+        if minor:
+            version = ('%s.%s' % (version, minor)).replace('..', '.')
+        return version
+
     _chart_url = ''
     @property
     def chart_url(self):
@@ -261,19 +279,20 @@ class KuberHandlerHelm(DockerHandler):
     @property
     def config_data(self):
         return self._config_data
-    
+
     _helm_target = ''
     @property
     def helm_target(self):
         return self._helm_target
 
-    def fetch(self, target=None, result={}):
+    def fetch(self, target=None, refetch=False):
         """execute the helm fetch command
-        
+
         Keyword Arguments:
-            target {string} -- target folder to extract the cahsrt into (default: {None})
+            target {string} -- target folder to extract the chart into (default: {None})
                                If target is none, install it in the sitedescriptions helm folder
-            result {dict} -- container to return used settings, mostly for testing
+            result {dict} -- container to return used settings
+            refetch {bool} -- if True refetch container, otherwise only fetch if not exists
         """
         # construct what chart to download
         if self.chart_url.startswith('http://') or self.chart_url.startswith('https://'):
@@ -290,8 +309,41 @@ class KuberHandlerHelm(DockerHandler):
             return
         if self.config_data.get('untar'):
             cmd_line.append('--untar')
-        result = self.run_commands_run([cmd_line])
-        return {'result' : result, 'cmd_line' : cmd_line, 'chart_path' : chart_path, 'helm_target' : self.helm_target}
+        if refetch or not glob.glob(self.helm_target):
+            result = self.run_commands_run([cmd_line])
+            return {
+                'result' : result,
+                'cmd_line' : cmd_line,
+                'chart_path' : chart_path,
+                'helm_target' : self.helm_target}
+        return {
+            'result': {},
+            'cmd_line': '',
+            'chart_path': chart_path,
+            'helm_target': self.helm_target}
+
+    def create_binami_container(self):
+        """create a container using bitnami helmcharts
+        | `image.registry`    | Odoo image registry                              | `docker.io`                                    |
+        | `image.repository`  | Odoo Image name                                  | `bitnami/odoo`                                 |
+        | `image.tag`         | Odoo Image tag                                   | `{VERSION}`                                    |
+        | `image.pullPolicy`  | Image pull policy                                | `Always`                                       |
+        | `image.pullSecrets` | Specify docker-registry secret names as an array | `[]` (does not add image pull secrets to deployed pods) |
+        | `odooUsername`      | User of the application                          | `user@example.com`                             |
+        | `odooPassword`      | Admin account password                           | _random 10 character long alphanumeric string_ |
+        | `odooEmail`         | Admin account email                              | `user@example.com`                             |
+
+        """
+        refetch = self.opts.refetch_helm_chart
+        result = self.fetch(refetch=refetch)
+        helm_target = result['helm_target']
+        helm_cmd = shutil.which('helm')
+        settings = 'image.repository=%s' % self.bitnamy_defaults.get(
+            'bitnami_docker_tag')
+        settings += ',image.tag=%s' % self.docker_hub_name
+        settings += ',odooUsername=%s' % 'admin'
+        settings += ',odooPassword=%s' % 'admin'
+        cmd_line = [helm_cmd, 'install', '--set', settings]
 
     def _get_line_and_index(self, lines, what):
         """get the index of the line within lines starting with what
@@ -320,7 +372,8 @@ class KuberHandlerHelm(DockerHandler):
             what = self.bitnamy_defaults.get('bitnami_dockerfile_apt_line')
             line, index = self._get_line_and_index(docker_file_lines, what)
             if line:
-                parts = [what] + extra_modules + list(set(line.split(what)[-1].split() + site_apt_modules))
+                parts = [what] + extra_modules + list(set(
+                    line.split(what)[-1].split() + site_apt_modules))
                 line = ' '.join(parts)
                 docker_file_lines[index] = line
         if site_pip_modules:
@@ -355,21 +408,9 @@ class KuberHandlerHelm(DockerHandler):
         docker_target_path = os.path.normpath(
             '%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
 
-        version = self.erp_version
-        minor = self.erp_minor
-        try:
-            version = str(int(float(version)))
-        except:
-            print(bcolors.FAIL)
-            print('*' * 80)
-            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
-            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (version, self.site))
-            print(bcolors.ENDC)
-        if minor:
-            version = ('%s.%s' % (version, minor)).replace('..', '.')
-
+        version = self.version
         # -------------------------------------------------------------
-        # git clone the odoo bitnami repo 
+        # git clone the odoo bitnami repo
         # -------------------------------------------------------------
         print(bcolors.WARNING)
         print('*' * 80)

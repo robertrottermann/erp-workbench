@@ -47,10 +47,9 @@ class TestGetBitnamiData(unittest.TestCase):
     def test_build_bitnami_dockerfile(self):
         """ create a docker image according to the gospel of bitnami
         here we just create it and check whether it exists
-        
+
         """
         self.dHandler.build_image_bitnami()
-
 
 class TestKuberHandler(unittest.TestCase):
 
@@ -90,7 +89,7 @@ class TestKuberHandlerInstall(unittest.TestCase):
         self.assertFalse(self.kHandler.install())
 
 class TestKuberHandler2_fetch(unittest.TestCase):
-    
+
     def do_setUp(self, config_data={}):
         from kuber_handler.kuber_handler import KuberHandlerHelm
         import sites_list
@@ -106,13 +105,12 @@ class TestKuberHandler2_fetch(unittest.TestCase):
         if helm_target and os.path.exists(helm_target):
             if helm_target.endswith('/helm'):
                 shutil.rmtree('%s/*' % helm_target, ignore_errors = True)
-        
-        
+
     def do_tearDown(self, result={}):
         helm_target = result.get('helm_target')
         if helm_target and os.path.exists(helm_target):
             if helm_target.endswith('/helm'):
-                shutil.rmtree(helm_target, ignore_errors = True)
+                shutil.rmtree(helm_target, ignore_errors=True)
         
     def test_crete_handler(self):
         """ create a docker image according to the gospel of bitnami
@@ -134,11 +132,11 @@ class TestKuberHandler2_fetch(unittest.TestCase):
         self.assertTrue(result)
         self.assertTrue(glob.glob(result.get('helm_target')))
         self.do_tearDown(result)
-        
+
     def test_fetch_chart_untar(self):
         """ create a docker image according to the gospel of bitnami
         downloads the default chart which is odoo and downloads it
-        to the default server which is localhost and checks whether 
+        to the default server which is localhost and checks whether
         it was downloaded and unpacked
         the download folder is:
         ~/workbench/demo_global/helm/odoo
@@ -147,4 +145,3 @@ class TestKuberHandler2_fetch(unittest.TestCase):
         result = self.kHandler.fetch()
         self.assertTrue(glob.glob('%s/odoo/' % result.get('helm_target')))
         self.do_tearDown(result)
-        

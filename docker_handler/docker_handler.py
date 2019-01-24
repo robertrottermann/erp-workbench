@@ -179,13 +179,13 @@ class DockerHandler(InitHandler, DBUpdater):
         docker_template = re.sub(' *= *', '=', docker_template)
         self.run_commands([docker_template], self.user, pw='')
 
-    def check_and_create_container(self, 
-        container_name='', 
-        recreate_container = False, 
-        rename_container = False, 
-        pull_image = False, 
-        update_container=False, 
-        delete_container=False):
+    def check_and_create_container(self,
+            container_name='',
+            recreate_container=False,
+            rename_container=False,
+            pull_image=False,
+            update_container=False,
+            delete_container=False):
         """create a new docker container or manage an existing one
         
         Keyword Arguments:
@@ -242,7 +242,7 @@ class DockerHandler(InitHandler, DBUpdater):
             if long_polling_port == '??':
                 print(DOCKER_INVALID_PORT % (name, name))
                 return()
-            
+
             allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog']
             if not delete_container and container_name != 'db':
                 # make sure we have valid elements
