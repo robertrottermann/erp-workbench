@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ $1 ]; then
-   bin/_c remote $1 $2 $3
+   bin/_c remote $@
 else
    bin/_c remote --help
 fi

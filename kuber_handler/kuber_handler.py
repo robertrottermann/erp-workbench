@@ -342,12 +342,20 @@ class KuberHandlerHelm(DockerHandler):
         act_dir = os.getcwd()
         os.chdir(helm_target)
         helm_cmd = shutil.which('helm')
-        settings = 'image.repository=%s' % self.bitnamy_defaults.get(
-            'bitnami_docker_tag')
-        settings += ',image.tag=%s' % self.docker_hub_name
+        settings = 'image.repository=%s/%s' % (self.docker_hub_name, self.bitnamy_defaults.get(
+            'bitnami_docker_tag'))
+        settings += ',image.tag=latest'
         settings += ',odooUsername=%s' % 'admin'
         settings += ',odooPassword=%s' % 'admin'
+        settings += ',odooEmail=%s' % 'admin'
         cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name', self.site_name.replace('_', '-'), '--set', settings]
+        if self.opts.verbose:
+            print(bcolors.OKBLUE)
+            print('*' * 80)
+            print('about to execute:')
+            print(cmd_line)
+            print(' '.join(cmd_line))
+            print(bcolors.ENDC)
         result = self.run_commands_run([cmd_line])
 
     def _get_line_and_index(self, lines, what):
@@ -373,7 +381,7 @@ class KuberHandlerHelm(DockerHandler):
         # if there are apt modules, we add them to the ones bitnami is already getting in
         if site_apt_modules:
             # extramodules are defined in the docker.yaml
-            extra_modules = self.bitnamy_defaults.get('bitnami_dockerfile_apt_items')
+            extra_modules = self.bitnamy_defaults.get('bitnami_dockerfile_apt_items', [])
             what = self.bitnamy_defaults.get('bitnami_dockerfile_apt_line')
             line, index = self._get_line_and_index(docker_file_lines, what)
             if line:

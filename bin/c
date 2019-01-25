@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ $1 ]; then
-   bin/_c create $1 $2 $3
+   bin/_c create $@
 else
    bin/_c create --help
 fi
