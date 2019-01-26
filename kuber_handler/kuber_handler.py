@@ -348,6 +348,15 @@ class KuberHandlerHelm(DockerHandler):
         settings += ',odooUsername=%s' % 'admin'
         settings += ',odooPassword=%s' % 'admin'
         settings += ',odooEmail=%s' % 'admin'
+        settings += ',persistence.storageClass=%s' % self.bitnamy_defaults.get('persistence.storageClass')
+        settings += ',persistence.accessMode=%s' % self.bitnamy_defaults.get('persistence.accessMode')
+        settings += ',persistence.size=%s' % self.bitnamy_defaults.get('persistence.size')
+        settings += ',postgresql.postgresqlPassword=%s' % self.bitnamy_defaults.get('postgresql.postgresqlPassword')
+        settings += ',postgresql.persistence.enabled=%s' % self.bitnamy_defaults.get('postgresql.persistence.enabled')
+        settings += ',postgresql.persistence.storageClass=%s' % self.bitnamy_defaults.get('postgresql.persistence.storageClass')
+        settings += ',postgresql.persistence.accessMode=%s' % self.bitnamy_defaults.get('postgresql.persistence.accessMode')
+        settings += ',postgresql.persistence.size=%s' % self.bitnamy_defaults.get('postgresql.persistence.size')
+
         cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name', self.site_name.replace('_', '-'), '--set', settings]
         if self.opts.verbose:
             print(bcolors.OKBLUE)

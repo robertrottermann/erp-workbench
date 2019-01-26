@@ -155,3 +155,32 @@ BITNAMI_DEFAULTS:
         - python-pip
         - python3-pip
         - python3-setuptools
+
+    # -------------------------------
+    # external storage
+    # -------------------------------
+    # persistence.storageClass
+    # PVC Storage Class                                           
+    persistence.storageClass: nil 
+    # persistence.accessMode
+    # PVC Access Mode                                             
+    persistence.accessMode: ReadWriteOnce 
+    # persistence.size
+    # PVC Storage Request                                         
+    persistence.size: 8Gi 
+    # postgresql.postgresqlPassword
+    # PostgreSQL password                                         
+    postgresql.postgresqlPassword: odoo
+    # postgresql.persistence.enabled
+    # Enable PostgreSQL persistence using PVC                     
+    postgresql.persistence.enabled: true 
+    # postgresql.persistence.storageClass
+    # PVC Storage Class for PostgreSQL volume                     
+    postgresql.persistence.storageClass: nil 
+    # postgresql.persistence.accessMode
+    # PVC Access Mode for PostgreSQL volume                       
+    postgresql.persistence.accessMode: ReadWriteOnce 
+    # postgresql.persistence.size
+    # PVC Storage Request for PostgreSQL volume                   
+    postgresql.persistence.size: 8Gi
+
