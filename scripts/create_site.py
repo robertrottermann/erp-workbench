@@ -501,6 +501,29 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
 
+        # -------------------------------------
+        # editing yam files
+        # -------------------------------------
+        if opts.edit_config:
+            handler.edit_yaml_file('config.yaml')
+            did_run_a_command = True
+            return
+
+        if opts.edit_docker:
+            handler.edit_yaml_file('docker.yaml')
+            did_run_a_command = True
+            return
+
+        if opts.edit_project:
+            handler.edit_yaml_file('project.yaml')
+            did_run_a_command = True
+            return
+
+        if opts.edit_servers:
+            handler.edit_yaml_file('servers.yaml')
+            did_run_a_command = True
+            return
+
         # add_server
         # ----------
         # add_server_to_server_list

@@ -1,6 +1,10 @@
 #!/bin/bash
 if [ $1 ]; then
-    bin/_c support --edit-site $1
+    if [[ $1 == -* ]]; then
+        bin/_c support  $@
+    else
+        bin/_c support --edit-site $1
+    fi
 else
     bin/_c support --edit-server
 fi

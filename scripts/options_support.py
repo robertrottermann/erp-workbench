@@ -33,11 +33,6 @@ def add_options_support(parser, result_dic):
         name_valid=True,
     )
     parser_support.add_argument(
-        "--add-server",
-        action="store", dest="add_server",
-        help='add server to config/servers.yaml. server ip and user must be provided in the form user@server_ip',
-    )
-    parser_support.add_argument(
         "--docker-port",
         action="store", dest="docker_port",
         help='provide docker port to new server.  To ckeck for availability use option -lp --list-port'
@@ -68,8 +63,37 @@ def add_options_support(parser, result_dic):
         need_name=False,
         name_valid=False,
     )
+    # -------------------------------------
+    # editing yam files
+    # -------------------------------------
     parser_support.add_argument(
-        "-a", "--alias",
+        "-a", "--add-server",
+        action="store", dest="add_server",
+        help='add server to config/servers.yaml. server ip and user must be provided in the form user@server_ip',
+    )
+    parser_support.add_argument(
+        "-c", "--edit-config",
+        action="store_true", dest="edit_config",
+        help='edit config yaml file'
+    )
+    parser_support.add_argument(
+        "-d", "--edit-docker",
+        action="store_true", dest="edit_docker",
+        help='edit docker yaml file',
+        need_name=False,
+    )
+    parser_support.add_argument(
+        "-p", "--edit-project",
+        action="store_true", dest="edit_project",
+        help='edit project yaml file'
+    )
+    parser_support.add_argument(
+        "-s", "--edit-servers",
+        action="store_true", dest="edit_servers",
+        help='edit servers yaml file'
+    )
+    parser_support.add_argument(
+        "-al", "--alias",
         action="store_true", dest="alias", default=False,
         help='add project site structure to aliases. create site will run this automatically'
     )

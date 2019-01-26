@@ -25,7 +25,7 @@ BLOCK_WITH_NEW_SERVER = """
     %(remote_ip)s:
         server_name: 'AnyName'
         server_ip: '%(remote_ip)s'
-        remote_user: 'root'
+        remote_user: '%(remote_user)s'
         remote_data_path: '%(BASE_PATH)s'
         # remote_pw is used as credential for the remote user. normaly unset
         # to use public keys.
@@ -276,6 +276,15 @@ class SupportHandler(InitHandler):
         return {'error' : 'should not have come here'}
 
     # ----------------------------------
+    # edit_yaml_file
+    # just call editor with specified yaml file
+    # ----------------------------------
+    def edit_yaml_file(self, file_name):
+        yaml_path = os.path.normpath("%s/config/%s" % (self.sites_home, file_name))
+        self.edit_site_or_server(yaml_path)
+        
+
+    # ----------------------------------
     # add_server_to_server_list
     # add new server info to server_list
     # ----------------------------------
@@ -288,12 +297,7 @@ class SupportHandler(InitHandler):
         #needs to be adapted to the using of yaml       
         opts = self.opts
         server_info = opts.add_server.strip().split('@')
-        print(bcolors.WARNING)
-        print("this method is not yet adapted to erp-workbench")
-        print("please add a block to the file %s/config/server.yaml with info simmilar to the following" % self.sites_home )
-        print(BLOCK_WITH_NEW_SERVER % {'remote_ip' : server_info and server_info[-1], 'BASE_PATH' :'/root/erp_workbench'})      
-        print(bcolors.ENDC)
-        return 
+    
         if not len(server_info) == 2:
             print(SITE_CREATED_SERVER_BAD_IP % opts.add_server)
             return
@@ -301,22 +305,14 @@ class SupportHandler(InitHandler):
             remote_data_path = '/root/erp_workbench'
         else:
             remote_data_path = '/home/%s/erp_workbench' % server_info[0]
-        # self.default_values['remote_user'] = server_info[0]
-        # self.default_values['use_ip'] = server_info[1]
-        # self.default_values['remote_data_path'] = remote_data_path
-        # self.default_values['marker'] = '\n' + MARKER
+        new_server = BLOCK_WITH_NEW_SERVER % {
+            'remote_ip': server_info and server_info[-1],
+            'BASE_PATH': remote_data_path,
+            'remote_user' : server_info[0]}   
 
-        template = open('%s/templates/newserver.py' %
-                        self.sites_home, 'r').read() % self.default_values
-        print(template)
-        # now open sites.py as text and replace the marker with the templae which allready has a new marker
-        m = re.compile(r'\n%s' % MARKER)
-        localdata = open('%s/config/localdata.py' % self.sites_home).read()
-        if not m.search(localdata):
-            print(LOCALSITESLIST_MARKER_MISSING)
-            return
-        open('%s/config/localdata.py' % self.sites_home,
-             'w').write(m.sub(template, localdata))
+        with open('%s/config/servers.yaml' % self.sites_home, 'a') as f:
+            f.write('\n')
+            f.write(new_server)
 
         print(SITE_CREATED_SERVER % (server_info[1], server_info[0]))
 
@@ -356,7 +352,7 @@ class SupportHandler(InitHandler):
 
     def pull_sites(self):
         """
-        pul site descriptions from their repository
+        pull site descriptions from their repository
         """
         try:
             sites_handler.check_pull(auto=False)
@@ -366,23 +362,24 @@ class SupportHandler(InitHandler):
             print(str(e))
             print(bcolors.ENDC)
 
-    def edit_site_or_server(self):
+    def edit_site_or_server(self, fname=''):
         # first we get the editor
         editor = self.editor
-        if self.opts.edit_server:
-            # we are editing config/localdata.py
-            fname = '%s/config/config_data/servers_info.py' % self.sites_home
-        elif self.opts.edit_site:
-            site_name = self.site_name
-            list_origin = self.site.get('site_list_name', '')
-            if self.site.get('is_local'):
-                fname = '%s/%s/sites_local/%s.py' % (
-                    BASE_INFO['sitesinfo_path'], list_origin, site_name)
-            else:
-                fname = '%s/%s/sites_global/%s.py' % (
-                    BASE_INFO['sitesinfo_path'], list_origin, site_name)
-        # command = editor + " " + fname
-        # status = os.system(command)
+        if not fname:
+            if self.opts.edit_server:
+                # we are editing config/localdata.py
+                fname = '%s/config/config_data/servers_info.py' % self.sites_home
+            elif self.opts.edit_site:
+                site_name = self.site_name
+                list_origin = self.site.get('site_list_name', '')
+                if self.site.get('is_local'):
+                    fname = '%s/%s/sites_local/%s.py' % (
+                        BASE_INFO['sitesinfo_path'], list_origin, site_name)
+                else:
+                    fname = '%s/%s/sites_global/%s.py' % (
+                        BASE_INFO['sitesinfo_path'], list_origin, site_name)
+            # command = editor + " " + fname
+            # status = os.system(command)
         fname = os.path.normpath(fname)
         try:
             subprocess.check_call([editor, fname])
@@ -396,7 +393,7 @@ class SupportHandler(InitHandler):
             print('falling back to use pico')
             print(str(e))
             print(bcolors.WARNING)
-            input('hit Enter to continue')
+            #input('hit Enter to continue')
             print(bcolors.ENDC)
             try:
                 subprocess.check_call(['pico', fname])
