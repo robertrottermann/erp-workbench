@@ -5,6 +5,8 @@ import sys
 import shutil
 import docker
 import glob
+import json
+from io import StringIO
 
 from scripts.bcolors import bcolors
 from docker_handler.docker_handler import DockerHandler
@@ -332,50 +334,61 @@ class KuberHandlerHelm(DockerHandler):
     
         settings += ',$1=%s' % self.bitnamy_defaults.get('$1')
         """
+        bitnami_chart = self.bitnami_chart
         refetch = self.opts.refetch_helm_chart
         result = self.fetch(refetch=refetch)
         helm_target = result['helm_target']
         act_dir = os.getcwd()
         os.chdir(helm_target)
         helm_cmd = shutil.which('helm')
-        settings = 'image.repository=%s/%s' % (self.docker_hub_name, self.bitnamy_defaults.get(
+        # --------------------
+        # replace values in the binami_chart we read from config
+        bitnami_chart['image']['repository'] =  '%s/%s' % (self.docker_hub_name, self.bitnamy_defaults.get(
             'bitnami_docker_tag'))
-        settings += ',image.tag=latest'
-        settings += ',odooUsername=%s' % 'admin'
-        settings += ',odooPassword=%s' % 'admin'
-        settings += ',odooEmail=%s' % 'admin'
+        bitnami_chart['image']['tag'] = 'latest'
+        bitnami_chart['odooEmail'] = 'admin'
+        bitnami_chart['odooUsername'] = 'admin'
+        bitnami_chart['odooPassword'] = 'admin'
+        if self.bitnamy_defaults.get('kubernetes_use_minikube'):
+            bitnami_chart['service']['type'] = 'NodePort'
 
-        # -------------------------------
-        # external storage
-        # -------------------------------
-        if not self.opts.docker_bitnami_no_storage:
-            settings += ',persistence.storageClass=%s' % self.bitnamy_defaults.get(
-                'persistence.storageClass')
-            settings += ',persistence.accessMode=%s' % self.bitnamy_defaults.get('persistence.accessMode')
-            settings += ',persistence.size=%s' % self.bitnamy_defaults.get('persistence.size')
-            settings += ',postgresql.postgresqlPassword=%s' % self.bitnamy_defaults.get('postgresql.postgresqlPassword')
-            settings += ',postgresql.persistence.enabled=%s' % self.bitnamy_defaults.get('postgresql.persistence.enabled')
-            settings += ',postgresql.persistence.storageClass=%s' % self.bitnamy_defaults.get('postgresql.persistence.storageClass')
-            settings += ',postgresql.persistence.accessMode=%s' % self.bitnamy_defaults.get('postgresql.persistence.accessMode')
-            settings += ',postgresql.persistence.size=%s' % self.bitnamy_defaults.get('postgresql.persistence.size')
+        # now write a yaml file we will use to install the chart
+        chart_path = os.path.normpath('%s/%s/helm/values.json' % (self.sites_home, self.site_name))
+        with open(chart_path, 'w') as f:
+            f.write(json.dumps(bitnami_chart))
+
+        # # -------------------------------
+        # # external storage
+        # # -------------------------------
+        # if not self.opts.docker_bitnami_no_storage:
+        #     settings += ',persistence.storageClass=%s' % self.bitnamy_defaults.get(
+        #         'persistence.storageClass')
+        #     settings += ',persistence.accessMode=%s' % self.bitnamy_defaults.get('persistence.accessMode')
+        #     settings += ',persistence.size=%s' % self.bitnamy_defaults.get('persistence.size')
+        #     settings += ',postgresql.postgresqlPassword=%s' % self.bitnamy_defaults.get('postgresql.postgresqlPassword')
+        #     settings += ',postgresql.persistence.enabled=%s' % self.bitnamy_defaults.get('postgresql.persistence.enabled')
+        #     settings += ',postgresql.persistence.storageClass=%s' % self.bitnamy_defaults.get('postgresql.persistence.storageClass')
+        #     settings += ',postgresql.persistence.accessMode=%s' % self.bitnamy_defaults.get('postgresql.persistence.accessMode')
+        #     settings += ',postgresql.persistence.size=%s' % self.bitnamy_defaults.get('postgresql.persistence.size')
 
 
-        # -------------------------------
-        # ingress
-        # -------------------------------
-        if not self.opts.docker_bitnami_no_ingress:
-            settings += ',ingress.enabled=%s' % self.bitnamy_defaults.get('ingress.enabled')
-            settings += ',ingress.hosts[0].name=%s' % self.bitnamy_defaults.get('ingress.hosts[0].name')
-            settings += ',ingress.hosts[0].path=%s' % self.bitnamy_defaults.get('ingress.hosts[0].path')
-            settings += ',ingress.hosts[0].tls=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tls')
-            settings += ',ingress.hosts[0].certManager=%s' % self.bitnamy_defaults.get('ingress.hosts[0].certManager')
-            settings += ',ingress.hosts[0].tlsSecret=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tlsSecret')
-            settings += ',ingress.hosts[0].annotations=%s' % self.bitnamy_defaults.get('ingress.hosts[0].annotations')
-            settings += ',ingress.secrets[0].name=%s' % self.bitnamy_defaults.get('ingress.secrets[0].name')
-            settings += ',ingress.secrets[0].certificate=%s' % self.bitnamy_defaults.get('ingress.secrets[0].certificate')
-            settings += ',ingress.secrets[0].key=%s' % self.bitnamy_defaults.get('ingress.secrets[0].key')
+        # # -------------------------------
+        # # ingress
+        # # -------------------------------
+        # if not self.opts.docker_bitnami_no_ingress:
+        #     settings += ',ingress.enabled=%s' % self.bitnamy_defaults.get('ingress.enabled')
+        #     settings += ',ingress.hosts[0].name=%s' % self.bitnamy_defaults.get('ingress.hosts[0].name')
+        #     settings += ',ingress.hosts[0].path=%s' % self.bitnamy_defaults.get('ingress.hosts[0].path')
+        #     settings += ',ingress.hosts[0].tls=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tls')
+        #     settings += ',ingress.hosts[0].certManager=%s' % self.bitnamy_defaults.get('ingress.hosts[0].certManager')
+        #     settings += ',ingress.hosts[0].tlsSecret=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tlsSecret')
+        #     settings += ',ingress.hosts[0].annotations=%s' % self.bitnamy_defaults.get('ingress.hosts[0].annotations')
+        #     settings += ',ingress.secrets[0].name=%s' % self.bitnamy_defaults.get('ingress.secrets[0].name')
+        #     settings += ',ingress.secrets[0].certificate=%s' % self.bitnamy_defaults.get('ingress.secrets[0].certificate')
+        #     settings += ',ingress.secrets[0].key=%s' % self.bitnamy_defaults.get('ingress.secrets[0].key')
 
-        cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name', self.site_name.replace('_', '-'), '--set', settings]
+        cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name',
+                    self.site_name.replace('_', '-'), '--values', chart_path]
         if self.opts.verbose:
             print(bcolors.OKBLUE)
             print('*' * 80)

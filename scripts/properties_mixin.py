@@ -1,4 +1,4 @@
-from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, BITNAMI_DEFAULTS, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
+from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, BITNAMI_DEFAULTS, BITNAMI_CHART, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
 import socket
 from scripts.bcolors import bcolors
 
@@ -68,6 +68,10 @@ class PropertiesMixin(object):
             self._bitnamy_defaults = BITNAMI_DEFAULTS
         return self._bitnamy_defaults
     
+    @property
+    def bitnami_chart(self):
+        return BITNAMI_CHART
+
     @property
     def docker_defaults(self):
         return DOCKER_DEFAULTS
