@@ -399,6 +399,20 @@ class KuberHandlerHelm(DockerHandler):
             print(bcolors.ENDC)
         result = self.run_commands_run([cmd_line])
 
+    def delete_bitnami_container(self):
+        # helm del --purge demo-global;
+        helm_cmd = shutil.which('helm')
+        name = self.site_name.replace('_', '-')
+        cmd_line = [helm_cmd, 'del', '--purge', name + ';']
+        if self.opts.verbose:
+            print(bcolors.OKBLUE)
+            print('*' * 80)
+            print('about to execute:')
+            print(' '.join(cmd_line))
+            print(bcolors.ENDC)
+
+        result = self.run_commands_run([cmd_line])
+
     def _get_line_and_index(self, lines, what):
         """get the index of the line within lines starting with what
         
