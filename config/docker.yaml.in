@@ -163,7 +163,7 @@ BITNAMI_DEFAULTS:
     # # $1\n# $3\n$1: $4$5
     # persistence.storageClass
     # PVC Storage Class                                           
-    persistence.storageClass: false 
+    persistence.storageClass: standard 
     # persistence.accessMode
     # PVC Access Mode                                             
     persistence.accessMode: ReadWriteOnce 
@@ -178,7 +178,7 @@ BITNAMI_DEFAULTS:
     postgresql.persistence.enabled: true 
     # postgresql.persistence.storageClass
     # PVC Storage Class for PostgreSQL volume                     
-    postgresql.persistence.storageClass: false 
+    postgresql.persistence.storageClass: standard 
     # postgresql.persistence.accessMode
     # PVC Access Mode for PostgreSQL volume                       
     postgresql.persistence.accessMode: ReadWriteOnce 
