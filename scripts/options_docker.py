@@ -111,6 +111,16 @@ def add_options_docker(parser, result_dic):
         action="store_true", dest="refetch_helm_chart", default=False,
         help='Refetch helm chart even if it already exists')
     parser_docker.add_argument(
+        "-dns", "--docker-bitnami-no-storage",
+        action="store_true", dest="docker_bitnami_no_storage", default=False,
+        help='Do not use storage settings when installing odoo helm')
+    parser_docker.add_argument(
+        "-dni", "--docker-bitnami-no-ingress",
+        action="store_true", dest="docker_bitnami_no_ingress", default=False,
+        help='Do not use ingress settings when installing odoo helm')
+
+
+    parser_docker.add_argument(
         "-dE", "--execute-script",
         action="store", dest="executescript",
         help="Run a script against a running erp site. Name must be given",
