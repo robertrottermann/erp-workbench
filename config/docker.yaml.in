@@ -159,9 +159,11 @@ BITNAMI_DEFAULTS:
     # -------------------------------
     # external storage
     # -------------------------------
+    # ^([^`]+)(` +\| )([^|]+)\| `([^`]+)`([^|])*\|
+    # # $1\n# $3\n$1: $4$5
     # persistence.storageClass
     # PVC Storage Class                                           
-    persistence.storageClass: nil 
+    persistence.storageClass: false 
     # persistence.accessMode
     # PVC Access Mode                                             
     persistence.accessMode: ReadWriteOnce 
@@ -176,11 +178,46 @@ BITNAMI_DEFAULTS:
     postgresql.persistence.enabled: true 
     # postgresql.persistence.storageClass
     # PVC Storage Class for PostgreSQL volume                     
-    postgresql.persistence.storageClass: nil 
+    postgresql.persistence.storageClass: false 
     # postgresql.persistence.accessMode
     # PVC Access Mode for PostgreSQL volume                       
     postgresql.persistence.accessMode: ReadWriteOnce 
     # postgresql.persistence.size
     # PVC Storage Request for PostgreSQL volume                   
     postgresql.persistence.size: 8Gi
+
+    # -------------------------------
+    # ingress
+    # -------------------------------
+    # ingress.enabled
+    # Enable ingress controller resource 
+    ingress.enabled: false 
+    # ingress.hosts[0].name
+    # Hostname to your Odoo installation 
+    ingress.hosts[0].name: odoo.local 
+    # ingress.hosts[0].path
+    # Path within the url structure 
+    ingress.hosts[0].path: / 
+    # ingress.hosts[0].tls
+    # Utilize TLS backend in ingress 
+    ingress.hosts[0].tls: false 
+    # ingress.hosts[0].certManager
+    # Add annotations for cert-manager 
+    ingress.hosts[0].certManager: false 
+    # ingress.hosts[0].tlsSecret
+    # TLS Secret(certificates) 
+    ingress.hosts[0].tlsSecret: odoo.local-tls-secret 
+    # ingress.hosts[0].annotations
+    # Annotations for this host's ingress record 
+    ingress.hosts[0].annotations: [] 
+    # ingress.secrets[0].name
+    # TLS Secret Name 
+    ingress.secrets[0].name: false 
+    # ingress.secrets[0].certificate
+    # TLS Secret Certificate 
+    ingress.secrets[0].certificate: false 
+    # ingress.secrets[0].key
+    # TLS Secret Key 
+    ingress.secrets[0].key: false 
+
 

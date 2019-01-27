@@ -326,15 +326,11 @@ class KuberHandlerHelm(DockerHandler):
 
     def create_binami_container(self):
         """create a container using bitnami helmcharts
-        | `image.registry`    | Odoo image registry                              | `docker.io`                                    |
-        | `image.repository`  | Odoo Image name                                  | `bitnami/odoo`                                 |
-        | `image.tag`         | Odoo Image tag                                   | `{VERSION}`                                    |
-        | `image.pullPolicy`  | Image pull policy                                | `Always`                                       |
-        | `image.pullSecrets` | Specify docker-registry secret names as an array | `[]` (does not add image pull secrets to deployed pods) |
-        | `odooUsername`      | User of the application                          | `user@example.com`                             |
-        | `odooPassword`      | Admin account password                           | _random 10 character long alphanumeric string_ |
-        | `odooEmail`         | Admin account email                              | `user@example.com`                             |
 
+        ^([^`]+)(` +\| )([^|]+)\| `([^`]+)`([^|])*\|
+        # $1\n# $3\n$1: $4$5
+    
+        settings += ',$1=%s' % self.bitnamy_defaults.get('$1')
         """
         refetch = self.opts.refetch_helm_chart
         result = self.fetch(refetch=refetch)
@@ -348,7 +344,12 @@ class KuberHandlerHelm(DockerHandler):
         settings += ',odooUsername=%s' % 'admin'
         settings += ',odooPassword=%s' % 'admin'
         settings += ',odooEmail=%s' % 'admin'
-        settings += ',persistence.storageClass=%s' % self.bitnamy_defaults.get('persistence.storageClass')
+
+        # -------------------------------
+        # external storage
+        # -------------------------------
+        settings += ',persistence.storageClass=%s' % self.bitnamy_defaults.get(
+            'persistence.storageClass')
         settings += ',persistence.accessMode=%s' % self.bitnamy_defaults.get('persistence.accessMode')
         settings += ',persistence.size=%s' % self.bitnamy_defaults.get('persistence.size')
         settings += ',postgresql.postgresqlPassword=%s' % self.bitnamy_defaults.get('postgresql.postgresqlPassword')
@@ -357,12 +358,28 @@ class KuberHandlerHelm(DockerHandler):
         settings += ',postgresql.persistence.accessMode=%s' % self.bitnamy_defaults.get('postgresql.persistence.accessMode')
         settings += ',postgresql.persistence.size=%s' % self.bitnamy_defaults.get('postgresql.persistence.size')
 
+
+        # -------------------------------
+        # ingress
+        # -------------------------------
+        settings += ',ingress.enabled=%s' % self.bitnamy_defaults.get('ingress.enabled')
+        settings += ',ingress.hosts[0].name=%s' % self.bitnamy_defaults.get('ingress.hosts[0].name')
+        settings += ',ingress.hosts[0].path=%s' % self.bitnamy_defaults.get('ingress.hosts[0].path')
+        settings += ',ingress.hosts[0].tls=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tls')
+        settings += ',ingress.hosts[0].certManager=%s' % self.bitnamy_defaults.get('ingress.hosts[0].certManager')
+        settings += ',ingress.hosts[0].tlsSecret=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tlsSecret')
+        settings += ',ingress.hosts[0].annotations=%s' % self.bitnamy_defaults.get('ingress.hosts[0].annotations')
+        settings += ',ingress.secrets[0].name=%s' % self.bitnamy_defaults.get('ingress.secrets[0].name')
+        settings += ',ingress.secrets[0].certificate=%s' % self.bitnamy_defaults.get('ingress.secrets[0].certificate')
+        settings += ',ingress.secrets[0].key=%s' % self.bitnamy_defaults.get('ingress.secrets[0].key')
+
         cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name', self.site_name.replace('_', '-'), '--set', settings]
         if self.opts.verbose:
             print(bcolors.OKBLUE)
             print('*' * 80)
             print('about to execute:')
             print(cmd_line)
+            print()
             print(' '.join(cmd_line))
             print(bcolors.ENDC)
         result = self.run_commands_run([cmd_line])
