@@ -1061,23 +1061,18 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
     # ----------------------------------
     # install_own_modules
-    # own modules are listed in sites.py under the key addons
-    def install_own_modules(self, list_only=False, quiet=False, info_dic={}):
+    # or install erp_moduls
+    def install_own_modules(self, quiet=False, info_dic={}):
         """
-        own modules are listed in the site description under the key addons
+        Install either the odoo apps listed under the key erp_addons
+        or the "own" addons listed under the key addons in the site description
+        quiet can get thw value "listownmodules" to only list the modules
+        or listownapps to list the erp_apps from the site description
         """
         opts = self.opts
         is_create = opts.subparser_name == 'create'
         is_docker = not is_create
         default_values = self.default_values
-        if list_only:
-            from templates.install_blocks import INSTALL_BLOCKS
-            print('\nthe following installable odoo module blocks exist:')
-            print('---------------------------------------------------')
-            for k in list(INSTALL_BLOCKS.keys()):
-                print('    ', k)
-            print('---------------------------------------------------')
-            return
 
         site = self.site
         # addons decalared in addons are the ones not available from odoo directly
@@ -1126,7 +1121,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
         # do we want to install odoo modules
         if (is_docker and opts.dinstall_erp_modules) or (is_create and opts.install_erp_modules):
-            #from templates.install_blocks import INSTALL_BLOCKS
             erp_apps_info, erp_modules_info = self.get_erp_modules()
 
             erp_apps = list(erp_apps_info.keys())
@@ -1142,14 +1136,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 erp_module_map[v] = k
             for o in (erp_addons or []):
                 o = str(o)
-                # if (o not in erp_apps) and (o not in erp_apps_names) \
-                #    and (o not in erp_modules) and (o not in erp_module_names):
-                #     print('!' * 80)
-                #     print('%s is not a known install block' % o)
-                #     print(
-                #         'check in templates/install_blocks.py what blocks are available')
-                #     print('-' * 80)
-                #     # sys.exit()
                 if o in erp_apps_names:
                     name = erp_module_map[o]
                     if name not in req:

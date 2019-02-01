@@ -839,11 +839,9 @@ class DockerHandler(InitHandler, DBUpdater):
         self.start_container(self.site_name)
 
 
-    def docker_install_own_modules(self, list_only=False, quiet=False):
+    def docker_install_own_modules(self, quiet=False):
         """
         """
-        if list_only:
-            return self.install_own_modules(self.default_values, list_only, quiet)
         # get_module_obj
         db_info = self.docker_registry.get(self.site_name)
         if not db_info:
@@ -854,7 +852,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 self.update_container_info()
             else:
                 return
-        return self.install_own_modules( list_only, quiet)
+        return self.install_own_modules( quiet=quiet)
 
 
     # shell
