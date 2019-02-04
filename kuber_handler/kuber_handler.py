@@ -4,10 +4,15 @@ import os
 import sys
 import shutil
 import docker
+import glob
+import json
+from io import StringIO
 
 from scripts.bcolors import bcolors
 from docker_handler.docker_handler import DockerHandler
-from scripts.messages import DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, DOCKER_BITNAMI_IMAGE_CREATE_DONE
+from scripts.messages import DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED,\
+    DOCKER_BITNAMI_IMAGE_CREATE_DONE, DOCKER_IMAGE_CREATE_MISING_HUB_USER
+
 """
 https://medium.com/programming-kubernetes/building-stuff-with-the-kubernetes-api-1-cc50a3642
 """
@@ -189,9 +194,6 @@ version: 5.0.2
 """
 
 
-
-from scripts.bcolors import bcolors
-
 try:
     import pint
     from kubernetes import client as ku_cli
@@ -225,21 +227,21 @@ except ImportError as e:
 class KuberHandlerHelm(DockerHandler):
     """KuberHandlerHelm
     just calls helm using popen calls
-    
+
     Arguments:
         object {[type]} -- [description]
     """
     def __init__(self, opts, sites, parsername='', config_data = {}):
         super().__init__(opts, sites, parsername)
-        """initialize KuberHandlerHelm 
+        """initialize KuberHandlerHelm
         with an url to the repository and a name of the chart to deal with      
         
         Arguments:
             url {string} -- either an url starting with http[s]:// or a well known helm repo like stable
             chart_name {string} -- name of the chart we deal with
         """
-        self._chart_url = config_data.get('chart_url', 'stable')
-        self._chart_name = config_data.get('chart_name', 'odoo')
+        self._chart_url = self.bitnamy_defaults.get('bitnami_chart_url')
+        self._chart_name = self.bitnamy_defaults.get('bitnami_chart_name')
         default_target = os.path.normpath('%s/helm' % (self.site_data_dir))
         helm_target = config_data.get('helm_target', default_target)
         self._helm_target = helm_target
@@ -247,6 +249,24 @@ class KuberHandlerHelm(DockerHandler):
         os.makedirs(helm_target, exist_ok=True)
         self._config_data = config_data
     
+    @property
+    def version(self):
+
+        version = self.erp_version
+        minor = self.erp_minor
+        try:
+            version = str(int(float(version)))
+        except:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
+            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (
+                version, self.site))
+            print(bcolors.ENDC)
+        if minor:
+            version = ('%s.%s' % (version, minor)).replace('..', '.')
+        return version
+
     _chart_url = ''
     @property
     def chart_url(self):
@@ -261,19 +281,20 @@ class KuberHandlerHelm(DockerHandler):
     @property
     def config_data(self):
         return self._config_data
-    
+
     _helm_target = ''
     @property
     def helm_target(self):
         return self._helm_target
 
-    def fetch(self, target=None, result={}):
+    def fetch(self, target=None, refetch=False, untar=True):
         """execute the helm fetch command
-        
+
         Keyword Arguments:
-            target {string} -- target folder to extract the cahsrt into (default: {None})
+            target {string} -- target folder to extract the chart into (default: {None})
                                If target is none, install it in the sitedescriptions helm folder
-            result {dict} -- container to return used settings, mostly for testing
+            result {dict} -- container to return used settings
+            refetch {bool} -- if True refetch container, otherwise only fetch if not exists
         """
         # construct what chart to download
         if self.chart_url.startswith('http://') or self.chart_url.startswith('https://'):
@@ -288,10 +309,153 @@ class KuberHandlerHelm(DockerHandler):
             print('helm could not be found. Is it installed?')
             print(bcolors.ENDC)
             return
-        if self.config_data.get('untar'):
+        if not untar:
+            untar = self.config_data.get('untar')
+        if untar:
             cmd_line.append('--untar')
+        if refetch or not glob.glob('%s/%s' % (self.helm_target, self._chart_name)):
+            result = self.run_commands_run([cmd_line])
+            return {
+                'result' : result,
+                'cmd_line' : cmd_line,
+                'chart_path' : chart_path,
+                'helm_target' : self.helm_target}
+        return {
+            'result': {},
+            'cmd_line': '',
+            'chart_path': chart_path,
+            'helm_target': self.helm_target}
+
+    def create_binami_container(self):
+        """create a container using bitnami helmcharts
+
+        ^([^`]+)(` +\| )([^|]+)\| `([^`]+)`([^|])*\|
+        # $1\n# $3\n$1: $4$5
+    
+        settings += ',$1=%s' % self.bitnamy_defaults.get('$1')
+        """
+        bitnami_chart = self.bitnami_chart
+        refetch = self.opts.refetch_helm_chart
+        result = self.fetch(refetch=refetch)
+        helm_target = result['helm_target']
+        act_dir = os.getcwd()
+        os.chdir(helm_target)
+        helm_cmd = shutil.which('helm')
+        # --------------------
+        # replace values in the binami_chart we read from config
+        bitnami_chart['image']['repository'] =  '%s/%s' % (self.docker_hub_name, self.bitnamy_defaults.get(
+            'bitnami_docker_tag'))
+        bitnami_chart['image']['tag'] = 'latest'
+        bitnami_chart['odooEmail'] = 'admin'
+        bitnami_chart['odooUsername'] = 'admin'
+        bitnami_chart['odooPassword'] = 'admin'
+        if self.bitnamy_defaults.get('kubernetes_use_minikube'):
+            bitnami_chart['service']['type'] = 'NodePort'
+
+        # now write a yaml file we will use to install the chart
+        chart_path = os.path.normpath('%s/%s/helm/values.json' % (self.sites_home, self.site_name))
+        with open(chart_path, 'w') as f:
+            f.write(json.dumps(bitnami_chart))
+
+        # # -------------------------------
+        # # external storage
+        # # -------------------------------
+        # if not self.opts.docker_bitnami_no_storage:
+        #     settings += ',persistence.storageClass=%s' % self.bitnamy_defaults.get(
+        #         'persistence.storageClass')
+        #     settings += ',persistence.accessMode=%s' % self.bitnamy_defaults.get('persistence.accessMode')
+        #     settings += ',persistence.size=%s' % self.bitnamy_defaults.get('persistence.size')
+        #     settings += ',postgresql.postgresqlPassword=%s' % self.bitnamy_defaults.get('postgresql.postgresqlPassword')
+        #     settings += ',postgresql.persistence.enabled=%s' % self.bitnamy_defaults.get('postgresql.persistence.enabled')
+        #     settings += ',postgresql.persistence.storageClass=%s' % self.bitnamy_defaults.get('postgresql.persistence.storageClass')
+        #     settings += ',postgresql.persistence.accessMode=%s' % self.bitnamy_defaults.get('postgresql.persistence.accessMode')
+        #     settings += ',postgresql.persistence.size=%s' % self.bitnamy_defaults.get('postgresql.persistence.size')
+
+
+        # # -------------------------------
+        # # ingress
+        # # -------------------------------
+        # if not self.opts.docker_bitnami_no_ingress:
+        #     settings += ',ingress.enabled=%s' % self.bitnamy_defaults.get('ingress.enabled')
+        #     settings += ',ingress.hosts[0].name=%s' % self.bitnamy_defaults.get('ingress.hosts[0].name')
+        #     settings += ',ingress.hosts[0].path=%s' % self.bitnamy_defaults.get('ingress.hosts[0].path')
+        #     settings += ',ingress.hosts[0].tls=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tls')
+        #     settings += ',ingress.hosts[0].certManager=%s' % self.bitnamy_defaults.get('ingress.hosts[0].certManager')
+        #     settings += ',ingress.hosts[0].tlsSecret=%s' % self.bitnamy_defaults.get('ingress.hosts[0].tlsSecret')
+        #     settings += ',ingress.hosts[0].annotations=%s' % self.bitnamy_defaults.get('ingress.hosts[0].annotations')
+        #     settings += ',ingress.secrets[0].name=%s' % self.bitnamy_defaults.get('ingress.secrets[0].name')
+        #     settings += ',ingress.secrets[0].certificate=%s' % self.bitnamy_defaults.get('ingress.secrets[0].certificate')
+        #     settings += ',ingress.secrets[0].key=%s' % self.bitnamy_defaults.get('ingress.secrets[0].key')
+
+        cmd_line = [helm_cmd, 'install', './%s' % self.chart_name, '--name',
+                    self.site_name.replace('_', '-'), '--values', chart_path]
+        if self.opts.verbose:
+            print(bcolors.OKBLUE)
+            print('*' * 80)
+            print('about to execute:')
+            print(cmd_line)
+            print()
+            print(' '.join(cmd_line))
+            print(bcolors.ENDC)
         result = self.run_commands_run([cmd_line])
-        return {'result' : result, 'cmd_line' : cmd_line, 'chart_path' : chart_path, 'helm_target' : self.helm_target}
+
+    def delete_bitnami_container(self):
+        # helm del --purge demo-global;
+        helm_cmd = shutil.which('helm')
+        name = self.site_name.replace('_', '-')
+        cmd_line = [helm_cmd, 'del', '--purge', name + ';']
+        if self.opts.verbose:
+            print(bcolors.OKBLUE)
+            print('*' * 80)
+            print('about to execute:')
+            print(' '.join(cmd_line))
+            print(bcolors.ENDC)
+
+        result = self.run_commands_run([cmd_line])
+
+    def _get_line_and_index(self, lines, what):
+        """get the index of the line within lines starting with what
+        
+        Arguments:
+            lines {list} -- lines to scrutinize
+            what {string} -- what to search
+        """
+        counter = 0
+        for line in lines:
+            if line.startswith(what):
+                return line, counter
+            counter += 1
+        return '', -1
+
+    def adapt_bitnami_dockerfile(self, site_apt_modules, site_pip_modules, docker_file):
+        docker_file_dir = os.path.dirname(docker_file)
+        # build a list with lines of the Dockerfile
+        with open(docker_file, 'r') as f:
+            docker_file_lines = f.read().splitlines()
+
+        # if there are apt modules, we add them to the ones bitnami is already getting in
+        if site_apt_modules:
+            # extramodules are defined in the docker.yaml
+            extra_modules = self.bitnamy_defaults.get('bitnami_dockerfile_apt_items', [])
+            what = self.bitnamy_defaults.get('bitnami_dockerfile_apt_line')
+            line, index = self._get_line_and_index(docker_file_lines, what)
+            if line:
+                parts = [what] + extra_modules + list(set(
+                    line.split(what)[-1].split() + site_apt_modules))
+                line = ' '.join(parts)
+                docker_file_lines[index] = line
+        if site_pip_modules:
+            what = self.bitnamy_defaults.get(
+                'bitnami_dockerfile_pip_line')
+            bitnami_dockerfile_pip_install_command = self.bitnamy_defaults.get(
+                'bitnami_dockerfile_pip_install_command')
+            line, index = self._get_line_and_index(docker_file_lines, what)
+            # insert a new line AFTER the index
+            line = "%s %s" % (bitnami_dockerfile_pip_install_command, ' '.join(site_pip_modules))
+            docker_file_lines.insert(index + 1, line)
+        # finally write out the file
+        with open(docker_file, 'w') as f:
+            f.write("\n".join(docker_file_lines))
 
     def build_image(self):
         """
@@ -302,26 +466,20 @@ class KuberHandlerHelm(DockerHandler):
         bitnami_git_url = self.bitnamy_defaults.get('bitnami_git_url')
         bitnami_folder = self.bitnamy_defaults.get('bitnami_folder_name')
         bitnami_docker_file_path = self.bitnamy_defaults.get('bitnami_docker_file_path')
-
+        bitnami_docker_tag = self.bitnamy_defaults.get('bitnami_docker_tag')
+        
         # make sure bitnami_folder exists
         os.makedirs(bitnami_folder, exist_ok=True)
         # cd into this folder
         act_dir = os.getcwd()
         os.chdir(bitnami_folder)
+        docker_target_path = os.path.normpath(
+            '%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
 
-        version = self.erp_version
-        minor = self.erp_minor
-        try:
-            version = str(int(float(version)))
-        except:
-            print(bcolors.FAIL)
-            print('*' * 80)
-            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
-            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (version, self.site))
-            print(bcolors.ENDC)
-        if minor:
-            version = ('%s.%s' % (version, minor)).replace('..', '.')
-
+        version = self.version
+        # -------------------------------------------------------------
+        # git clone the odoo bitnami repo
+        # -------------------------------------------------------------
         print(bcolors.WARNING)
         print('*' * 80)
         print("Git clonig odoo source V%s to be included in the image to %s/src" %
@@ -333,16 +491,27 @@ class KuberHandlerHelm(DockerHandler):
             'git submodule add %s' % bitnami_git_url
         ]
         self.run_commands(cmd_lines=cmd_lines)
+
+        # -------------------------------------------------------------
+        # get libraries to add to the image, adapt Dockerfile
+        # -------------------------------------------------------------
+        site_apt_modules = self.site_apt_modules
+        site_pip_modules = self.site_pip_modules
+        os.chdir(docker_target_path)
+        docker_file = '%s/Dockerfile' % docker_target_path
+        self.adapt_bitnami_dockerfile(
+            site_apt_modules, site_pip_modules, docker_file)
+
+        # -------------------------------------------------------------
+        # build the image
+        # -------------------------------------------------------------
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
-        tag = self.erp_image_version
-        return_info = []
+        tag = bitnami_docker_tag
+        return_info = [] # used to get te result from building the image
         try:
-            docker_target_path = os.path.normpath('%s/%s' % (bitnami_folder, bitnami_docker_file_path,))
-            os.chdir(docker_target_path)
-            docker_file = '%s/Dockerfile' % docker_target_path
             result = self.docker_client.build(
-                docker_target_path, 
-                tag = tag, 
+                docker_target_path,
+                tag=tag,
                 dockerfile=docker_file)
             is_ok = self._print_docker_result(result, docker_file, docker_target_path, return_info)
             if not is_ok:
@@ -351,9 +520,10 @@ class KuberHandlerHelm(DockerHandler):
             print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
         else:
             result = return_info[0].split(' ')[-1]
-            # the last line is something like:
-            # {"stream":"Successfully built 97cea8884220\n"}
-            print(DOCKER_BITNAMI_IMAGE_CREATE_DONE % (self.site_name, result))
+            hubname = self.docker_hub_name or 'YOUR_DOCKERHUB_ACCOUNT'
+            print(DOCKER_BITNAMI_IMAGE_CREATE_DONE % (
+                self.site_name, result, hubname,
+                result))
 
 class KuberHandler(object):
     def __init__(self, opts, sites, parsername='', config_data = {}):

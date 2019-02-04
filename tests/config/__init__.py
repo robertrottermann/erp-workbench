@@ -94,6 +94,7 @@ if must_reload and construct_result.get(yaml_dic['docker'][1]):
 else:
     from config.config_data.docker_info import DOCKER_DEFAULTS
 from config.config_data.docker_info import DOCKER_IMAGE
+from config.config_data.docker_info import BITNAMI_DEFAULTS
 # load project defaults
 if must_reload and construct_result.get(yaml_dic['project'][1]):
     PROJECT_DEFAULTS = construct_result[yaml_dic['project'][1]]['PROJECT_DEFAULTS']
@@ -109,6 +110,7 @@ from site_desc_handler.sdesc_utilities import AttrDict
 BASE_INFO = AttrDict(BASE_INFO)
 DOCKER_DEFAULTS = AttrDict(DOCKER_DEFAULTS)
 DOCKER_IMAGE = AttrDict(DOCKER_IMAGE)
+BITNAMI_DEFAULTS = AttrDict(BITNAMI_DEFAULTS)
 PROJECT_DEFAULTS = AttrDict(PROJECT_DEFAULTS)
 REMOTE_SERVERS = AttrDict(REMOTE_SERVERS)
 # sites is a combination created from "regular" sites listed in sites.py

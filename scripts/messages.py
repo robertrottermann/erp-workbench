@@ -486,9 +486,21 @@ DOCKER_BITNAMI_IMAGE_CREATE_DONE = """
 Finished to create docker image for site 
 
     %%s
+
+it is tagged:
     %%s
+
+Now you can upload it to your docker hub account.
+Todo so, make sure that your computer is logged into
+your docker hub account executing:
+
+    docker login -u %%s
+
+and then:
+
+    docker push %%s
 ---------------------------------------------%s
-"""
+""" % (bcolors.OKGREEN, bcolors.ENDC)
 # -------------------------------------
 # missing modules
 # -------------------------------------

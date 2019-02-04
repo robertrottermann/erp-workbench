@@ -1,0 +1,3 @@
+[submodule "bitnami-docker-odoo"]
+	path = bitnami-docker-odoo
+	url = https://github.com/bitnami/bitnami-docker-odoo

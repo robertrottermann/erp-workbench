@@ -67,7 +67,7 @@ def add_options_parent(parser, result_dic = {}):
         help='use the ip provided to write the TARGET instead of localhost'
     )
     parent_parser.add_argument(
-        "-s", "--single-step",
+        "-ss", "--single-step",
         action="store_true", dest="single_step", default=False,
         help='load modules one after the other. MUCH! slower, but problems are easier to spot'
     )

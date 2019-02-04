@@ -35,13 +35,27 @@ def add_options_create(parser, result_dic):
         - database Proj_Name
         """,
         need_name=True,
-        name_valid = True, 
+        name_valid = True,
     )
     parser_manage.add_argument(
         "-lo", "--listownmodules",
         action="store_true", dest="listownmodules", default=False,
         help='list installable modules from sites.py sites description. Name must be provided',
         need_name=True        
+    )
+    parser_manage.add_argument(
+        "-lm", "--list-apps",
+        action="store_true", dest="listapps", default=False,
+        help='list erp aps listed to install in the site description. Name must be provided',
+        need_name=True,        
+        name_valid = True,
+    )
+    parser_manage.add_argument(
+        "-lM", "--list-installed-apps",
+        action="store_true", dest="listinstalledapps", default=False,
+        help='list installed apps. Name must be provided',
+        need_name=True,
+        name_valid = True,       
     )
     parser_manage.add_argument(
         "-io", "--installown",

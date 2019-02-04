@@ -118,6 +118,45 @@ HOST_MAPPING:
 # ----------------------------
 # info about bitnami & helm-charts
 BITNAMI_DEFAULTS:
+    # bitnami_git_url
+    # is the github repo where we find bitnami-odoo
     bitnami_git_url: https://github.com/bitnami/bitnami-docker-odoo
+    # bitnami_chart_url
+    # what chart repository to use
+    bitnami_chart_url: stable
+    # bitnami_chart_name
+    # how do we define a version?
+    bitnami_chart_name: odoo
+    # bitnami_folder_name
+    # the name of the folder we construct within the site-desc data folder
     bitnami_folder_name: '%(SITE_DATA_DIR)s/bitnami'
+    # bitnami_docker_file_path
+    # the path within the bitnami repo where we find the Dockerfile
     bitnami_docker_file_path: bitnami-docker-odoo/11/debian-9/
+    # bitnami_docker_tag
+    # the tag we apply to the image 
+    bitnami_docker_tag: 'bitnami-odoo-%(ERP_VERSION)s'
+    # bitnami_dockerfile_apt_line
+    # is the start of the line wher bitnmi installs abt libraries
+    # into the image
+    bitnami_dockerfile_apt_line: RUN install_packages
+    # bitnami_dockerfile_pip_line
+    # after the line beginning with this string we will insert the
+    # installation of the pip modules
+    bitnami_dockerfile_pip_line: RUN bitnami-pkg unpack odoo
+    # bitnami_dockerfile_pip_install_command
+    # command line to pip install the pip libraries
+    bitnami_dockerfile_pip_install_command: RUN pip3 install --cache-dir=.pip
+    # bitnami_dockerfile_apt_items
+    # are apt library elements we must make sure to have included
+    bitnami_dockerfile_apt_items:
+        - python
+        - python-libxslt1
+        - python-pip
+        - python3-pip
+        - python3-setuptools
+
+    # kubernetes_use_minikube
+    # tells wheter we are usingin a local minikube
+    kubernetes_use_minikube: True
+

@@ -67,3 +67,17 @@ class TestKuberHandler2Data(unittest.TestCase):
         handler = main(args, args.subparser_name, need_names_dic, return_handler=1)
         handler.build_image()
         
+    def test_install_chart(self):
+        """ 
+        the download folder is:
+        ~/workbench/demo_global/helm/odoo
+        """
+        self.do_setUp()
+        from scripts.create_site import main
+        args = self.args
+        args.create = True
+        args.verbose = True
+        need_names_dic = {}
+        handler = main(args, args.subparser_name,
+                       need_names_dic, return_handler=1)
+        handler.create_binami_container()

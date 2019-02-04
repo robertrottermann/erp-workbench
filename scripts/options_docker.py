@@ -40,8 +40,8 @@ def add_options_docker(parser, result_dic):
         "-dbiC", "--build_image_collect_sites",
         action="store_true", dest="use_collect_sites",
         help='collect all libraries from sites with the same erp version, to create an image that can handle all situations',
-        need_name = True,
-        name_valid = True,
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dp", "--docker-pull-image",
@@ -56,9 +56,9 @@ def add_options_docker(parser, result_dic):
     parser_docker.add_argument(
         "-dc", "--create_container",
         action="store_true", dest="docker_create_container", default=False,
-        help = 'create a docker container. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='create a docker container. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dr", "--recreate-container",
@@ -84,8 +84,8 @@ def add_options_docker(parser, result_dic):
         "-dddb", "--drop_db",
         action="store_true", dest="docker_drop_db", default=False,
         help='drop database in db docker container. name of the site db belongs to must be provided',
-        need_name = True,
-        name_valid = True,
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dlsdb", "--list_db",
@@ -102,22 +102,24 @@ def add_options_docker(parser, result_dic):
     # -----------------------------------------------
     # manage bitnami
     # -----------------------------------------------
+    # parser_docker.add_argument(
+    #     "-dbib", "--build-image-bitnami",
+    #     action="store_true", dest="build_image_bitnami", default=False,
+    #     help='Build an image after the holi gospel of bitnami')
     parser_docker.add_argument(
-        "-dbib", "--build-image-bitnami",
-        action="store_true", dest="build_image_bitnami", default=False,
-        help='Build an image after the holi gospel of bitnami',
-    )
+        "-drhc", "--refetch-helm-chart",
+        action="store_true", dest="refetch_helm_chart", default=False,
+        help='Refetch helm chart even if it already exists')
     parser_docker.add_argument(
         "-dE", "--execute-script",
         action="store", dest="executescript",
         help="Run a script against a running erp site. Name must be given",
-        need_name = True,
-        name_valid = True,      
-    )
+        need_name=True,
+        name_valid=True)
     parser_docker.add_argument(
         "-dEP", "--execute-script-parameter",
         action="store", dest="executescriptparameter",
-        help="parameters to be passed to the executed script. It must be a comma separated string of key=value pairs. No spaces!")    
+        help="parameters to be passed to the executed script. It must be a comma separated string of key=value pairs. No spaces!")
     parser_docker.add_argument(
         "-dSL", "--set-local-data-docker",
         action="store_true", dest="set_local_data_docker", default=False,
@@ -126,50 +128,49 @@ def add_options_docker(parser, result_dic):
         "-dSOS", "--set-erp-settings-docker",
         action="store_true", dest="set_erp_settings_docker", default=False,
         help="set erp settings like the mail handlers. The script tries to define for what ip",
-        need_name = True,
-        name_valid = True,       
-    )
+        need_name=True,
+        name_valid=True)
     #parser_docker.add_argument(
         #"-dsapw", "--docker-set-admin-pw",
         #action="store_true", dest="docker_set_admin_pw", default = False,
-        #help = 'Set admin password from site description in a docker conatiner. option -n must be set and valid.',
+        #help='Set admin password from site description in a docker conatiner. option -n must be set and valid.',
     #)
     parser_docker.add_argument(
         "-dd", "--delete_container",
         action="store_true", dest="docker_delete_container", default=False,
-        help = 'delete a docker container. Name must be provided',
-        need_name = True
+        help='delete a docker container. Name must be provided',
+        need_name=True
     )
     parser_docker.add_argument(
         "-ds", "--start_container",
         action="store_true", dest="docker_start_container", default=False,
-        help = 'start a docker container. Name must be provided',
-        need_name = True
+        help='start a docker container. Name must be provided',
+        need_name=True
     )
     parser_docker.add_argument(
         "-dshow",
         action="store_true", dest="docker_show", default=False,
-        help = 'show some info about a container. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='show some info about a container. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dshowa",
         action="store_true", dest="docker_show_all", default=False,
-        help = 'show all info about a container. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='show all info about a container. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dS", "--stop_container",
         action="store_true", dest="docker_stop_container", default=False,
-        help = 'stop a docker container. Name must be provided',
-        need_name = True
+        help='stop a docker container. Name must be provided',
+        need_name=True
     )
     parser_docker.add_argument(
         "-drs", "--restart_container",
         action="store_true", dest="docker_restart_container", default=False,
-        help = 'restart a docker container. Name must be provided'
+        help='restart a docker container. Name must be provided'
     )
     parser_docker.add_argument(
         "-ddbname", "--dockerdbname",
@@ -199,46 +200,46 @@ def add_options_docker(parser, result_dic):
     parser_docker.add_argument(
         "-dud", "--dataupdate_docker",
         action="store_true", dest="dataupdate_docker", default=False,
-        help = 'update local data from remote server into local docker. Name must be provided.\nRespects -N and -nupdb options',
-        need_name = True
+        help='update local data from remote server into local docker. Name must be provided.\nRespects -N and -nupdb options',
+        need_name=True
     )
     parser_docker.add_argument(
         "-ddump", "--dump-local-docker",
         action="store_true", dest="dump_local_docker", default=False,
-        help = 'dump database data into the servers dump folder. does use docker',
-        need_name = True
+        help='dump database data into the servers dump folder. does use docker',
+        need_name=True
     )
     parser_docker.add_argument(
         "-dio", "--dinstallown",
         action="store_true", dest="dinstallown", default=False,
-        help = 'install all modules listed as addons. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='install all modules listed as addons. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-duo", "--dupdateown",
         action="store", dest="dupdateown", default='',
-        help = 'update modules listed as addons, pass a comma separated list (no spaces) or all. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='update modules listed as addons, pass a comma separated list (no spaces) or all. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dro", "--dremoveown",
         action="store", dest="dremoveown", default='',
-        help = 'remove modules listed as addons, pass a comma separated list (no spaces) or all. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='remove modules listed as addons, pass a comma separated list (no spaces) or all. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     parser_docker.add_argument(
         "-dI", "--dinstall_erp_modules",
         action="store_true", dest="dinstall_erp_modules", default=False,
-        help = 'install modules listed as addons into docker. Name must be provided',
-        need_name = True,
-        name_valid = True,
+        help='install modules listed as addons into docker. Name must be provided',
+        need_name=True,
+        name_valid=True,
     )
     #parser_docker.add_argument(
         #"-dassh", "--docker-add_ssh",
         #action="store_true", dest="docker_add_ssh", default=False,
-        #help = 'add ssh to a docker container'
+        #help='add ssh to a docker container'
     #)    
     

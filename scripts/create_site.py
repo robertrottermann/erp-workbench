@@ -340,14 +340,20 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         #   container can be reached. must be unique for each remote server
         if opts.docker_create_container:
             # "docker -dc", "--create_container",
-            handler.check_and_create_container()
+            if opts.docker_use_bitnami:
+                handler.create_binami_container()
+            else:
+                handler.check_and_create_container()
             did_run_a_command = True
         if opts.docker_create_update_container:
             # "docker -dcu", "--create_update_container",
             handler.check_and_create_container(update_container=True)
             did_run_a_command = True
         if opts.docker_delete_container:
-            handler.check_and_create_container(delete_container=True)
+            if opts.docker_use_bitnami:
+                handler.delete_bitnami_container()
+            else:            
+                handler.check_and_create_container(delete_container=True)
             did_run_a_command = True
         if opts.docker_create_db_container:
             # "docker -dcdb", "--create_db_container",
@@ -370,13 +376,13 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
         
-        # build image
-        # ----------
-        # build docker image according to bitnami
-        if opts.build_image_bitnami:
-            handler.build_image_bitnami()
-            did_run_a_command = True
-            return
+        # # build image
+        # # ----------
+        # # build docker image according to bitnami
+        # if opts.build_image_bitnami:
+        #     handler.build_image_bitnami()
+        #     did_run_a_command = True
+        #     return
             
         # build image
         # ----------
@@ -495,6 +501,29 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             if opts.edit_site:
                 handler.check_name()
             handler.edit_site_or_server()
+            did_run_a_command = True
+            return
+
+        # -------------------------------------
+        # editing yam files
+        # -------------------------------------
+        if opts.edit_config:
+            handler.edit_yaml_file('config.yaml')
+            did_run_a_command = True
+            return
+
+        if opts.edit_docker:
+            handler.edit_yaml_file('docker.yaml')
+            did_run_a_command = True
+            return
+
+        if opts.edit_project:
+            handler.edit_yaml_file('project.yaml')
+            did_run_a_command = True
+            return
+
+        if opts.edit_servers:
+            handler.edit_yaml_file('servers.yaml')
             did_run_a_command = True
             return
 

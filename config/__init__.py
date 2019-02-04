@@ -28,6 +28,7 @@ data_path = os.path.normpath('%s/config_data' % BASE_PATH)
 user_home = os.path.expanduser('~')
 yaml_dic = {}
 for y_info in  (
+        ('bitnami_chart', 'bitnami_chart.py'),
         ('config', 'base_info.py'),
         ('servers', 'servers_info.py'),
         ('docker', 'docker_info.py'),
@@ -59,7 +60,8 @@ vals = {
     'ACT_USER'  : ACT_USER,
     'DB_USER'   : ACT_USER,
     'PROJECT_INSTALL': '%(inner_path)s',
-    'SITE_DATA_DIR' : '%(site_data_dir)s'
+    'SITE_DATA_DIR' : '%(site_data_dir)s',
+    'ERP_VERSION' : '%(erp_version)s',
 }
 # from pprint import pformat
 # print(pformat(yaml_dic))
@@ -95,6 +97,7 @@ else:
     from config.config_data.docker_info import DOCKER_DEFAULTS
 from config.config_data.docker_info import DOCKER_IMAGE
 from config.config_data.docker_info import BITNAMI_DEFAULTS
+from config.config_data.bitnami_chart import BITNAMI_CHART
 # load project defaults
 if must_reload and construct_result.get(yaml_dic['project'][1]):
     PROJECT_DEFAULTS = construct_result[yaml_dic['project'][1]]['PROJECT_DEFAULTS']
@@ -113,6 +116,7 @@ DOCKER_IMAGE = AttrDict(DOCKER_IMAGE)
 BITNAMI_DEFAULTS = AttrDict(BITNAMI_DEFAULTS)
 PROJECT_DEFAULTS = AttrDict(PROJECT_DEFAULTS)
 REMOTE_SERVERS = AttrDict(REMOTE_SERVERS)
+
 # sites is a combination created from "regular" sites listed in sites.py
 # an a list of localsites listed in local_sites.py
 #from sites import SITES, SITES_L as SITES_LOCAL

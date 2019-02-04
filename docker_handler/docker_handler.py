@@ -179,13 +179,13 @@ class DockerHandler(InitHandler, DBUpdater):
         docker_template = re.sub(' *= *', '=', docker_template)
         self.run_commands([docker_template], self.user, pw='')
 
-    def check_and_create_container(self, 
-        container_name='', 
-        recreate_container = False, 
-        rename_container = False, 
-        pull_image = False, 
-        update_container=False, 
-        delete_container=False):
+    def check_and_create_container(self,
+            container_name='',
+            recreate_container=False,
+            rename_container=False,
+            pull_image=False,
+            update_container=False,
+            delete_container=False):
         """create a new docker container or manage an existing one
         
         Keyword Arguments:
@@ -242,7 +242,7 @@ class DockerHandler(InitHandler, DBUpdater):
             if long_polling_port == '??':
                 print(DOCKER_INVALID_PORT % (name, name))
                 return()
-            
+
             allow_empty = ['list_db', 'log_db', 'logfile', 'server_wide_modules', 'without_demo', 'logrotate', 'syslog']
             if not delete_container and container_name != 'db':
                 # make sure we have valid elements
@@ -839,11 +839,9 @@ class DockerHandler(InitHandler, DBUpdater):
         self.start_container(self.site_name)
 
 
-    def docker_install_own_modules(self, list_only=False, quiet=False):
+    def docker_install_own_modules(self, quiet=False):
         """
         """
-        if list_only:
-            return self.install_own_modules(self.default_values, list_only, quiet)
         # get_module_obj
         db_info = self.docker_registry.get(self.site_name)
         if not db_info:
@@ -854,7 +852,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 self.update_container_info()
             else:
                 return
-        return self.install_own_modules( list_only, quiet)
+        return self.install_own_modules( quiet=quiet)
 
 
     # shell
