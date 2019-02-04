@@ -1066,7 +1066,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         """
         Install either the odoo apps listed under the key erp_addons
         or the "own" addons listed under the key addons in the site description
-        quiet can get thw value "listownmodules" to only list the modules
+        quiet can get the value "listownmodules" to only list the modules
         or listownapps to list the erp_apps from the site description
         """
         opts = self.opts

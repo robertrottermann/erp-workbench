@@ -53,7 +53,14 @@ def add_options_create(parser, result_dic):
     parser_manage.add_argument(
         "-lM", "--list-installed-apps",
         action="store_true", dest="listinstalledapps", default=False,
-        help='list installed apps. Name must be provided',
+        help='list installed erp apps. Name must be provided',
+        need_name=True,
+        name_valid = True,
+    )
+    parser_manage.add_argument(
+        "-LM", "--list-installed-apps-and-modules",
+        action="store_true", dest="listinstalledapps_modules", default=False,
+        help='list installed erp apps. Name must be provided',
         need_name=True,
         name_valid = True,       
     )
