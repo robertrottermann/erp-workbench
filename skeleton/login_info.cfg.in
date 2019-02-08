@@ -44,7 +44,7 @@ log_db_level = %(log_db_level)s
 admin_passwd = %(erp_admin_pw)s
 ##---------------------------------
 # addons_path defines where addons for this site are to be found
-addons_path = %(projectname)s_addons,%(local_site_addons_path)s
+addons_path = %(projectname)s_addons%(local_site_addons_path)s
 ##---------------------------------
 # local addons will not be copied to the server
 # they are used to add local developement addons

@@ -525,8 +525,10 @@ def checkout_sa(opts, handler):
                         site_addon.get('branch', 'master'))))
         downloaded.append([addon_name, branch])
         
-        if not dev_list or addon_name in dev_list:
+        if not dev_list or (addon_name in dev_list):
             real_target = download_target or target
+            if os.path.realpath(real_target) == os.path.realpath(handler.local_addon_path_prefix[1:]):
+                real_target = os.path.normpath('%s/%s' % (real_target, handler.site_name))
             cpath = os.getcwd()
             gr = GitRepo(real_target, url)
             # GitRepo can not easily tell actual branch

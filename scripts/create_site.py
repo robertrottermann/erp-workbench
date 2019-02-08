@@ -5,7 +5,7 @@
 # Do NOT !!!!! sort imports
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!
 import os, sys, time
-# robert: i usualy thest in wingide
+# robert: i usualy test in wingide
 if not os.environ.get('VIRTUAL_ENV') and not os.environ.get('WINGDB_ACTIVE') and not os.environ.get('UNIT_TESTING'):
     print('not running in a virtualenv')
     print('activate the worbench environment executing:')
@@ -92,10 +92,6 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     return_handler is used while testing
     """
     # default_handler = SiteCreator
-    try:
-        import wingdbstub
-    except:
-        pass
     # if the name ends with /, cut it off
     if opts.name.endswith('/'):
         opts.name = opts.name[:-1]

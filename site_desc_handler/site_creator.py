@@ -65,7 +65,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
                 '\n'.join(s))  # 25.7.17 robert % self.default_values)
         return existed
 
-
     def get_config_info(self, reset=False):
         """
         collect values needed to put into the openerp.cfg file

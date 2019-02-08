@@ -660,7 +660,13 @@ class PropertiesMixin(object):
                                  self.local_addon_path_prefix.join(self._site_addons_list))
         else:
             addons_path = self.local_addon_path_prefix.join(self._site_addons_list)
-        return self.local_addon_path_prefix + addons_path
+        # the above procedure produce out of: self.local_addon_path_prefix.join(['a','b'])
+        # something line 'a,/home/robert/workbench/afbschweiz/addons/b'
+        # so we have to prepend it with self.local_addon_path_prefix
+        # to make it '/home/robert/workbench/afbschweiz/addons/a,/home/robert/workbench/afbschweiz/addons/b'
+        # and finaly we appen self.local_addon_path_prefix so that also modules that are added 
+        # directly into addons are found also
+        return self.local_addon_path_prefix + addons_path + self.local_addon_path_prefix 
 
     # site_addons is the list of addons_entries in the odoo config
     _site_addons = {}
