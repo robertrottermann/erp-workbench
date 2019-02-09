@@ -203,7 +203,15 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.install_own_modules()
             did_run_a_command = True
             return
-        
+
+        # listapps
+        # --------
+        # list odoo apps that are declared within the selected site
+        if opts.listapps:
+            handler.listapps()
+            did_run_a_command = True
+            return
+
         # delete_site_local
         # --------
         # delete_site_local removes a site and all project files
@@ -250,7 +258,11 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.install_own_modules()
             did_run_a_command = True
 
-        # dataupdate 
+        if opts.removeapps:
+            handler.remove_apps()
+            did_run_a_command = True
+
+        # dataupdate
         # ----------
         # these options are used to copy a running remote server to a lokal
         # odoo instance

@@ -11,6 +11,9 @@ then to add virtualenvwrapper when a shell is opened:
     export PROJECT_HOME=$HOME/projetcs
     source /usr/local/bin/virtualenvwrapper.sh
 
+    source .local/bin/virtualenvwrapper.sh
+
+
 take care that the last line (source /usr/local/bin/virtualenvwrapper.sh) is correct.
 It could be, that virtualenvwrapper.sh was installed to a different directory.
 

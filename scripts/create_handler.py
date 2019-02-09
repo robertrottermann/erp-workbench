@@ -1212,7 +1212,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 print('*' * 80)
             if installed and (
                 (is_create and (opts.updateown or opts.removeown)) 
-                or (is_docker and (opts.dupdateown or opts.dremoveown))):
+                    or (is_docker and (opts.dupdateown or opts.dremoveown))):
                 if (is_create and opts.updateown) or (is_docker and opts.dupdateown):
                     i_list = [il[0]
                               for il in installed if (il[1] not in skip_upd_list)]
@@ -1249,13 +1249,63 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         print('*' * 80)
 
     # ----------------------------------
+    # remove_apps
+    # remove erp_moduls
+    def remove_apps(self):
+        opts = self.opts
+        to_remove = opts.removeapps.split(',')
+        apps = self.listapps(return_apps=True)
+        module_obj = self.get_module_obj()
+        app_dic = {key: value for (value, key) in apps}
+        if module_obj:
+            print(bcolors.green)
+            print('*' * 80)
+            print('The following app(s) will be uninstalled')
+            for app_name in to_remove:
+                if app_dic.get(app_name):
+                    print(app_name)                    
+                    module_obj.browse(app_dic.get(
+                        app_name)).button_immediate_uninstall()
+            print(bcolors.ENDC)
+        else:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('odoo seems not to be running')
+            print(bcolors.ENDC)
+
+
+    # listapps
+    # --------
+    # list what apps are installed in a running odoo site
+    # mark the ones listed in the site description
+    def listapps(self, return_apps = False):
+        installed = []
+        uninstalled = []
+        to_upgrade = []
+        req = []
+        apps = []
+        cursor = self.get_cursor()
+        site = self.site
+        # addons decalared in addons are the ones not available from odoo directly
+        site_addons = self.site_addons
+        # addons declared in the erp_addons stanza are the ones we can get from odoo
+        erp_addons = self.erp_addons
+
+        self.collect_info(cursor, req, installed, uninstalled, to_upgrade, skip_list=[], apps=apps)
+        if return_apps:
+            return apps
+        app_names = [a[1] for a in apps]
+        for name in erp_addons:
+            print(name, name in app_names and '+' or '')
+
+    # ----------------------------------
     #  collects info on what modules are installed
     # or need to be installed
     # @req : list of required modules. If this is an empty list
     #         use any module
     # @uninstalled  : collect unistalled modules into this list
     # @to_upgrade   :collect modules that expect upgrade into this list
-    def collect_info(self, cursor, req, installed, uninstalled, to_upgrade, skip_list, all_list=[]):
+    def collect_info(self, cursor, req, installed, uninstalled, to_upgrade, skip_list, all_list=[], apps=[]):
         opts = self.opts
         s = 'select * from ir_module_module'
         cursor.execute(s)
@@ -1267,11 +1317,15 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 updlist = opts.updateown.split(',')
             elif opts.removeown:
                 updlist = opts.removeown.split(',')
+            elif opts.removeapps:
+                updlist = opts.removeapps
         if opts.subparser_name == 'docker':
             if opts.dupdateown:
                 updlist = opts.dupdateown.split(',')
             elif opts.dremoveown:
                 updlist = opts.dremoveown.split(',')
+            elif opts.dremoveapps:
+                updlist = opts.dremoveapps
         if 'all' in updlist:
             updlist = all_list
         if 'dev' in updlist or 'develop' in updlist:
@@ -1290,6 +1344,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if n in req:
                     req.pop(req.index(n))
                 if s == 'installed':
+                    if r.get('application'):
+                        apps.append([i, n])
                     if all or updlist == 'all' or n in updlist:
                         installed.append((i, n))
                     continue
@@ -1298,7 +1354,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 elif s == 'to upgrade':
                     to_upgrade.append(n)
                 else:
-                    print(n, s, id)
+                    if not s == 'uninstallable':
+                        print(n, s, i)
         # now clean all list from any modules we want to skip
         # x.pop(x.index(2))
         if skip_list:

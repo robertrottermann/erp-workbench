@@ -8,7 +8,7 @@ def add_options_create(parser, result_dic):
     Arguments:
         parser {argparse instance} -- instance to which arguments should be added
     """
-    parser_manage = ParserHandler(parser, result_dic)
+    parser_manage=ParserHandler(parser, result_dic)
 
     parser_manage.add_argument(
         "-c", "--create",
@@ -16,7 +16,7 @@ def add_options_create(parser, result_dic):
         help='create new site structure in %s. Name must be provided' % BASE_INFO.get(
             'project_path', os.path.expanduser('projects')),
         need_name=True,
-        name_valid = True,
+        name_valid=True,
     )
     parser_manage.add_argument(
         "-D", "--directories",
@@ -35,45 +35,51 @@ def add_options_create(parser, result_dic):
         - database Proj_Name
         """,
         need_name=True,
-        name_valid = True,
+        name_valid=True,
     )
     parser_manage.add_argument(
         "-lo", "--listownmodules",
         action="store_true", dest="listownmodules", default=False,
         help='list installable modules from sites.py sites description. Name must be provided',
-        need_name=True        
+        need_name=True
     )
     parser_manage.add_argument(
         "-lm", "--list-apps",
         action="store_true", dest="listapps", default=False,
         help='list erp aps listed to install in the site description. Name must be provided',
-        need_name=True,        
-        name_valid = True,
+        need_name=True,
+        name_valid=True,
     )
     parser_manage.add_argument(
         "-lM", "--list-installed-apps",
         action="store_true", dest="listinstalledapps", default=False,
         help='list installed erp apps. Name must be provided',
         need_name=True,
-        name_valid = True,
+        name_valid=True,
     )
     parser_manage.add_argument(
         "-LM", "--list-installed-apps-and-modules",
         action="store_true", dest="listinstalledapps_modules", default=False,
         help='list installed erp apps. Name must be provided',
         need_name=True,
-        name_valid = True,       
+        name_valid=True
     )
     parser_manage.add_argument(
         "-io", "--installown",
         action="store_true", dest="installown", default=False,
         help='install all modules listed as addons',
-        need_name=True        
+        need_name=True
     )
     parser_manage.add_argument(
         "-uo", "--updateown",
         action="store", dest="updateown", default='',
         help='update modules listed as addons, pass a comma separated list (no spaces) or all',
+        need_name=True
+    )
+    parser_manage.add_argument(
+        "-ra", "--removeapps",
+        action="store", dest="removeapps", default='',
+        help='remove installed modules/apps, pass a comma separated list (no spaces)',
         need_name=True
     )
     parser_manage.add_argument(
