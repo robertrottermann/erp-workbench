@@ -9,6 +9,7 @@ from scripts.properties_mixin import PropertiesMixin
 from scripts.bcolors import bcolors 
 from argparse import Namespace
 from scripts.messages import SITE_NOT_EXISTING, SITE_HAS_NO_REMOTE_INFO, SITE_UNKNOW_IP
+from site_desc_handler.sdesc_utilities import flatten_sites
 
 class DummyNamespace(Namespace):
     # we need a namespace that just ignores unknow options
@@ -390,6 +391,8 @@ class SiteDescHandlerMixin(PropertiesMixin):
             running_site {dict} -- site description
         """
         self.set_passwords(running_site)
+        # # resolve inheritance within sites
+        flatten_sites(self._sites)        
         # construct the addons path
         self._site_addons_list = self.collect_addons() 
         self.handle_skip_list()

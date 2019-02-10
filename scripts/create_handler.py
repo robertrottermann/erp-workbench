@@ -282,8 +282,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # # call the DockerHandlerMixin to setup the docker environment
         # self.setup_docker_env(self.site)
         # #self.check_name(no_completion=True, must_match=True)
-        # # resolve inheritance within sites
-        # flatten_sites(self._sites)
+        ## # resolve inheritance within sites
+        #flatten_sites(self._sites)
         # # collect info on what parser and what options are selected
         parsername, selected, options = collect_options(opts)
         self.selections = selected
