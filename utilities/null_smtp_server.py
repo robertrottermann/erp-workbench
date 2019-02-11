@@ -115,7 +115,7 @@ class NullSMTPDHandler(object):
     built in Vagrant/Docker and that we don't have a proper domain for and we don't really
     care to real all emails via a web interface.
     """
-    def __init__(self, logger, mail_dir, output_messages=True):
+    def __init__(self, logger, mail_dir, output_messages=True, quiet=False):
         """
 
         :param logger: Logger to use for the handler
@@ -136,6 +136,7 @@ class NullSMTPDHandler(object):
         self.mail_dir = mail_dir
         self.print_messages = output_messages is True
         self.logger.info("Mail Directory: {:s}".format(mail_dir))
+        self._quiet = quiet
 
     # pylint: disable=invalid-name
     async def handle_DATA(self, _, __, envelope):
@@ -164,6 +165,8 @@ class NullSMTPDHandler(object):
                 os.mkdir(os.path.join(self.mail_dir, recipient))
             with open(mail_path, 'a') as open_file:
                 open_file.write(data + "\n")
+            if not self._quiet:
+                print('%s --> %s' % (recipient, mail_path))
 
             if self.print_messages:
                 self.logger.info(data)
@@ -186,11 +189,11 @@ def _parse_args():
                         help="Port to listen on (defaults to 25, fallback 2525)")
     parser.add_argument("--mail-dir", type=str, default=NULLSMTPD_DIRECTORY,
                         help="Location to write logs and emails (defaults to ~/.nullsmtpd)")
-    parser.add_argument("-v", "--version", action="version", version="%(prog)s ("+__version__+")")
+    parser.add_argument("-q", "--quiet", action="store_true", default=False)
     return parser.parse_args()
 
-def get_controller(host, port, logger, mail_dir, output_messages):
-    controller = Controller(NullSMTPDHandler(logger, mail_dir, output_messages), hostname=host,
+def get_controller(host, port, logger, mail_dir, output_messages, quiet):
+    controller = Controller(NullSMTPDHandler(logger, mail_dir, output_messages, quiet=quiet), hostname=host,
                             port=port)
     return controller
     
@@ -213,15 +216,16 @@ def main():
     output_messages = True #'fork' in args and args.fork
     logger = configure_logging(args.mail_dir, output_messages)
     mail_dir = args.mail_dir
+    quiet = args.quiet
 
     try:
         logger.info("Starting nullsmtpd {:s} on {:s}:{:d}".format(__version__, host, port))
-        controller = get_controller(host, port, logger, mail_dir, output_messages)
+        controller = get_controller(host, port, logger, mail_dir, output_messages, quiet)
         controller.start()
     except PermissionError:
         port = SMTP_FALLBACK_PORT
         logger.info("Starting nullsmtpd {:s} on {:s}:{:d}".format(__version__, host, port))
-        controller = get_controller(host, port, logger, mail_dir, output_messages)
+        controller = get_controller(host, port, logger, mail_dir, output_messages, quiet=quiet)
         controller.start()
         if output_messages:
             while 1:
