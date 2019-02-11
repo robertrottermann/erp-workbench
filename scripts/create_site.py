@@ -330,6 +330,21 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.dump_instance()
             did_run_a_command = True
 
+        # set_erp_settings
+        # ----------------
+        # set local settings from the site description
+        if opts.set_erp_settings:
+            handler.set_erp_settings(use_docker=False, local=False)
+            did_run_a_command = True
+
+        # set_local_data
+        # --------------
+        # set local settings from the site description
+        if opts.set_local_data:
+            handler.set_local_data(use_remote_setting=False)
+            did_run_a_command = True
+            
+
     # ----------------------
     # docker commands
     # ----------------------
@@ -479,6 +494,13 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             print('The selected docker option is either invalid or not yet implemented')
             print(bcolors.ENDC)
         return
+
+        # set_local_data
+        # --------------
+        # set local settings from the site description
+        if opts.set_local_data_docker:
+            handler.set_local_data(use_remote_setting=True)
+            did_run_a_command = True
     
     # ----------------------
     # support commands

@@ -10,6 +10,7 @@ import sys
 import argparse
 import os
 import time
+import email.message
 
 from aiosmtpd.controller import Controller
 
@@ -138,6 +139,18 @@ class NullSMTPDHandler(object):
         self.logger.info("Mail Directory: {:s}".format(mail_dir))
         self._quiet = quiet
 
+    def print_mail(self, data):
+        msg = email.message_from_string(data)
+        if msg.is_multipart():
+            for part in msg.walk():
+                ctype = part.get_content_type()
+                cdispo = str(part.get('Content-Disposition'))
+                try:
+                    print(part.get_payload(decode=1))
+                except:
+                    pass
+
+
     # pylint: disable=invalid-name
     async def handle_DATA(self, _, __, envelope):
         """
@@ -169,7 +182,8 @@ class NullSMTPDHandler(object):
                 print('%s --> %s' % (recipient, mail_path))
 
             if self.print_messages:
-                self.logger.info(data)
+                self.print_mail(data)
+                #self.logger.info(data)
         return '250 OK'
 
 

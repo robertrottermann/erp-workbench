@@ -320,9 +320,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             """
             p = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
             ifc_resp = p.communicate()
+            if ifc_resp:
+                ifc_resp = ifc_resp[0].decode('utf8')
             patt = re.compile(
                 r'inet\s*\w*\S*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
-            resp = patt.findall(ifc_resp[0])
+            resp = patt.findall(ifc_resp)
             return resp
 
         return remote_url in get_ipv4_address()
@@ -1247,6 +1249,114 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         module_obj.browse(i).button_immediate_uninstall()
                         print('finished unistalling: ' + n)
                         print('*' * 80)
+
+    # ----------------------------------
+    # set_erp_settings
+    # set odoo settings from the site description
+    # like the email settings and such
+    # we try to find out what our ip is and the get the data
+    # according to that ip.
+    # if our ip is not in the servers list, we take 127.0.0.1
+    def set_erp_settings(self, use_docker=False, local=True):
+        import socket
+        import fcntl
+        import struct
+        SITES_PW = {}
+
+        def get_ip_address(ifname):
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            try:
+                return socket.inet_ntoa(fcntl.ioctl(
+                    s.fileno(),
+                    0x8915,  # SIOCGIFADDR
+                    struct.pack('256s', ifname[:15])
+                )[20:24])
+            except:
+                # we have no etho
+                # https://stackoverflow.com/questions/24196932/how-can-i-get-the-ip-address-of-eth0-in-python
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                ipl = s.getsockname()
+                if ipl:
+                    return ipl[0]
+        odoo = self.get_odoo()
+        if not odoo:
+            print(ODOO_NOT_RUNNING % self.site_name)
+            return
+        site = self.site
+        remote_servers = site.get('remote_servers', {})
+        # if the site runs on a virtual server behind a NAT we do
+        # not know its real address
+        if self.opts.use_ip:
+            my_ip = self.opts.use_ip
+        elif use_docker and self.opts.use_ip_docker:
+            my_ip = self.opts.use_ip_docker
+        elif local:
+            my_ip = '127.0.0.1'
+        else:
+            my_ip = get_ip_address('eth0')
+        # check whether the address in in
+        s_data = remote_servers.get(my_ip)
+        # use proxy on development server
+        proxy = ''
+        if not s_data:
+            s_data = remote_servers.get(remote_servers.get('proxy'))
+            proxy = remote_servers.get('proxy')
+            print(bcolors.FAIL + 'no odoo_settings for (local) id:%s found' %
+                  my_ip + bcolors.ENDC)
+            print(bcolors.WARNING + 'using proxy (%s) to calculate site settings' %
+                  my_ip + bcolors.ENDC)
+        if not s_data:
+            print(bcolors.WARNING + 'no odoo_settings for id:%s found' %
+                  my_ip + bcolors.ENDC)
+            return
+        # get passwords
+        try:
+            from sites_pw import SITES_PW
+            email_pws = SITES_PW.get(self.site_name, {}).get(
+                'email', SITES_PW.get(self.site_name, {}).get('email_settings', {}))
+        except ImportError:
+            email_pws = {}
+            pass
+
+        # write the incomming email server
+        i_server = odoo.env['fetchmail.server']
+        # get the first server
+        print(bcolors.OKGREEN, '*' * 80)
+        print('incomming email')
+        i_ids = i_server.search([])
+        i_id = 0
+        i_data = s_data.get('odoo_settings', {}).get('mail_incomming')
+        # do we have a password
+        if not local:
+            i_data['password'] = email_pws.get('email_pw_incomming', '')
+        if i_ids:
+            i_id = i_ids[0]
+        if i_id:
+            incomming = i_server.browse([i_id])
+            incomming.write(i_data)
+        else:
+            incomming = i_server.create(i_data)
+        print(i_data)
+        print('-' * 80)
+        print('outgoing email')
+        # now do the same for the outgoing server
+        o_data = s_data.get('odoo_settings', {}).get('mail_outgoing')
+        if not local:
+            o_data['smtp_pass'] = email_pws.get('email_pw_outgoing', '')
+        o_server = odoo.env['ir.mail_server']
+        # get the first server
+        o_ids = o_server.search([])
+        o_id = 0
+        if o_ids:
+            o_id = o_ids[0]
+        if o_id:
+            outgoing = o_server.browse([o_id])
+            outgoing.write(o_data)
+        else:
+            o_server.create(o_data)
+        print(o_data)
+        print('*' * 80, bcolors.ENDC)
 
     # ----------------------------------
     # remove_apps

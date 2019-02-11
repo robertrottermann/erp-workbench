@@ -25,12 +25,6 @@ def parse_args():
     # manage rpc stuff
     # -----------------------------------------------
     #parser_remote_s = parser_remote.add_subparsers(title='remote commands', dest="rpc_commands")
-    parser_rpc.add_argument("-SL", "--set-local-data",
-                            action="store_true", dest="set_local_data", default=False,
-                            help="set local data from the site description. Together with -F it can also be used remotely")
-    parser_rpc.add_argument("-SOS", "--set-odoo-settings",
-                            action="store_true", dest="set_odoo_settings", default=False,
-                            help="set odoo settings like the mail handlers. The script tries to define for what ip")
     parser_rpc.add_argument("-SOSL", "--set-odoo-settings-local",
                             action="store_true", dest="set_odoo_settings_local", default=False,
                             help="set odoo settings like the mail handlers. The script tries to define for what ip")
