@@ -41,6 +41,9 @@ def add_options_rpc(parser, result_dic):
     parser_rpc.add_argument("-SOS", "--set-odoo-settings",
                             action="store_true", dest="set_erp_settings", default=False,
                             help="set erp settings like the mail handlers. The script tries to define for what ip")
+    parser_rpc.add_argument("-SN", "--set-null-smtp",
+                            action="store_true", dest="set_null_smtp", default=False,
+                            help="Set the outgoing mailserver to use the local null smt server. It has to be startet with bin/python utilities/null_smtp_server.py")
 
 
 

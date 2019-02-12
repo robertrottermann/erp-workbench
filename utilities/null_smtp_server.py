@@ -15,6 +15,29 @@ import email.message
 from aiosmtpd.controller import Controller
 
 """
+null_smtp_server.py acts as an smtp server that can intercept all
+email messages sent from odoo and write them to a local folder.
+
+To use it, you have to set up odoo's outgoing mail server wit the following values:
+        data = {'active': True,
+                'name': 'localost',
+                'sequence': 10,
+                'smtp_debug': False,
+                'smtp_encryption': 'none',
+                'smtp_host': 'localhost',
+                'smtp_pass': '',
+                'smtp_port': 2525,
+                'smtp_user': ''}
+
+and then start it:
+    bin/python utilities/null_smtp_server.py
+
+workbench can set the email server for you:
+    bin/c -SN SITENAME
+
+"""
+
+"""
 Metadata about the project
 """
 
@@ -146,7 +169,15 @@ class NullSMTPDHandler(object):
                 ctype = part.get_content_type()
                 cdispo = str(part.get('Content-Disposition'))
                 try:
-                    print(part.get_payload(decode=1))
+                    lines = part.get_payload(decode=1)
+                    if lines and isinstance(lines, str):
+                        lines = lines.split('\n')
+                    elif lines and isinstance(lines, bytes):
+                        lines = lines.split(b'\n')
+                    else:
+                        lines = [lines]
+                    for line in lines:
+                        print(line.decode('utf8'))
                 except:
                     pass
 

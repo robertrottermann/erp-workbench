@@ -344,6 +344,12 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.set_local_data(use_remote_setting=False)
             did_run_a_command = True
             
+        # set_null_smtp
+        # --------------
+        # set null smtp handler from the site description
+        if opts.set_null_smtp:
+            handler.set_null_mail_server()
+            did_run_a_command = True
 
     # ----------------------
     # docker commands
