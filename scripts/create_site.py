@@ -494,6 +494,13 @@ def main(opts, parsername, need_names_dic, return_handler = False):
                 handler.docker_show()
             did_run_a_command = True
         
+        # set_local_data
+        # --------------
+        # set local settings from the site description
+        if opts.set_local_data_docker:
+            handler.set_local_data(use_remote_setting=True)
+            did_run_a_command = True
+
         if not did_run_a_command:
             print(bcolors.WARNING)
             print('*' * 80)
@@ -501,12 +508,6 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             print(bcolors.ENDC)
         return
 
-        # set_local_data
-        # --------------
-        # set local settings from the site description
-        if opts.set_local_data_docker:
-            handler.set_local_data(use_remote_setting=True)
-            did_run_a_command = True
     
     # ----------------------
     # support commands

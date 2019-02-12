@@ -431,6 +431,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             print('*' * 80)
             print('the site %s uses "odoo_version" but should use "erp_version", please fix' % self.site_name)
             print(bcolors.ENDC)
+            self.site['erp_version'] = self.site.get('odoo_version')
         default_values.update(self.site)
         # now we try to replace the %(xx)s element with values we connected from 
         # the yaml files
