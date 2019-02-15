@@ -39,12 +39,13 @@ from config.handlers import DockerHandler
 from kuber_handler.kuber_handler import KuberHandlerHelm
 from config.handlers import SupportHandler
 from config.handlers import RemoteHandler
-#from config.handlers import MailHandler
+from config.handlers import MigrationHandler
 
 # get config options
 from scripts.options_create import add_options_create
 from scripts.options_docker import add_options_docker
 from scripts.options_parent import add_options_parent
+from scripts.options_migrate import add_options_migrate
 from scripts.options_rpc import add_options_rpc
 from scripts.options_support import add_options_support
 from scripts.options_remote import add_options_remote
@@ -102,6 +103,8 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         handler = SupportHandler(opts, SITES)
     elif parsername == 'remote':
         handler = RemoteHandler(opts, SITES)
+    elif parsername == 'migrate':
+        handler = MigrateHandler(opts, SITES)
     elif parsername == 'docker':
         if opts.docker_use_bitnami:
             handler = KuberHandlerHelm(opts, SITES)
@@ -508,6 +511,18 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             print(bcolors.ENDC)
         return
 
+    # ----------------------
+    # migrate commands
+    # ----------------------
+    if parsername == 'migrate':
+        # add_site
+        # --------
+        # add_site adds a site description to the sites.py file
+        # add_site_local adds a site description to the sites_local.py file
+        if opts.add_site or opts.add_site_local:
+            handler.add_site_to_sitelist()
+            did_run_a_command = True
+            return
     
     # ----------------------
     # support commands
@@ -591,8 +606,6 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             print(bcolors.ENDC)
         return
 
-
-   
     # ----------------------
     # remote commands
     # ----------------------
@@ -674,6 +687,13 @@ def parse_args():
         help='docker provides commands to handle docker containers',
         parents=[parent_parser])
     add_options_docker(parser_docker, need_names_dic)
+    # -----------------------------------------------
+    # manage migrate
+    parser_migrate = subparsers.add_parser(
+        'migrate',
+        help='docker provides commands to handle docker containers',
+        parents=[parent_parser])
+    add_options_migrate(parser_migrate, need_names_dic)
     # -----------------------------------------------
     # manage remote server (can be localhost)
     parser_remote = subparsers.add_parser(
