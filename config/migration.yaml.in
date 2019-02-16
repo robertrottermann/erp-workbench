@@ -1,0 +1,15 @@
+# MIGRATION_DEFAULTS list of values a migration job has to provide
+
+# Variables that can be used in the values
+# %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
+# %(USER_HOME)s the home folder of the logged in user
+
+# 
+MIGRATION_DEFAULTS:
+    token_list:
+        # source_server:
+        # from where do we get the data and the modules to migrate
+        - source_server
+        - target_server
+        - source_version
+        - target_version

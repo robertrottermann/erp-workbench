@@ -59,5 +59,25 @@ class MigrationHandler(InitHandler, DBUpdater):
     _subparser_name = 'migrate'
     @property
     def subparser_name(self):
-        return self._subparser_name     
+        return self._subparser_name 
+
+    _migration_tokens = ''
+    @property
+    def migration_tokens(self):
+        """migration token is a list of names we want to collect values for
+        
+        Returns:
+            list -- list of strings
+        """
+
+        return self._migration_tokens
+    
+
+    def collet_migration_info(self):
+        """read the migration values for the running sit
+        to do so, we collect the values for the tokens we read from
+        config/migration.yaml
+        """
+
+
 
