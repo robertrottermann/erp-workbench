@@ -32,7 +32,8 @@ for y_info in  (
         ('config', 'base_info.py'),
         ('servers', 'servers_info.py'),
         ('docker', 'docker_info.py'),
-        ('project', 'project_info.py')
+        ('project', 'project_info.py'),
+        ('migration', 'migration_info.py'),
     ):
     y_name, file_name = y_info
     config_yaml = '%s/config/%s.yaml' % (BASE_PATH, y_name)
@@ -109,6 +110,12 @@ if must_reload and construct_result.get(yaml_dic['servers'][1]):
 else:
     from config.config_data.servers_info import REMOTE_SERVERS
 
+# load migration
+if must_reload and construct_result.get(yaml_dic['migration'][1]):
+    MIGRATION_DEFAULTS = construct_result[yaml_dic['migration'][1]]['MIGRATION_DEFAULTS']
+else:
+    from config.config_data.migration_info import MIGRATION_DEFAULTS
+
 from site_desc_handler.sdesc_utilities import AttrDict
 BASE_INFO = AttrDict(BASE_INFO)
 DOCKER_DEFAULTS = AttrDict(DOCKER_DEFAULTS)
@@ -116,6 +123,7 @@ DOCKER_IMAGE = AttrDict(DOCKER_IMAGE)
 BITNAMI_DEFAULTS = AttrDict(BITNAMI_DEFAULTS)
 PROJECT_DEFAULTS = AttrDict(PROJECT_DEFAULTS)
 REMOTE_SERVERS = AttrDict(REMOTE_SERVERS)
+MIGRATION_DEFAULTS = AttrDict(MIGRATION_DEFAULTS)
 
 # sites is a combination created from "regular" sites listed in sites.py
 # an a list of localsites listed in local_sites.py
@@ -222,3 +230,9 @@ ODOO_VERSIONS = {
         'python_path' : '/usr/bin/python3',
     },
 }
+
+
+# -----------------------------------------
+# migration
+# -----------------------------------------
+# ??
