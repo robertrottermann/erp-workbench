@@ -452,6 +452,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if opts.add_site or opts.add_site_local:
                     self.site_names = [name]
                     return name
+            if opts.subparser_name == 'migrate':
+                if opts.migrate_remove_apps:
+                    self.site_names = [name]
+                    return name
         # no name
         if not name:
             name = ''  # make sure it is a string
@@ -521,7 +525,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                  if not provided check what option user has selected
         """
         opts = self.opts
-        need_name = need_names_dic.get('name_valid', [])
+        need_name = need_names_dic.get('need_name', [])
         name_valid = need_names_dic.get('name_valid', [])
         collected_opts = [item[0]
                           for item in list(opts.__dict__.items()) if item[1]]
@@ -534,8 +538,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             # only return False if all options need no name
             result = False
             options = self.selections
-            for option in options:
-                if self.name_needed(option[0], need_names_dic):
+            for opt in options:
+                if self.name_needed(opt[0], need_names_dic):
                     result = True
             return result
 

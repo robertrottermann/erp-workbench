@@ -64,7 +64,7 @@ def add_options_support(parser, result_dic):
         name_valid=False,
     )
     # -------------------------------------
-    # editing yam files
+    # editing yaml files
     # -------------------------------------
     parser_support.add_argument(
         "-a", "--add-server",
@@ -83,7 +83,7 @@ def add_options_support(parser, result_dic):
         need_name=False,
     )
     parser_support.add_argument(
-        "-p", "--edit-project",
+        "-pp", "--edit-project",
         action="store_true", dest="edit_project",
         help='edit project yaml file'
     )

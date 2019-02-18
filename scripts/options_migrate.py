@@ -14,8 +14,15 @@ def add_options_migrate(parser, result_dic = {}):
     parent_parser = ParserHandler(parser, result_dic)
 
     parent_parser.add_argument(
-        "-nmp", "--migrate-prepare",
+        "-mp", "--migrate-prepare",
         action="store", dest="migrate_prepare", default=False,
-        help='prepare migraten, site name must be given'
+        help='prepare migration, site name must be given'
     )
+    parent_parser.add_argument(
+        "-mr", "--migrate-remove-apps",
+        action="store", dest="migrate_remove_apps", default=False,
+        help='provide a filename with modules to be removed, a name of the site must be given',
+        need_name=True,
+    )
+
 

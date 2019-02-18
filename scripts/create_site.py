@@ -104,7 +104,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     elif parsername == 'remote':
         handler = RemoteHandler(opts, SITES)
     elif parsername == 'migrate':
-        handler = MigrateHandler(opts, SITES)
+        handler = MigrationHandler(opts, SITES)
     elif parsername == 'docker':
         if opts.docker_use_bitnami:
             handler = KuberHandlerHelm(opts, SITES)
@@ -512,15 +512,11 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         return
 
     # ----------------------
-    # migrate commands
+    # migration commands
     # ----------------------
     if parsername == 'migrate':
-        # add_site
-        # --------
-        # add_site adds a site description to the sites.py file
-        # add_site_local adds a site description to the sites_local.py file
-        if opts.add_site or opts.add_site_local:
-            handler.add_site_to_sitelist()
+        if opts.migrate_remove_apps:
+            handler.migrate_remove_apps()
             did_run_a_command = True
             return
     
@@ -620,12 +616,12 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
 
-        if not did_run_a_command:
-            print(bcolors.WARNING)
-            print('*' * 80)
-            print('The selected remote option is either invalid or not yet implemented')
-            print(bcolors.ENDC)
-        return
+    if not did_run_a_command:
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print('The selected remote option is either invalid or not yet implemented')
+        print(bcolors.ENDC)
+    return
 
 def parse_args():
     print_banner = True
@@ -645,9 +641,9 @@ def parse_args():
     # set options for parent_parser
     add_options_parent(parent_parser, need_names_dic)
     # parser_rpc is also used in several parsers to provide default values
-    parser_rpc = ArgumentParser(add_help=False)
+    #parser_rpc = ArgumentParser(add_help=False)
     # set options for parser_rpc
-    add_options_rpc(parser_rpc, need_names_dic)
+    add_options_rpc(parent_parser, need_names_dic)
 
 
     # parser is the main parser
@@ -667,7 +663,7 @@ def parse_args():
         create is used to manage local and remote sites by reading 
         site descrition created using the sites command set
         """,
-        parents=[parser_rpc, parent_parser],
+        parents= [parent_parser], # [parser_rpc, parent_parser],
         #prog='PROG',
         usage='%(prog)s [options]')
     # -----------------------------------------------
@@ -725,7 +721,7 @@ def parse_args():
     args.command_line = command_line
     unknownargs = [a for a in unknownargs if a and a[0] != '-']
     if not args.name:
-        cmds = ['create', 'support', 'docker', 'remote', 'mail']
+        cmds = ['create', 'support', 'docker', 'remote', 'mail', 'migrate']
         if unknownargs and unknownargs[0] not in cmds:
             args.name = unknownargs[0]
         else:
