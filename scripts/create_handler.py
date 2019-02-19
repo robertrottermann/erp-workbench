@@ -1064,6 +1064,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             i_ids = i_server.search([])
             i_id = 0
             i_data = s_data.get('erp_settings', {}).get('mail_incomming')
+            if not i_data and s_data.get('odoo_settings', {}).get('mail_incomming'): # bb
+                i_data = s_data.get('odoo_settings', {}).get('mail_incomming')
             # do we have a password
             if not local:
                 i_data['password'] = email_pws.get('email_pw_incomming', '')
@@ -1079,6 +1081,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         print('outgoing email')
         # now do the same for the outgoing server
         o_data = s_data.get('erp_settings', {}).get('mail_outgoing')
+        if not o_data and s_data.get('odoo_settings', {}).get('mail_outgoing'):
+            o_data = s_data.get('odoo_settings', {}).get('mail_outgoing')
         if not local:
             o_data['smtp_pass'] = email_pws.get('email_pw_outgoing', '')
         o_server = odoo.env['ir.mail_server']
