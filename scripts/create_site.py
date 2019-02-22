@@ -520,6 +520,11 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
     
+        if opts.migrate_dump_site:
+            handler.migrate_dump_site()
+            did_run_a_command = True
+            return
+
     # ----------------------
     # support commands
     # ----------------------

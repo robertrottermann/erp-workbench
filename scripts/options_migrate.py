@@ -14,6 +14,18 @@ def add_options_migrate(parser, result_dic = {}):
     parent_parser = ParserHandler(parser, result_dic)
 
     parent_parser.add_argument(
+        "-mdump", "--migrate-dump-site",
+        action="store_true", dest="migrate_dump_site", default=False,
+        help="Dump odoo site into zip file. Default = False" ,
+        need_name=True,
+    )
+    parent_parser.add_argument(
+        "-mdbp", "--migrate-data-path",
+        action="store", dest="migrate_data_path", default=False,
+        help="provide path to odoo's datapath. Default = ~/.local/share/Odoo" ,
+        need_name=True,
+    )
+    parent_parser.add_argument(
         "-mp", "--migrate-prepare",
         action="store", dest="migrate_prepare", default=False,
         help='prepare migration, site name must be given'
