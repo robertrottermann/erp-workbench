@@ -99,6 +99,8 @@ class MigrationHandler(InitHandler, DBUpdater):
                     module_obj.browse(app_id).button_immediate_uninstall()
 
 
+    def backup_db(self):
+        dump_stream = openerp.service.db.dump_db(name, None, backup_format)
 
 
 
