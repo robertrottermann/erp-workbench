@@ -456,6 +456,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if opts.migrate_remove_apps:
                     self.site_names = [name]
                     return name
+                if opts.migrate_dump_site:
+                    self.site_names = [name]
+                    return name
         # no name
         if not name:
             name = ''  # make sure it is a string

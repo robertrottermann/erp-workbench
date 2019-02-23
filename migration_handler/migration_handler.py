@@ -216,6 +216,7 @@ class MigrationHandler(InitHandler, DBUpdater):
         cmd.append(db_name)
         odoo_options = {}
         opts = self.opts
+        filestore = ''
         if opts.migrate_config_path:
             odoo_options = parse_odoo_config(opts.migrate_config_path)
             if not odoo_options:
@@ -224,7 +225,9 @@ class MigrationHandler(InitHandler, DBUpdater):
                 print('%s is not readable' % opts.migrate_config_path)
                 print(bcolors.ENDC)
                 sys.exit()
-        if self.site_name in self.site_names:
+        # is this a wb managed site ?
+        is_wb_site = self.site_name in self.sites.keys()
+        if is_wb_site:
             # this is a site handled by erpworkbench
             filestore = self.site_data_dir
             # filestore = '%s/filestore/%s' % (self.site_data_dir, db_name)
@@ -235,13 +238,13 @@ class MigrationHandler(InitHandler, DBUpdater):
         if not filestore:
             print(bcolors.FAIL)
             print('*' * 80)
-            print('no datafile detected')
+            print('no datafiles detected')
             print(bcolors.ENDC)
             sys.exit()
         filestore = '%s/filestore/%s' % (filestore, db_name)
         
         # get odoo version info
-        if self.site_name in self.site_names:
+        if is_wb_site:
             version = '%s%s' % (self.erp_version, self.erp_minor)
             v_int = int(self.erp_version)
         else:
@@ -250,7 +253,7 @@ class MigrationHandler(InitHandler, DBUpdater):
                 newstr = ''.join((ch if ch in '0123456789.' else ' ') for ch in '11.0-final')
                 try:
                     version = str(float(newstr))
-                    v_int = int(version)
+                    v_int = int(float(version))
                 except:
                     raise ValueError('can not detect version from %s' % opts.migrate_version)
             else:
