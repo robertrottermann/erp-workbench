@@ -9,6 +9,8 @@ import shutil
 import tempfile
 import zipfile
 import configparser
+import json
+import subprocess
 
 from scripts.create_handler import InitHandler
 from scripts.update_local_db import DBUpdater
@@ -39,48 +41,42 @@ def parse_odoo_config(path):
         for key, value in config['options'].items():
             result[key] = value
     return result
+
 #----------------------------------------------------------
 # Postgres subprocesses
 #----------------------------------------------------------
 
 def find_pg_tool(name):
-    path = None
-    if config['pg_path'] and config['pg_path'] != 'None':
-        path = config['pg_path']
-    try:
-        return which(name, path=path)
-    except IOError:
-        raise Exception('Command `%s` not found.' % name)
+    return shutil.which(name)
 
-def exec_pg_environ():
-    """
-    Force the database PostgreSQL environment variables to the database
-    configuration of Odoo.
+#def exec_pg_environ():
+    #"""
+    #Force the database PostgreSQL environment variables to the database
+    #configuration of Odoo.
 
-    Note: On systems where pg_restore/pg_dump require an explicit password
-    (i.e.  on Windows where TCP sockets are used), it is necessary to pass the
-    postgres user password in the PGPASSWORD environment variable or in a
-    special .pgpass file.
+    #Note: On systems where pg_restore/pg_dump require an explicit password
+    #(i.e.  on Windows where TCP sockets are used), it is necessary to pass the
+    #postgres user password in the PGPASSWORD environment variable or in a
+    #special .pgpass file.
 
-    See also http://www.postgresql.org/docs/8.4/static/libpq-envars.html
-    """
-    env = os.environ.copy()
-    if odoo.tools.config['db_host']:
-        env['PGHOST'] = odoo.tools.config['db_host']
-    if odoo.tools.config['db_port']:
-        env['PGPORT'] = str(odoo.tools.config['db_port'])
-    if odoo.tools.config['db_user']:
-        env['PGUSER'] = odoo.tools.config['db_user']
-    if odoo.tools.config['db_password']:
-        env['PGPASSWORD'] = odoo.tools.config['db_password']
-    return env
+    #See also http://www.postgresql.org/docs/8.4/static/libpq-envars.html
+    #"""
+    #env = os.environ.copy()
+    #if odoo.tools.config['db_host']:
+        #env['PGHOST'] = odoo.tools.config['db_host']
+    #if odoo.tools.config['db_port']:
+        #env['PGPORT'] = str(odoo.tools.config['db_port'])
+    #if odoo.tools.config['db_user']:
+        #env['PGUSER'] = odoo.tools.config['db_user']
+    #if odoo.tools.config['db_password']:
+        #env['PGPASSWORD'] = odoo.tools.config['db_password']
+    #return env
 
-def exec_pg_command(name, *args):
+def exec_pg_command(name, *args, **pg_env):
     prog = find_pg_tool(name)
-    env = exec_pg_environ()
     with open(os.devnull) as dn:
         args2 = (prog,) + args
-        rc = subprocess.call(args2, env=env, stdout=dn, stderr=subprocess.STDOUT)
+        rc = subprocess.call(args2, env=pg_env, stdout=dn, stderr=subprocess.STDOUT)
         if rc:
             raise Exception('Postgres subprocess %s error %s' % (args2, rc))
 
@@ -92,19 +88,40 @@ def tempdir():
     finally:
         shutil.rmtree(tmpdir)
 
-def dump_db_manifest(cr):
-    pg_version = "%d.%d" % divmod(cr._obj.connection.server_version / 100, 100)
+def zip_dir(path, stream, include_dir=True, fnct_sort=None):      # TODO add ignore list
+    """
+    : param fnct_sort : Function to be passed to "key" parameter of built-in
+                        python sorted() to provide flexibility of sorting files
+                        inside ZIP archive according to specific requirements.
+    """
+    path = os.path.normpath(path)
+    len_prefix = len(os.path.dirname(path)) if include_dir else len(path)
+    if len_prefix:
+        len_prefix += 1
+
+    with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED, allowZip64=True) as zipf:
+        for dirpath, dirnames, filenames in os.walk(path):
+            filenames = sorted(filenames, key=fnct_sort)
+            for fname in filenames:
+                bname, ext = os.path.splitext(fname)
+                ext = ext or bname
+                if ext not in ['.pyc', '.pyo', '.swp', '.DS_Store']:
+                    path = os.path.normpath(os.path.join(dirpath, fname))
+                    if os.path.isfile(path):
+                        zipf.write(path, path[len_prefix:])
+
+
+
+def dump_db_manifest(cr, manifest={}):
+    # get te version
+    cr.execute('select version();')
+    row = cr.fetchone()
+    pg_version = row.get('version').split(' ')[1]
+    # pg_version = "%d.%d" % divmod(cr._obj.connection.server_version / 100, 100)
     cr.execute("SELECT name, latest_version FROM ir_module_module WHERE state = 'installed'")
     modules = dict(cr.fetchall())
-    manifest = {
-        'odoo_dump': '1',
-        'db_name': cr.dbname,
-        'version': odoo.release.version,
-        'version_info': odoo.release.version_info,
-        'major_version': odoo.release.major_version,
-        'pg_version': pg_version,
-        'modules': modules,
-    }
+    manifest['modules'] = modules
+    manifest['pg_version'] = pg_version
     return manifest
 
 class MigrationHandler(InitHandler, DBUpdater):
@@ -186,13 +203,15 @@ class MigrationHandler(InitHandler, DBUpdater):
 
 
     def migrate_dump_site(self):
+        backup_format = 'zip'
+        opts = self.opts
+        
+        dump_stream = self.dump_db(self.site_name, backup_format)
 
-        dump_stream = openerp.service.db.dump_db(name, None, backup_format)
-
-    def dump_db(self, db_name, stream, backup_format='zip'):
+    def dump_db(self, db_name, backup_format='zip'):
         """Dump database `db` into file-like object `stream` if stream is None
         return a file object with the dump """
-
+        # ['pg_dump', '--no-owner', '--file=/tmp/tmp87h3qpev/dump.sql', 'redo2oo11']
         cmd = ['pg_dump', '--no-owner']
         cmd.append(db_name)
         odoo_options = {}
@@ -205,25 +224,81 @@ class MigrationHandler(InitHandler, DBUpdater):
                 print('%s is not readable' % opts.migrate_config_path)
                 print(bcolors.ENDC)
                 sys.exit()
-        filestore = self.opts.migrate_data_path
+        if self.site_name in self.site_names:
+            # this is a site handled by erpworkbench
+            filestore = self.site_data_dir
+            # filestore = '%s/filestore/%s' % (self.site_data_dir, db_name)
+        elif self.opts.migrate_data_path:
+            filestore = self.opts.migrate_data_path
+        if not filestore:
+            filestore = odoo_options.get('data_dir')
+        if not filestore:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('no datafile detected')
+            print(bcolors.ENDC)
+            sys.exit()
+        filestore = '%s/filestore/%s' % (filestore, db_name)
+        
+        # get odoo version info
+        if self.site_name in self.site_names:
+            version = '%s%s' % (self.erp_version, self.erp_minor)
+            v_int = int(self.erp_version)
+        else:
+            version = opts.migrate_version
+            if version:
+                newstr = ''.join((ch if ch in '0123456789.' else ' ') for ch in '11.0-final')
+                try:
+                    version = str(float(newstr))
+                    v_int = int(version)
+                except:
+                    raise ValueError('can not detect version from %s' % opts.migrate_version)
+            else:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('please provide a version like -mver 11.0-final')
+                print(bcolors.ENDC)
+                sys.exit()
+                
         backup_format = 'zip'
         cr = self.get_cursor()
+        # version_info format: (MAJOR, MINOR, MICRO, RELEASE_LEVEL, SERIAL)
+        # inspired by Python's own sys.version_info, in order to be
+        # properly comparable using normal operarors, for example:
+        #  (6,1,0,'beta',0) < (6,1,0,'candidate',1) < (6,1,0,'candidate',2)
+        #  (6,1,0,'candidate',2) < (6,1,0,'final',0) < (6,1,2,'final',0)
+        version_info = (v_int, 0, 0, 'final', 0, '')        
+        manifest = {
+            'odoo_dump': '1',
+            'db_name': db_name,
+            'version': version,
+            'version_info': version_info,
+            'major_version': version,
+            'pg_version': '',
+            'modules': [],
+        }
+        
+        pg_env = os.environ.copy()
+        pg_env['PGHOST'] = self.db_host
+        pg_env['PGPORT'] = str(self.postgres_port)
+        pg_env['PGUSER'] = self.db_user
+        pg_env['PGPASSWORD'] = self.db_user_pw
+        
         with tempdir() as dump_dir:
             if os.path.exists(filestore):
                 shutil.copytree(filestore, os.path.join(dump_dir, 'filestore'))
+            #manifest = dump_db_manifest(cr, manifest)
             with open(os.path.join(dump_dir, 'manifest.json'), 'w') as fh:
-                db = odoo.sql_db.db_connect(db_name)
-                with db.cursor() as cr:
-                    json.dump(dump_db_manifest(cr), fh, indent=4)
+                json.dump(dump_db_manifest(cr, manifest), fh, indent=4)
             cmd.insert(-1, '--file=' + os.path.join(dump_dir, 'dump.sql'))
-            exec_pg_command(*cmd)
-            if stream:
-                odoo.tools.osutil.zip_dir(dump_dir, stream, include_dir=False, fnct_sort=lambda file_name: file_name != 'dump.sql')
-            else:
-                t=tempfile.TemporaryFile()
-                odoo.tools.osutil.zip_dir(dump_dir, t, include_dir=False, fnct_sort=lambda file_name: file_name != 'dump.sql')
-                t.seek(0)
-                return t
+            exec_pg_command(*cmd, **pg_env)
+            t=tempfile.TemporaryFile()
+            zip_dir(dump_dir, t, include_dir=False, fnct_sort=lambda file_name: file_name != 'dump.sql')
+            t.seek(0)
+            # now write everything to a file
+            with open('%s.zip' % self.site_name, 'wb') as zip_file:
+                zip_file.write(t.read())
+        a = 1
 
 
 
