@@ -2,28 +2,43 @@
 # -*- encoding: utf-8 -*-
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
-from config import ODOO_VERSIONS
 #from config.handlers import InitHandler, DBUpdater
-from scripts.create_handler import InitHandler
-from scripts.update_local_db import DBUpdater
 import os
-import re
 import sys
-import shutil
-from site_desc_handler.handle_remote_data import get_remote_server_info
-from scripts.bcolors import bcolors
-from contextlib import contextmanager
 import shutil
 import tempfile
 import zipfile
+import configparser
 
-from scripts.messages import DOCKER_DB_MISSING #, DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
+from scripts.create_handler import InitHandler
+from scripts.update_local_db import DBUpdater
+from scripts.bcolors import bcolors
+from contextlib import contextmanager
+from scripts.messages import DOCKER_DB_MISSING  # , DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
 #       DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
 #       DOCKER_IMAGE_PUSH_MISING_HUB_INFO, SITE_NOT_EXISTING, DOCKER_IMAGE_CREATE_ERROR, \
 #       DOCKER_IMAGE_CREATE_MISING_HUB_INFO, DOCKER_IMAGE_CREATE_MISING_HUB_USER, ERP_VERSION_BAD, \
 #       DOCKER_IMAGE_CREATE_MISING_HUB_USER, DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, \
 #       DOCKER_IMAGE_CREATE_DONE
 
+
+#----------------------------------------------------------
+# Handle ini-file
+#----------------------------------------------------------
+def parse_odoo_config(path):
+    """scan odoo config file into dictionary
+    
+    Arguments:
+        path {string} -- path to the config file
+    """
+
+    result = {}
+    config = configparser.ConfigParser()
+    config.read(path)
+    if 'options' in config:
+        for key, value in config['options'].items():
+            result[key] = value
+    return result
 #----------------------------------------------------------
 # Postgres subprocesses
 #----------------------------------------------------------
@@ -132,7 +147,7 @@ class MigrationHandler(InitHandler, DBUpdater):
             app_id = row.get('id')
             if state == 'installed':
                 result[name] = app_id
-        return result    
+        return result
 
     def collect_migration_info(self):
         """read the migration values for the running site
@@ -174,12 +189,22 @@ class MigrationHandler(InitHandler, DBUpdater):
 
         dump_stream = openerp.service.db.dump_db(name, None, backup_format)
 
-    def dump_db(db_name, stream, backup_format='zip'):
+    def dump_db(self, db_name, stream, backup_format='zip'):
         """Dump database `db` into file-like object `stream` if stream is None
         return a file object with the dump """
 
         cmd = ['pg_dump', '--no-owner']
         cmd.append(db_name)
+        odoo_options = {}
+        opts = self.opts
+        if opts.migrate_config_path:
+            odoo_options = parse_odoo_config(opts.migrate_config_path)
+            if not odoo_options:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('%s is not readable' % opts.migrate_config_path)
+                print(bcolors.ENDC)
+                sys.exit()
         filestore = self.opts.migrate_data_path
         backup_format = 'zip'
         cr = self.get_cursor()

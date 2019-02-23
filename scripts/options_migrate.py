@@ -26,6 +26,12 @@ def add_options_migrate(parser, result_dic = {}):
         need_name=True,
     )
     parent_parser.add_argument(
+        "-mconf", "--migrate-config",
+        action="store", dest="migrate_config_path", default=False,
+        help="provide path to odoo's migration file",
+        need_name=True,
+    )
+    parent_parser.add_argument(
         "-mp", "--migrate-prepare",
         action="store", dest="migrate_prepare", default=False,
         help='prepare migration, site name must be given'
