@@ -26,6 +26,12 @@ def add_options_migrate(parser, result_dic = {}):
         need_name=True,
     )
     parent_parser.add_argument(
+        "-mver", "--migrate-version",
+        action="store", dest="migrate_version", default='',
+        help="string with version info like  to write into the manifest" ,
+        need_name=True,
+    )
+    parent_parser.add_argument(
         "-mconf", "--migrate-config",
         action="store", dest="migrate_config_path", default=False,
         help="provide path to odoo's migration file",
