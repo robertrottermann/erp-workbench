@@ -634,6 +634,13 @@ class DockerHandler(InitHandler, DBUpdater):
             envar_line = 'ENV  %s=%s\n'
             for k,v in image_envars.items():
                 en_vars += (envar_line % (k.strip(), v.strip()))
+        # collect extra build commands
+        run_extra_run_block = ''
+        extra_commands = self.site.get('docker_build_cmds', [])
+        if extra_commands:
+            for extra_command in extra_commands:
+                run_extra_run_block += 'RUN %s\n' % extra_command.strip()
+
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
             data_dic = {
                'erp_image_version'  : self.docker_base_image
@@ -652,6 +659,7 @@ class DockerHandler(InitHandler, DBUpdater):
                     data_str +=  (' '.join(['%s' % p for p in pip_list]))
             data_dic['run_block'] = data_str
             data_dic['env_vars'] = en_vars
+            data_dic['run_extra_run_block'] = run_extra_run_block
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
             result.write(docker_file)
         # construct folder layout as expected by the base image

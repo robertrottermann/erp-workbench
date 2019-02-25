@@ -102,8 +102,10 @@ RUN pip install --cache-dir=.pip -e  /odoo/src
 COPY ./requirements.txt /odoo/
 RUN cd /odoo && pip install --cache-dir=.pip -r requirements.txt
 
+%(run_extra_run_block)s
+
 # ENV ADDONS_PATH=/odoo/local-src,/odoo/src/addons
-# ENV DB_NAME=afbsdemo
+# ENV DB_NAME=xxxxxx 
 ENV MIGRATE=False
 # Set the default config file
 ENV OPENERP_SERVER /etc/odoo/openerp-server.conf

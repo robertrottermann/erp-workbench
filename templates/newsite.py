@@ -50,6 +50,8 @@
             # starts. `web.base.url.freeze` will be set to `True`.
             'ODOO_BASE_URL': 'https://www.%(site_name)s.ch'
         },
+        # docker_build_cmds are run after all build commands in the docker file
+        'docker_build_cmds' : [],      
         # docker_hub is used to store images we build ourself
         # by default we use dockers own docker_hub, but could
         # provide our own
