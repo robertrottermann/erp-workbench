@@ -10,3 +10,4 @@ Docker
     create_image
     dumper
     docker_commands
+    bitnami_container

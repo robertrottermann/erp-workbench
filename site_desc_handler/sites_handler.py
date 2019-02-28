@@ -441,12 +441,17 @@ class SitesHandler(SiteDescHandlerMixin):
             if not self.base_info.get('sites_autopull', ''):
                 return
         os.chdir(self.sites_list_path)
-        p = subprocess.Popen(
-            'git pull',
-            stdout=PIPE,
-            env=dict(os.environ,  PATH='/usr/bin'),
-            shell=True)
-        p.communicate()
+        folders = next(os.walk('.'))[1]
+        for folder in folders:
+            if folder[0] == '_': # skip '__pycache__'
+                continue
+            os.chdir('%s%s' % (self.sites_list_path, folder))
+            p = subprocess.Popen(
+                'git pull',
+                stdout=PIPE,
+                env=dict(os.environ,  PATH='/usr/bin'),
+                shell=True)
+            p.communicate()
         os.chdir(actual)
 
     def fix_sites_list(self, fix=False):

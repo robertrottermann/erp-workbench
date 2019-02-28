@@ -332,7 +332,6 @@ class SiteDescHandlerMixin(PropertiesMixin):
             print(bcolors.ENDC)
         return apt_list, pip_list
 
-
     def handle_addons(self):
         """read the list of addons from the site description
         """
@@ -340,8 +339,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
         _construct_sa(
             self.site_name, deepcopy(site_addons), self.site_skip_list)
         
-        self._site_addons = site_addons
-        
+        self._site_addons = site_addons        
 
     def handle_pip_modules(self):
         """read the list of pip modules from the site description

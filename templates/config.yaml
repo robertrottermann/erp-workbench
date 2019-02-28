@@ -1,223 +1,127 @@
-# DOCKER_DEFAULTS provides the information needed to work with docker
+# BASE_DEFAULTS are the values erp-workbench needs 
 # to find its data
 
 # Variables that can be used in the values
-# %(BASE_PATH)s will be replaced with the actual folder where erp-workbench is installed
+# %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
 # %(USER_HOME)s the home folder of the logged in user
+# %(SITE_DATA_DIR)s the folder where the sites data is stored
+# %(ODOO_INSTALL_HOME)s where the sites local odoo is installed
 
-DOCKER_DEFAULTS:
-    # docker_hub_name:
-    # what is the name of the dockerhub to use
-    docker_hub_name: 'robertredcor'
-    
-    # docker_port:
-    # this is the default port we assign to a docker container to use
-    # it has to be adapted in the site description depending on what
-    # server the site is running
-    docker_port: 9000
-    
-    # docker_postgres_port
-    # port at which the db container exports its port
-    docker_postgres_port: 55432
+BASE_DEFAULTS:
+  # erp_version:
+  # define what erp version should be used for a new site
+  # this only affects the generation of new site descriptions
+  # and can be easily changed in these new site description
+  erp_version: '11'
 
-    # the name of the container in which all database are created
-    docker_db_container_name: 'db'
-    
-    # docker_db_user is used to access the database  in the database container
-    docker_db_user: 'odoo'
-    
-    # docker_db_user_pw is the docker db user's password
-    docker_db_user_pw: 'odoo'
-    
-    # docker_rpc_user is the user with which we want to login to the erp site running in the container
-    docker_rpc_user: 'admin'
+  # erp_minor:
+  # define what erp minor version should be used for a new site
+  erp_minor: '.0'
 
-    # docker_rpc_user_pw docker rpc user's password
-    # this is in most cases NOT 'admin'
-    # you can overrule it with -ddbpw
-    docker_rpc_user_pw: 'admin'
-    
-    # dumper_image:
-    # when dumping a container based erp site site to its backup structure
-    # a docker container is used that has access to databse container
-    # where the sites data is maintained (normally this container is named db)
-    # to create a this dumper container we need an image which uses pgdump
-    # to dump the db.
-    # since pgdump is database version dependent, the database container
-    # and the dumper container need to use the same pgdump version.
-    docker_dumper_image: 'robertredcor/dumper'
+  # site_editor:
+  # define what editor to use when editing site description
+  site_editor: 'pico'
 
-    # use_postgres_version
-    # is used when creating the db image to define what postgres version to use
-    use_postgres_version: '10.0'
+  # sitesinfo_path:
+  # Sites are defined in a sites description file
+  # There exist local sites, which are not managed using a source
+  # controll system (git), and global sites which are managed with 
+  # git and normaly describe sites that run on remote servers.
+  # the sitesinfo_path points to a folder, where these site descriptions 
+  # are kept
+  # by default it is kept within the erp-workbench folder
+  # %s(BASE_PATH)
+  sitesinfo_path: '%(BASE_PATH)s/sites_list/'
 
-    # erp_image_version
-    # is used when creating a new site description, do determine 
-    # from what image a container for the site-description should be created
-    # IMPORTANT: the version should be the same as the erp_version in config.yaml
-    erp_image_version: 'odoo-project:12.0-latest'
+  # repo_mapper:
+  # repo_mapper allows to use locical names in a site description
+  # like:
+  # {
+  #     'type' : 'git',
+  #     'url' : '%(gitlab.redcor.ch)s/afbs/afbs_cms.git',
+  # }
+  # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
 
+  # sitesinfos:
+  # sitesinfos provide an name and an associated the url where git repositories 
+  # can be found in which the sites are maintained 
+  siteinfos:
+    localhost:
+      'localhost'
+  #  redo2oo:
+  #    'ssh://git@gitlab.redcor.ch:10022/redcor_customers/sites_list.git'
+  #  cooby:
+  #    # either one of the following
+  #    # https://gitlab.com/cooby/erp-workbench.git
+  #    'git@gitlab.com:cooby/erp-workbench.git'
 
-    # docker_local_user_id
-    # the user id assigned to the odoo user within the running docker container
-    # normally just leave it at its default
-    docker_local_user_id: 999
+  # project_path:
+  # path to the projects
+  # Here a structure for each erp site is created to build and run a local erp/odoo server
+  project_path: '%(USER_HOME)s/projects'
 
-    # values to be added to the config file
-    # docker_addons_base_path will always be prepended to the addons_path
-    # it could contain also $DOCKER_EXTRA_ADDONS which would be expanded
-    docker_addons_base_path: /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,
-    docker_logrotate: True
-    docker_syslog:  False
-    docker_db_sslmode: 'prefer'
-    docker_list_db: False
-    docker_db_maxconn: 64
-    docker_limit_memory_soft: 2147483648
-    docker_limit_memory_hard: 2684354560
-    docker_limit_request: 8192
-    docker_limit_time_cpu: 60
-    docker_limit_time_real: 120
-    docker_limit_time_real_cron: 120
-    docker_log_handler: ':INFO'
-    docker_log_level: 'info'
-    docker_logfile: False
-    docker_log_db: False
-    docker_max_cron_threads: 2
-    docker_workers: 4
-    docker_running_env: 'production'
-    docker_without_demo: True
-    docker_server_wide_modules': ''
+  # erp_server_data_path
+  # path to server data. Here for every site a set of folders is created
+  # that will contain the servers config, filestore, log- and dump-files.
+  # these folders created are
+  # addons:     here the addons of the sites are to be found
+  # etc:        here the config files for the site is writen to
+  # file_store: here the external files of the file are stored
+  # log:        here the logfile of the site is stored
+  # dump:       here the a running site can dump its data
+  # start-entrypoint.d:
+  #             here files to support the starting process of the site can be put
+  #
+  # by default erp_server_dta_path points to the same folder where erp-workbench resides
+  # however if you create many site, this can quickly become confusing
+  erp_server_data_path: '%(BASE_PATH)s'
 
-# ----------------------------
-# image creation
-# ----------------------------
-DOCKER_IMAGE:
-    environment:
-        # be careful to protect variables with spaces like follows:
-        DUMMY: '"for nothing, just a sample"'
+  # local_user_mail:
+  # sometimes you want to avoid sending mails to real user
+  # when you have copied a life server to your local environment
+  # this setting is only used when the redirect_email addon is installed
+  local_user_mail: 'info@company.com'
 
-    # commands to use within a dockerfile to pull aditional libraries
-    apt_command: apt
-    pip_command: pip
+  # db_user:
+  # this is the default data base user, its value can be overruled in the
+  # server description file in the servers.yaml file
+  db_user: '%(DB_USER)s'
 
-# ----------------------------
-# host mapping
-# ----------------------------
-# all path are relative to the sites data folder
-HOST_MAPPING:
-    /etc: /etc/odoo/
-    /start-entrypoint.d: /opt/odoo/start-entrypoint.d/
-    /addons: /mnt/extra-addons/
-    /dump: /mnt/dump/
-    /filestore: /var/lib/odoo/filestore/
-    /: /var/lib/odoo/
-    /log: /var/log/odoo/
+  # db_user_pw:
+  # this is the default password, if it is not defined in the
+  # server description file in the servers.yaml file
+  db_user_pw: 'admin'
 
-# ----------------------------
-# bitnami / helm
-# ----------------------------
-# info about bitnami & helm-charts
-BITNAMI_DEFAULTS:
-    # bitnami_git_url
-    # is the github repo where we find bitnami-odoo
-    bitnami_git_url: https://github.com/bitnami/bitnami-docker-odoo
-    # bitnami_chart_url
-    # what chart repository to use
-    bitnami_chart_url: stable
-    # bitnami_chart_name
-    # how do we define a version?
-    bitnami_chart_name: odoo
-    # bitnami_folder_name
-    # the name of the folder we construct within the site-desc data folder
-    bitnami_folder_name: '%(SITE_DATA_DIR)s/bitnami'
-    # bitnami_docker_file_path
-    # the path within the bitnami repo where we find the Dockerfile
-    bitnami_docker_file_path: bitnami-docker-odoo/11/debian-9/
-    # bitnami_docker_tag
-    # the tag we apply to the image 
-    bitnami_docker_tag: 'bitnami-odoo-%(ERP_VERSION)s'
-    # bitnami_dockerfile_apt_line
-    # is the start of the line wher bitnmi installs abt libraries
-    # into the image
-    bitnami_dockerfile_apt_line: RUN install_packages
-    # bitnami_dockerfile_pip_line
-    # after the line beginning with this string we will insert the
-    # installation of the pip modules
-    bitnami_dockerfile_pip_line: RUN bitnami-pkg unpack odoo
-    # bitnami_dockerfile_pip_install_command
-    # command line to pip install the pip libraries
-    bitnami_dockerfile_pip_install_command: RUN pip3 install --cache-dir=.pip
-    # bitnami_dockerfile_apt_items
-    # are apt library elements we must make sure to have included
-    bitnami_dockerfile_apt_items:
-        - python
-        - python-libxslt1
-        - python-pip
-        - python3-pip
-        - python3-setuptools
+  # sites_autopull:
+  # should the list of sites be pulled automatically
+  sites_autopull: True
 
-    # -------------------------------
-    # external storage
-    # -------------------------------
-    # ^([^`]+)(` +\| )([^|]+)\| `([^`]+)`([^|])*\|
-    # # $1\n# $3\n$1: $4$5
-    # persistence.storageClass
-    # PVC Storage Class                                           
-    persistence.storageClass: nil 
-    # persistence.accessMode
-    # PVC Access Mode                                             
-    persistence.accessMode: ReadWriteOnce 
-    # persistence.size
-    # PVC Storage Request                                         
-    persistence.size: 8Gi 
-    # postgresql.postgresqlPassword
-    # PostgreSQL password                                         
-    postgresql.postgresqlPassword: odoo
-    # postgresql.persistence.enabled
-    # Enable PostgreSQL persistence using PVC                     
-    postgresql.persistence.enabled: true 
-    # postgresql.persistence.storageClass
-    # PVC Storage Class for PostgreSQL volume                     
-    postgresql.persistence.storageClass: nil 
-    # postgresql.persistence.accessMode
-    # PVC Access Mode for PostgreSQL volume                       
-    postgresql.persistence.accessMode: ReadWriteOnce 
-    # postgresql.persistence.size
-    # PVC Storage Request for PostgreSQL volume                   
-    postgresql.persistence.size: 8Gi
+  # print_banner:
+  # should the (beautiful) erp-workbench banner be printed?
+  print_banner: True
 
-    # -------------------------------
-    # ingress
-    # -------------------------------
-    # ingress.enabled
-    # Enable ingress controller resource 
-    ingress.enabled: false 
-    # ingress.hosts[0].name
-    # Hostname to your Odoo installation 
-    ingress.hosts[0].name: odoo.local 
-    # ingress.hosts[0].path
-    # Path within the url structure 
-    ingress.hosts[0].path: / 
-    # ingress.hosts[0].tls
-    # Utilize TLS backend in ingress 
-    ingress.hosts[0].tls: false 
-    # ingress.hosts[0].certManager
-    # Add annotations for cert-manager 
-    ingress.hosts[0].certManager: false 
-    # ingress.hosts[0].tlsSecret
-    # TLS Secret(certificates) 
-    ingress.hosts[0].tlsSecret: odoo.local-tls-secret 
-    # ingress.hosts[0].annotations
-    # Annotations for this host's ingress record 
-    ingress.hosts[0].annotations: [] 
-    # ingress.secrets[0].name
-    # TLS Secret Name 
-    ingress.secrets[0].name: nil 
-    # ingress.secrets[0].certificate
-    # TLS Secret Certificate 
-    ingress.secrets[0].certificate: nil 
-    # ingress.secrets[0].key
-    # TLS Secret Key 
-    ingress.secrets[0].key: nil 
+  # postgres_port:
+  # to be used to access the postgres db server in a non dockerized local installation
+  postgres_port: 5432
 
+  # local_base_addons:
+  # path to the odoo addons in a local installation
+  # %%(ODOO_INSTALL_HOME)s is only expanded by bin/dosetup_odoo.py
+  # in the site's project folder
+  local_base_addons:
+  
+  # docker_base_addons:
+  # path to the odoo addons in a docker installation
+  docker_base_addons:
+    /odoo/local-src,/odoo/src/addons,/mnt/extra-addons,/mnt/extra-addons/
 
+  # local_addon_path_prefix:
+  # prefix added to each addon element in a local installation
+  local_addon_path_prefix:
+    '%(SITE_DATA_DIR)s/addons/'
+
+  # docker_addon_path_prefix:
+  # prefix added to each addon element in a docker installation
+  docker_addon_path_prefix:
+    /mnt/extra-addons/
+ 
