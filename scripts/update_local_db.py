@@ -324,7 +324,8 @@ class DBUpdater(object):
         if 'remote_url' in extra_data:  # self.opts.use_ip:
             remote_url = extra_data['remote_url']
         else:
-            remote_url = self.remote_url
+            #remote_url = self.remote_url
+            remote_url = self.remote_http_url
         # remote_data_path = self.remote_data_path # server_info['remote_data_path']
         if 'remote_data_path' in extra_data:
             remote_data_path = extra_data['remote_data_path']
@@ -345,8 +346,11 @@ class DBUpdater(object):
         pw = remote_pw  # self.db_password
         # check if we have to copy things to a new target
         use_site_name = site_name
-        if opts.new_target_site:
-            use_site_name =  opts.new_target_site
+        try:
+            if opts.new_target_site:
+                use_site_name =  opts.new_target_site
+        except:
+            pass
         dpath = '%s/%s/dump/%s.dmp' % (self.data_path, use_site_name, use_site_name)
         if not norefresh:
             # ---------------------------
