@@ -434,6 +434,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         opts = self.opts
         name = self.site_name
         if name:
+            name = self.site_name.split(':')[0]
             # if name == 'all':
             #     site_names = list(self.sites.keys())
             # else:

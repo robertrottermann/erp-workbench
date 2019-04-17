@@ -202,7 +202,7 @@ def get_single_value(
 
 
 
-def list_sites(sites_dic, quiet=False):
+def list_sites(sites_dic, quiet=False, name=''):
     """
     list sitenames listed in the sites_dic
     @sites_dic    : dictionary with info about sites
@@ -217,10 +217,12 @@ def list_sites(sites_dic, quiet=False):
             origin = ':%s' % origin
         if sites_dic[key].get('is_local'):
             if not quiet:
-                print('%s%s (local)' % (key, origin))
+                if name in key:
+                    print('%s%s (local)' % (key, origin))
         else:
             if not quiet:
-                print('%s%s' % (key, origin))
+                if name in key:
+                    print('%s%s' % (key, origin))
 
 
 # ----------------------------------

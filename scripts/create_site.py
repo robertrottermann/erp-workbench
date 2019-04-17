@@ -193,7 +193,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # ----------
         # list_sites lists all existing sites both from global and local sites
         if opts.list_sites:
-            list_sites(SITES, opts.quiet)
+            list_sites(SITES, opts.quiet, opts.name)
             did_run_a_command = True
             return
 
