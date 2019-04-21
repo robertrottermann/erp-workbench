@@ -253,6 +253,8 @@ class PropertiesMixin(object):
     def db_host(self):
         if self.subparser_name == 'docker':
             return self.docker_db_ip
+        if self.subparser_name == 'support':
+            return ''
         return self._db_host
 
     @property

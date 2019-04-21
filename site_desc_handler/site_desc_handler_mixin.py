@@ -205,6 +205,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             if not erp_version:
                 erp_version = self.project_defaults.get('erp_version', '12')
             self._erp_version = erp_version
+            self.default_values['erp_version'] = erp_version
             # minor
             erp_minor = running_site.get('erp_minor')
             if not erp_minor:
