@@ -107,7 +107,7 @@ class PropertiesMixin(object):
     # theoretically the erp workbench can handle other erp systems
     # than odoo like flectra or erp next
     # the value of erp_provider tells what the running site is based on
-    _erp_provider = ''
+    _erp_provider = 'odoo'
     @property
     def erp_provider(self):
         self._cp
@@ -248,7 +248,7 @@ class PropertiesMixin(object):
     # -------------------------------------------------------------
     # database
     # -------------------------------------------------------------
-
+    _db_host = 'localhost'
     @property
     def db_host(self):
         if self.subparser_name == 'docker':
