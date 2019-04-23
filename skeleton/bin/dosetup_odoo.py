@@ -145,7 +145,9 @@ def _make_base_config_file(tags):
     base_cfg = BASE_CFG_FILE
     real_cfg = OUT_FILE
     erp_cfg = BASE_ERP_CFG
-    cmd = ['bin/odoo_bin', '-s', '-c', base_cfg, '--stop-after-ini']
+    db_name = ''
+    data_dir = ''
+    cmd = ['bin/odoo_bin', '-s', '-c', base_cfg, '-d %%s' %%  db_name, '--data-dir=%%s' %% data_dir, '--stop-after-ini']
     print('create base config')
     p = Popen(cmd, stdout=PIPE)
     p.communicate()
@@ -161,7 +163,7 @@ def _make_base_config_file(tags):
         for k, v in tags.items():
             if k == 'addons_path':
                 #v = '%%(ph)s/odoo/addons,' %% {'ph': LIB_DIR} + v
-                v = base_tags[k].strip() + '\n    '  + v.strip().replace(',', '\n    ' )
+                v = base_tags[k].strip() + '\n    '  + v.strip().replace(',', ',\n    ' )
             line = '%%s = %%s\n' %% (k, v)
             fh.write(line)
             if k == 'xmlrpc_port':
