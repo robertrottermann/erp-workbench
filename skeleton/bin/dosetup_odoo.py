@@ -163,7 +163,7 @@ def _make_base_config_file(tags):
         for k, v in tags.items():
             if k == 'addons_path':
                 #v = '%%(ph)s/odoo/addons,' %% {'ph': LIB_DIR} + v
-                v = base_tags[k].strip() + '\n    '  + v.strip().replace(',', ',\n    ' )
+                v = base_tags[k].strip() + ',\n    '  + v.strip().replace(',', ',\n    ' )
             line = '%%s = %%s\n' %% (k, v)
             fh.write(line)
             if k == 'xmlrpc_port':

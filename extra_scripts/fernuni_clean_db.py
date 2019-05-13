@@ -7,6 +7,7 @@ from odoorpc import ODOO
 from argparse import ArgumentParser
 import psycopg2
 import psycopg2.extras
+import logging
 
 sys.path.insert(0, os.path.split(os.path.split(os.path.realpath(__file__))[0])[0])
 sys.path.insert(0, '%s/extra_scripts' % os.path.split(os.path.split(os.path.realpath(__file__))[0])[0])
@@ -42,14 +43,15 @@ if wkhtmltopdf:
 
 class OdooHandler(object):
 
-    def __init__(self, opts, odoo):
+    def __init__(self, opts, odoo=None):
         self.opts = opts
         if not odoo:
-            print ('host: %s, port: %s' % (opts.host, opts.port))
-            odoo = ODOO(host=opts.host, port=opts.port)
-            print ('dbname: %s, user: %s, password : %s' % (opts.dbname, opts.user, opts.password))
-            odoo.login(db=opts.dbname, login=opts.user, password=opts.password)
+            print ('host: %s, port: %s' % (opts.db_host, opts.port))
+            odoo = ODOO(host=opts.db_host, port=opts.port)
+            print ('dbname: %s, user: %s, password : %s' % (opts.db_name, opts.user, opts.password))
+            odoo.login(db=opts.db_name, login=opts.user, password=opts.password)
         self.odoo = odoo
+        self.env = odoo.env
         self.ail=odoo.env['account.invoice.line']
         self.pt=odoo.env['product.template']
         self.mprods = self.pt.browse(self.pt.search([('id', 'in', (5,6,7))]))
@@ -94,6 +96,85 @@ class OdooHandler(object):
     #         invoice_line['price_unit'] = il.price_unit
     #         v['invoice_line_ids']= [[_x, _y, invoice_line]]
     #         print '--->', self.ai.create(v)
+
+    #@api.model
+    def _attachments_to_filesystem_init(self):
+        """Set up config parameter and cron job"""
+        module_name = __name__.split('.')[-3]
+        ir_model_data = self.env['ir.model.data']
+        location = self.env['ir.config_parameter'].get_param(
+            'ir_attachment.location'
+        )
+        if location:
+            # we assume the user knows what she's doing. Might be file:, but
+            # also whatever other scheme shouldn't matter. We want to bring
+            # data from the database to there
+            pass
+        else:
+            ir_model_data._update(
+                'ir.config_parameter', module_name,
+                {
+                    'key': 'ir_attachment.location',
+                    'value': 'file',
+                },
+                xml_id='config_parameter_ir_attachment_location'
+            )
+
+        # synchronous behavior
+        if self.env['ir.config_parameter'].get_param(
+                'attachments_to_filesystem.move_during_init'
+        ):
+            self._attachments_to_filesystem_cron(limit=None)
+            return
+
+        # otherwise, configure our cronjob to run next night
+        user = self.env.user
+        next_night = datetime.now() + relativedelta(
+            hour=1, minute=42, second=0)
+        user_tz = user.tz or 'UTC'
+        next_night = pytz.timezone(user_tz).localize(next_night).astimezone(
+            pytz.utc).replace(tzinfo=None)
+        if next_night < datetime.now():
+            next_night += relativedelta(days=1)
+        self.env.ref('%s.cron_move_attachments' % module_name).write({
+            'nextcall': fields.Datetime.to_string(next_night),
+            'doall': True,
+            'interval_type': 'days',
+            'interval_number': 1,
+        })
+
+    #@api.model
+    def dump(self, limit=10000):
+        """Do the actual moving"""
+        limit = int(
+            self.env['ir.config_parameter'].get_param(
+                'attachments_to_filesystem.limit', '0')
+        ) or limit
+        ir_atts = self.env['ir.attachment']
+        attachments = ir_atts.search(
+            [('db_datas', '!=', False)], limit=limit)
+        logging.info('moving %d attachments to filestore', len(attachments))
+        # attachments can be big, so we read every attachment on its own
+        for counter, a_id in enumerate(attachments, start=1):
+            attachment = ir_atts.browse([a_id])
+            # attachment_data -> [{attachement, id, res_model}]
+            attachment_data = attachment.read(['datas', 'res_model'])[0]
+            if attachment_data['res_model'] and not self.env.registry.get(
+                    attachment_data['res_model']
+            ):
+                logging.warning(
+                    'not moving attachment %d because it links to unknown '
+                    'model %s', attachment.id, attachment_data['res_model'])
+                continue
+            try:
+                attachment.write({
+                    'datas': attachment_data['datas'],
+                    'db_datas': False,
+                })
+            except Exception:
+                logging.exception('Error moving attachment #%d', attachment.id)
+            if not counter % (len(attachments) / 100 or limit):
+                logging.info('moving attachments: %d done', counter)
 
 
 class DbHandler(object):
@@ -213,15 +294,28 @@ class DbHandler(object):
         connection.commit()
 
 def main(opts):
-    handler = DbHandler(opts)
-    connection = handler.get_cursor()
-    handler.clean_db()
-    handler.clean_db(phase=2)
-    print('ha gmacht wasisöll')
-
+    if opts.clean:        
+        handler = DbHandler(opts)
+        connection = handler.get_cursor()
+        handler.clean_db()
+        handler.clean_db(phase=2)
+        print('ha gmacht wasisöll')
+    elif opts.dump: 
+        handler = OdooHandler(opts)
+        handler.dump()
+    else:
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print('Please indicate either -c --clean or -dumpa --dump-attachements')
+        print(bcolors.ENDC)
+        
 if __name__ == '__main__':
     usage = "fernuni_clean_db.py -h for help on usage"
     parser = ArgumentParser(usage=usage)
+
+    parser.add_argument("-c", "--clean",
+                        action="store_true", dest="clean", default=False,
+                        help="Clean database")
 
     parser.add_argument("-H", "--dbhost",
                         action="store", dest="db_host", default='localhost',
@@ -235,12 +329,16 @@ if __name__ == '__main__':
                         action="store", dest="postgres_port", default=5432,
                         help="define postgres port default 5432")
 
+    parser.add_argument("-dumpa", "--dump-attachements",
+                        action="store_true", dest="dump", default=False,
+                        help="Dump attachments to the filesystem")
+
     parser.add_argument("-d", "--db-name",
                         action="store", dest="db_name", default='fsch_test',
                         help="define dbname default 'fsch_test'")
 
     parser.add_argument("-u", "--user",
-                        action="store", dest="user", default='odoo',
+                        action="store", dest="user", default='admin',
                         help="define user default 'admin'")
 
     parser.add_argument("-pw", "--password",
@@ -252,8 +350,8 @@ if __name__ == '__main__':
                         help="run odoo, default false")
 
     parser.add_argument("-v", "--verbose",
-                        action="store_true", dest="verbose", default=False,
-                        help="be verbose, default false")
+                        action="store_true", dest="verbose", default=True,
+                        help="be verbose, default true")
 
     opts = parser.parse_args()
     main(opts)
