@@ -1,17 +1,23 @@
+# BASE_PATH is the home directory of erp_workbench
+# BASE_INFO is a dictoary with all the info read from the config yaml file found in config
+# PROJECT_DEFAULTS, DOCKER_DEFAULTS info found in the respective yal files
+# 
+import os
 from config import BASE_PATH, BASE_INFO, PROJECT_DEFAULTS, DOCKER_DEFAULTS, DOCKER_IMAGE, BITNAMI_DEFAULTS, BITNAMI_CHART, FOLDERNAMES, ACT_USER, REMOTE_SERVERS, MARKER
 import socket
 from scripts.bcolors import bcolors
+from scripts.construct_defaults import read_yaml_file
 
 class PropertiesMixin(object):
     _login_info = {}
-    
+
     # -------------------------------------------------------------
     # Bootstrap reading of the values from its divers sources
-    # most of the variables are in an undefined setting untill
+    # most of the variables are in an undefined setting until
     # they are bootstraped.
     # who does the bootstrapping depends on what part of erp-workbench
     # is involved.
-    # many properties call _cp as first step to ensure bootstrappiing
+    # many properties call _cp as first step to ensure bootstrapping
     # -------------------------------------------------------------
     # we must have parsed the site description at least once
     _all_done = False
@@ -55,7 +61,7 @@ class PropertiesMixin(object):
                 value_dic[k] = v % self.default_values
             except:
                 pass
-            
+
     @property
     def base_info(self):
         return BASE_INFO
@@ -67,7 +73,7 @@ class PropertiesMixin(object):
             self._pep_up(BITNAMI_DEFAULTS)
             self._bitnamy_defaults = BITNAMI_DEFAULTS
         return self._bitnamy_defaults
-    
+
     @property
     def bitnami_chart(self):
         return BITNAMI_CHART
@@ -204,13 +210,25 @@ class PropertiesMixin(object):
     # it is constructed by looking up self.site_name (the project name) from the self.sites dict
     @property
     def site(self, site_name=''):
-        """return a dictonary with a site description
-        
+        """return a dictionary with a site description
+
         Keyword Arguments:
-            site_name {str} -- name of the site to loock up (default: {''})
-        
+            site_name {str} -- name of the site to look up (default: {''})
+
         Returns:
             dict -- dictionary with the site description
+        """
+        """
+        may 12th 2019: we want to slowly replace/enhance the content of
+        the site description with a site specific yaml file
+        This can be found in $SITESLIST-HOME/$SITESLIST-NAME/yaml/$SITE-NAME.yaml
+        We do not want to read all of them at start up time, so keep a flag 
+        _yaml_dirty
+        that tells us in the site-description , whether the yaml file is read.
+        This flag is set to true when the sites are loaded at startup time
+
+        We must be careful, that the _yaml_dirty is correctly handled when
+        flattening sites.
         """
 
         if site_name:
@@ -218,9 +236,24 @@ class PropertiesMixin(object):
         else:
             name = self.site_name
         if name:
-            return self.sites.get(name, {})
+            site_dic = self.sites.get(name, {})
+            self.get_site_yaml(name, site_dic)
         else:
             return {}
+
+    def get_site_yaml(self, site_name, site_dic):
+        """read site specifig yaml file and clear _yml_dirty flag
+        
+        Arguments:
+            site_name {string} -- name of the sit
+            site_dic {dictionary} -- content of the site description
+        """
+        sites_list_path = BASE_INFO['sitesinfo_path']
+        yaml_path = "%s/%s/yaml/%s.yaml" % (self.sitesinfo_path, site_dic.get('site_list_name', 'localhost'), site_name)
+        if os.path.exists(yaml_path):
+            yaml_data = read_yaml_file(yaml_path)
+            site_dic.update(yaml_data)
+        site_dic['_yaml_dirty'] = False
 
     # site_name is the name of the site we are acting on
     # its value has been passed as a command line option when executing a wb command
@@ -229,10 +262,6 @@ class PropertiesMixin(object):
     @property
     def site_name(self):
         return self.site_names and self.site_names[0] or ''
-        # what for wa that following ???
-        if self.sites:
-            return self.site_names and self.site_names[0] or ''
-        return ''
 
     @site_name.setter
     def site_name(self, v):

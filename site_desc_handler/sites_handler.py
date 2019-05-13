@@ -48,6 +48,7 @@ SITES_L = {}
 def set_orig(dic, orig):
     for k,v in list(dic.items()):
         v['site_list_name'] = orig
+        v['_yaml_dirty'] = True
 """
 SITES_LIST_OUTER_LINE = """
 from .%(file_name)s import SITES_G as SG_%(file_name)s

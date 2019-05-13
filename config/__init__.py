@@ -24,7 +24,7 @@ FOLDERNAMES = ['addons', 'dump', 'etc', 'filestore', 'log', 'ssl', 'start-entryp
 # first thing we do, is make sure there exists all *.yaml files
 # if it does not exist, we copy it from ??.yaml.in
 
-data_path = os.path.normpath('%s/config_data' % BASE_PATH)
+#data_path = os.path.normpath('%s/config_data' % BASE_PATH)
 user_home = os.path.expanduser('~')
 yaml_dic = {}
 for y_info in  (
