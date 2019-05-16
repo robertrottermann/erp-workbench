@@ -1,5 +1,3 @@
-# this is a method, we pass the calling instance
-# as first parameter. like this we have access on all its attributes
 import os
 import sys
 import shutil
@@ -8,11 +6,35 @@ from argparse import ArgumentParser
 import psycopg2
 import psycopg2.extras
 import logging
+import datetime
 
-sys.path.insert(0, os.path.split(os.path.split(os.path.realpath(__file__))[0])[0])
-sys.path.insert(0, '%s/extra_scripts' % os.path.split(os.path.split(os.path.realpath(__file__))[0])[0])
+MY_PATH = os.path.split(os.path.split(os.path.realpath(__file__))[0])[0]
+sys.path.insert(0, MY_PATH)
+#sys.path.insert(0, '%s/extra_scripts' % MY_PATH)
 
-from scripts.bcolors import bcolors
+
+try:
+    from scripts.bcolors import bcolors
+except ImportError:
+    class bcolors:
+        """
+        class to color bash shell's output 
+        """
+        HEADER = '\033[95m'
+        OKBLUE = '\033[94m'
+        OKGREEN = '\033[92m'
+        WARNING = '\033[93m'
+        FAIL = '\033[91m'
+        ENDC = '\033[0m'
+        BOLD = '\033[1m'
+        UNDERLINE = '\033[4m'
+        white = "\033[1;37m"
+        normal = "\033[0;00m"
+        red = "\033[1;31m"
+        blue = "\033[1;34m"
+        green = "\033[1;32m"
+        lightblue = "\033[0;34m"
+        
 
 wkhtmltopdf = shutil.which('wkhtmltopdf-amd64')
 if not wkhtmltopdf:
@@ -42,8 +64,22 @@ if wkhtmltopdf:
         "UPDATE ir_config_parameter SET value='%s' where key='webkit_path'" % wkhtmltopdf)
 
 class OdooHandler(object):
+    """
+    this class knows how to access odoo
+    """
 
     def __init__(self, opts, odoo=None):
+        """[summary]
+        
+        Arguments:
+            opts {namespace} -- collection of selected options
+        
+        Keyword Arguments:
+            odoo {odoo instance} -- a running odoo instance or nothing (default: {None})
+
+        log into a running odoo,
+        Open file to dump logdata into
+        """
         self.opts = opts
         if not odoo:
             print ('host: %s, port: %s' % (opts.db_host, opts.port))
@@ -57,47 +93,20 @@ class OdooHandler(object):
         self.mprods = self.pt.browse(self.pt.search([('id', 'in', (5,6,7))]))
         self.ai = odoo.env['account.invoice']
 
-    # def list_invoices(self):
-    #     invoices = {
-    #     }
-    #     old_invoices = []
-    #     for il in self.ail.browse(self.ail.search([])):
-    #             # products with id's in (5,6,7) are the membership types I am interested in
-    #             # they have been looked up manually
-    #         if il.product_id.id in (5,6,7):
-    #             ilist = invoices.get(il.name, set())
-    #             ilist.update([il.partner_id])
-    #             invoices[il.name] = ilist
-    #             old_invoices.append(il)
-    #     counter = 0
-    #     for k, partners in invoices.items():
-    #         for p in partners:
-    #             counter +=1
-    #             print '(%s)' % counter,k, p.name, p.city, p.street
+        # open log file
+        # we assume it should be relative to where we are running
+        try:
+            self.logfile_path = os.path.normpath('%s/%s' % (MY_PATH, opts.logfile))
+            self.logfile = open(self.logfile_path, 'w')
+        except:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('could not open logfile:%s' % self.logfile_path)
+            print(bcolors.ENDC)
+            sys.exit()
 
 
-    #     #today = date.today()
-    #     processed = []
-    #     for il in old_invoices:
-    #         if il.partner_id.id in processed:
-    #             continue
-    #         processed.append(il.partner_id.id)
-    #         # we want to create a new invoice
-    #         v = copy.deepcopy(VALS)
-    #         td = date.today().strftime('%Y-%m-%d')
-    #         due = (date.today() + timedelta(days=30)).strftime('%Y-%m-%d')
-    #         v['date_invoice'] = td
-    #         v['date_due'] = due
-    #         v['partner_id'] = il.partner_id.id
-    #         v['partner_shipping_id'] = il.partner_id.id
-    #         _x, _y, invoice_line = v['invoice_line_ids'][0]
-    #         invoice_line['name'] = il.name
-    #         invoice_line['product_id'] = il.product_id.id
-    #         invoice_line['price_unit'] = il.price_unit
-    #         v['invoice_line_ids']= [[_x, _y, invoice_line]]
-    #         print '--->', self.ai.create(v)
 
-    #@api.model
     def _attachments_to_filesystem_init(self):
         """Set up config parameter and cron job"""
         module_name = __name__.split('.')[-3]
@@ -143,7 +152,6 @@ class OdooHandler(object):
             'interval_number': 1,
         })
 
-    #@api.model
     def dump(self, limit=10000):
         """Do the actual moving"""
         limit = int(
@@ -154,6 +162,11 @@ class OdooHandler(object):
         attachments = ir_atts.search(
             [('db_datas', '!=', False)], limit=limit)
         logging.info('moving %d attachments to filestore', len(attachments))
+
+        self.logfile.write('*' * 80)
+        self.logfile.write('date: %s' % datetime.datetime.now())
+        self.logfile.write('*' * 80)
+        self.logfile.write('\n')
         # attachments can be big, so we read every attachment on its own
         for counter, a_id in enumerate(attachments, start=1):
             attachment = ir_atts.browse([a_id])
@@ -175,11 +188,31 @@ class OdooHandler(object):
                 logging.exception('Error moving attachment #%d', attachment.id)
             if not counter % (len(attachments) / 100 or limit):
                 logging.info('moving attachments: %d done', counter)
+                data = {
+                    fname :attachment.datas_fname,
+                    dname : attachment.display_name,
+                    store_fname : attachment.store_fname,
+                    size : len(attachment.datas),
+                }
+                line = 'name: %(fname)s, %(dname)s, store: %(store_fname)s, size: %(size)s\n' % data
+                self.logfile.write(line)
+
+
 
 
 class DbHandler(object):
+    """class to access a database directly using raw sql    
+    """
 
     def __init__(self, opts):
+        """[summary]
+        
+        Arguments:
+            opts {namespace} -- collection of selected options
+        
+        Keyword Arguments:
+            odoo {odoo instance} -- a running odoo instance or nothing (default: {None})
+        """
         self.opts = opts
 
     _db_connection = None
@@ -320,6 +353,10 @@ if __name__ == '__main__':
     parser.add_argument("-H", "--dbhost",
                         action="store", dest="db_host", default='localhost',
                         help="define db host default localhost")
+
+    parser.add_argument("-l", "--log-file",
+                        action="store", dest="logfile", default='dump.log',
+                        help="define logfile to to to print the path of the removed attchements to. Default dump.log")
 
     parser.add_argument("-p", "--port",
                         action="store", dest="port", default=8069,
