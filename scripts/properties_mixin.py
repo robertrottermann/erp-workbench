@@ -238,6 +238,7 @@ class PropertiesMixin(object):
         if name:
             site_dic = self.sites.get(name, {})
             self.get_site_yaml(name, site_dic)
+            return site_dic
         else:
             return {}
 
