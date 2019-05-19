@@ -66,6 +66,18 @@ def add_options_docker(parser, result_dic):
         help='recreate docker container. Name must be provided,'
     )
     parser_docker.add_argument(
+        "-dirt", "--retag-images",
+        action="store_true", dest="docker_images_retag", default=False,
+        help="""retag images, you have to indicate source and target in the form of\n
+        camptocamp/odoo-project:robertrottermann/odoo-test
+        this will produce something like:
+            camptocamp/odoo-project:9.0-latest-batteries-onbuild -> robertrottermann/odoo-test:9.0-latest-batteries-onbuild
+            camptocamp/odoo-project:9.0-latest-batteries         -> robertrottermann/odoo-test:9.0-latest-batteries        
+            camptocamp/odoo-project:9.0-latest-onbuild           -> robertrottermann/odoo-test:9.0-latest-onbuild          
+            camptocamp/odoo-project:9.0-latest                   -> robertrottermann/odoo-test:9.0-latest                  
+        """
+    )
+    parser_docker.add_argument(
         "-dR", "--rename-container",
         action="store_true", dest="docker_rename_container", default=False,
         help='rename container to have actual date in its name and recreate docker container. Name must be provided,'

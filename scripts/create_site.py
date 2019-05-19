@@ -443,6 +443,15 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.push_image()
             did_run_a_command = True
             return
+
+        # push retag image
+        # ----------------
+        # push docker image used by a site
+        if opts.docker_images_retag:
+            handler.retag_image()
+            did_run_a_command = True
+            return
+        
         
         # installown or updateown or removeown
         # ------------------------------------

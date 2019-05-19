@@ -334,7 +334,7 @@ class DockerHandler(InitHandler, DBUpdater):
                     print('*' * 80)
                     print(bcolors.ENDC)
                     sys.exit()
-                
+
                 # here we need to decide , whether we run flectra or odoo
                 if self.erp_provider == 'flectra':
                     from templates.docker_templates import flectra_docker_template
@@ -464,6 +464,13 @@ class DockerHandler(InitHandler, DBUpdater):
         for line in result:
             print(line)
         
+    def retag_image(self):
+        """
+        docker login
+        docker tag e6861e4e5151 robertredcor/afbs:9.0
+        docker push robertredcor/afbs
+        """
+        client = self.docker_client
 
     def dockerhub_login(self):
         client = self.docker_client
