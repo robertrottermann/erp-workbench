@@ -463,7 +463,7 @@ class DockerHandler(InitHandler, DBUpdater):
         result = client.push(image, stream=True)
         for line in result:
             print(line)
-        
+
     def retag_image(self):
         """
         docker login
@@ -471,6 +471,36 @@ class DockerHandler(InitHandler, DBUpdater):
         docker push robertredcor/afbs
         """
         client = self.docker_client
+        dirt_info = self.opts.docker_images_retag.split(':')
+        if len(dirt_info) != 2:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('bad -dirt data: need ACTUAL-TAG:TARGET-TAG')
+            print(bcolors.ENDC)
+        images = [i['RepoTags'] for i in client.images()]
+        # keep a list of images that start with the source name
+        image, target = dirt_info
+        found = []
+        if images:
+            for fullnames in images:
+                if not fullnames:
+                    break
+                for fullname in fullnames:
+                    i_name, tag = (fullname.split(':') + [''])[:2]
+                    print(i_name, tag)
+                    if i_name == image:
+                        found.append((i_name, tag))
+        if not found:
+            print(DOCKER_IMAGE_NOT_FOUND % image)
+        else:
+            # we have to construct a new name for the images.
+            # image:tag -> target:tag
+            for image, tag in found:
+                old_name = '%s:%s' % (image, tag)
+                new_name = '%s:%s' % (target, tag)
+                self.docker_client.tag(old_name, new_name)
+                self.docker_client.remove_image(old_name)
+
 
     def dockerhub_login(self):
         client = self.docker_client

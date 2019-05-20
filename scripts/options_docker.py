@@ -67,7 +67,7 @@ def add_options_docker(parser, result_dic):
     )
     parser_docker.add_argument(
         "-dirt", "--retag-images",
-        action="store_true", dest="docker_images_retag", default=False,
+        action="store", dest="docker_images_retag",
         help="""retag images, you have to indicate source and target in the form of\n
         camptocamp/odoo-project:robertrottermann/odoo-test
         this will produce something like:
