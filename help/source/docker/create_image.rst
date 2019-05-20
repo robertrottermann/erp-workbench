@@ -34,6 +34,24 @@ the result should be something like::
     docker push coobyhq/odoo-project:11.0-latest
     ---------------------------------------------
 
+Steps to create a camptocamp base docker image
+**********************************************
+Camptocamp maintains an environment to build an odd base image that can be used as base
+for more specialized "vertical" images.
+The process is simple but a bit time consuming:
+
+1. clone git repository: https://github.com/camptocamp/docker-odoo-project.git
+2. cd docker-odoo-project
+3. VERSION=XX.Y make  <-- this creates 5 different images
+4. tag the images using: bin/d -dirt (or --retag-images) camptocamp/odoo-project:robertrottermann/odoo-test 
+
+Assuming we used VERSION=9.0 i step 3 this will produce something like:
+    from camptocamp/odoo-project:9.0-latest-batteries-onbuild -> robertrottermann/odoo-test:9.0-latest-batteries-onbuild
+    from camptocamp/odoo-project:9.0-latest-batteries         -> robertrottermann/odoo-test:9.0-latest-batteries        
+    from camptocamp/odoo-project:9.0-latest-onbuild           -> robertrottermann/odoo-test:9.0-latest-onbuild          
+    from camptocamp/odoo-project:9.0-latest                   -> robertrottermann/odoo-test:9.0-latest                  
+        
+
 
 Settings within the site description
 ************************************
@@ -64,7 +82,7 @@ There are two parts in the description concerning image creation:
         'ODOO_BASE_URL': 'https://www.coobytech.ch'
     },
 
-* Taging the image::
+* Tagging the image::
 
     Please make sure, that you provide credentials to acces the docker hub repository 
     otherwise you get a warning::

@@ -49,53 +49,59 @@ def flatten_sites(sites):
             # update does not work as this overwrites values that are directories
             for key, val in list(inherited.items()):
                 if isinstance(val, dict):
-                    # make sure the dic exists otherwise we can not add the items
-                    vvkeys = list(v.get(key, {}).keys())
-                    if key not in v:
-                        v[key] = {}
-                    for val_k, val_val in list(val.items()):
-                        if isinstance(val_val, list):
-                            # v is the element in the inherited site
-                            # if v does not have a key we add it with an empty list
-                            if val_k not in v[key]:
-                                v[key][val_k] = []
-                            [v[key][val_k].append(vi)
-                                for vi in val_val if vi not in v[key][val_k] and not ('-' + vi in v[key][val_k])]
-                            # clean resulting list
-                            v[key][val_k] = [vi for vi in v[key]
-                                                [val_k] if not vi.startswith('-')]
-                        elif isinstance(val_val, dict):
-                            # v is the site into which we inherit (the parent)
-                            # key is the key in the child
-                            # val is the value in the child
-                            # val_val
-                            if val_k not in v[key]:
-                                # so we have a target dict
-                                v[key][val_k] = {}
-                            # now add elements to the the target dict
-                            target = v[key][val_k]
-                            for val_val_k, val_val_v in list(val_val.items()):
-                                # we do an other level of hierarchy
-                                if isinstance(val_val_v, list):
-                                    if val_val_k not in target:
-                                        target[val_val_k] = []
-                                    sub_target = target[val_val_k]
-                                    for tk in val_val_v:
-                                        # should it be possible to decuct keys???
-                                        if tk not in sub_target:
-                                            sub_target.append(tk)
-                                elif isinstance(val_val_v, dict):
-                                    if val_val_k not in target:
-                                        target[val_val_k] = {}
-                                    sub_target = target[val_val_k]
-                                    for val_val_v_k, val_val_v_v in list(val_val_v.items()):
-                                        sub_target[val_val_v_k] = val_val_v_v
-                                else:
-                                    if val_val_k not in target:
-                                        target[val_val_k] = val_val_v
-                        else:
-                            if val_k not in vvkeys:
-                                v[key][val_k] = val_val
+                    vvdata = v.get(key, {})
+                    if isinstance(vvdata, dict):
+                        # make sure the dic exists otherwise we can not add the items
+                        vvkeys = list(vvdata.keys())
+                        if key not in v:
+                            v[key] = {}
+                        for val_k, val_val in list(val.items()):
+                            if isinstance(val_val, list):
+                                # v is the element in the inherited site
+                                # if v does not have a key we add it with an empty list
+                                if val_k not in v[key]:
+                                    v[key][val_k] = []
+                                [v[key][val_k].append(vi)
+                                    for vi in val_val if vi not in v[key][val_k] and not ('-' + vi in v[key][val_k])]
+                                # clean resulting list
+                                v[key][val_k] = [vi for vi in v[key]
+                                                    [val_k] if not vi.startswith('-')]
+                            elif isinstance(val_val, dict):
+                                # v is the site into which we inherit (the parent)
+                                # key is the key in the child
+                                # val is the value in the child
+                                # val_val
+                                if val_k not in v[key]:
+                                    # so we have a target dict
+                                    v[key][val_k] = {}
+                                # now add elements to the the target dict
+                                target = v[key][val_k]
+                                for val_val_k, val_val_v in list(val_val.items()):
+                                    # we do an other level of hierarchy
+                                    if isinstance(val_val_v, list):
+                                        if val_val_k not in target:
+                                            target[val_val_k] = []
+                                        sub_target = target[val_val_k]
+                                        for tk in val_val_v:
+                                            # should it be possible to decuct keys???
+                                            if tk not in sub_target:
+                                                sub_target.append(tk)
+                                    elif isinstance(val_val_v, dict):
+                                        if val_val_k not in target:
+                                            target[val_val_k] = {}
+                                        sub_target = target[val_val_k]
+                                        for val_val_v_k, val_val_v_v in list(val_val_v.items()):
+                                            sub_target[val_val_v_k] = val_val_v_v
+                                    else:
+                                        if val_val_k not in target:
+                                            target[val_val_k] = val_val_v
+                            else:
+                                if val_k not in vvkeys:
+                                    v[key][val_k] = val_val
+                    elif isinstance(vvdata, list):
+                        xx
+                    else:
+                        yy
                 elif isinstance(val, list):
                     existing = v.get(key, [])
                     v[key] = existing + \
