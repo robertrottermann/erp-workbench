@@ -379,6 +379,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
         if opts.docker_create_update_container:
             # "docker -dcu", "--create_update_container",
+            # create a container that runs etc/odoorunner.sh as entrypoint
             handler.check_and_create_container(update_container=True)
             did_run_a_command = True
         if opts.docker_delete_container:

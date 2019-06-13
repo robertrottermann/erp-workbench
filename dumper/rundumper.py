@@ -11,7 +11,7 @@ if len(sys.argv) > 1:
 else:
     print('no database name provided')
     sys.exit()
-verbose = len(sys.argv) > 3
+verbose = True #len(sys.argv) > 3
 dumper_cmd = len(sys.argv) > 2 and sys.argv[2] or '-d'
 SITES_HOME = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 try:

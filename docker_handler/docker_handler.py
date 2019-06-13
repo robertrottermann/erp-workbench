@@ -202,6 +202,7 @@ class DockerHandler(InitHandler, DBUpdater):
         site = self.site
         base_info = self.base_info
         base_info['docker_command'] = shutil.which('docker')
+        # constructs a dictionary with values to patch the docker files with
         info_dic = self.create_docker_composer_dict()
         if name == 'db':
             #self.update_docker_info('db')
@@ -322,8 +323,10 @@ class DockerHandler(InitHandler, DBUpdater):
                 from templates.docker_templates import docker_template, flectra_docker_template
                 if self.erp_provider == 'flectra':
                     docker_template = flectra_docker_template
-                self._create_container(docker_template, info_dic)
-                print('created container %s' % name)                
+                # robert june 19, do not recreate if container allready exists
+                if not self.docker_registry.get(container_name):                    
+                    self._create_container(docker_template, info_dic)
+                    print('created container %s' % name)                
             else:
                 # we need a postgres version
                 pg_version = self.use_postgres_version
@@ -740,17 +743,32 @@ class DockerHandler(InitHandler, DBUpdater):
         if minor:
             version = ('%s.%s' % (version, minor)).replace('..', '.')
                 
-        print(bcolors.WARNING)
-        print('*' * 80)
-        print("Git clonig odoo source V%s to be included in the image to %s/src" %
-              (version, os.getcwd()))
-        print(bcolors.ENDC)
-        cmd_lines = [
-            'git init .',
-            'git submodule init',
-            'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
-        ]
-        self.run_commands(cmd_lines=cmd_lines)
+        if os.path.exists('src') and os.path.isdir('src'):
+            o_dir = os.getcwd()
+            os.chdir('src')
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print("Git upgrading existing %s" % os.getcwd())
+            print(bcolors.ENDC)
+            cmd_lines = [
+                'git pull',
+            ]
+            self.run_commands(cmd_lines=cmd_lines)
+            os.chdir(o_dir)
+        else:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print("Git clonig odoo source V%s to be included in the image to %s/src" %
+                  (version, os.getcwd()))
+            print(bcolors.ENDC)
+            cmd_lines = [
+                'git init .',
+                'git submodule init',
+                'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
+                
+            ]
+            self.run_commands(cmd_lines=cmd_lines)
+            
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
         tag = self.erp_image_version
         return_info = []

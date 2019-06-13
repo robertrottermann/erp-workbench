@@ -676,12 +676,14 @@ class PropertiesMixin(object):
     @property
     def docker_addon_path_prefix(self):
         prefix = self.base_info.get('docker_addon_path_prefix', '')
+        if not prefix.startswith(','):
+            prefix = ',' + prefix.strip()
         return prefix or '' # make sure it is a string
 
     @property
     def docker_site_addons_path(self):
         self._cp
-        addons_path = '%s/%s' % (self.docker_base_addons, self.docker_addon_path_prefix.join(self._site_addons_list))
+        addons_path = ('%s/%s' % (self.docker_base_addons, self.docker_addon_path_prefix.join(self._site_addons_list))).replace('//', '/')
         return addons_path
 
     @property

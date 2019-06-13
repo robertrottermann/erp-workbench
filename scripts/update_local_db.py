@@ -521,7 +521,7 @@ class DBUpdater(object):
             # mac needs absolute path to psql
             where = os.path.split(which('psql'))[0]
             wd = which('docker')
-            dumper_image_name = BASE_INFO.get('docker_dumper_image')
+            dumper_image_name = self.docker_defaults.get('docker_dumper_image')
             if wd:
                 whered = os.path.split(wd)[0]
             else:

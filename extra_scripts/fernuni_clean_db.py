@@ -168,6 +168,8 @@ class OdooHandler(object):
         self.logfile.write('*' * 80)
         self.logfile.write('\n')
         # attachments can be big, so we read every attachment on its own
+        # /home/robert/git_repositories/odoo-server/openerp/addons/base/ir/ir_attachment.py:42
+        # 
         for counter, a_id in enumerate(attachments, start=1):
             attachment = ir_atts.browse([a_id])
             # attachment_data -> [{attachement, id, res_model}]

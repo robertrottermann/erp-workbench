@@ -96,7 +96,7 @@ def reload_instance(opts):
         instances = names
     else:
         instances = [n for n in dbname.split(',') if n in names]
-    #print data
+    print(data)
     for instance in instances:
         # drop database
         dbname = data[instance]
@@ -151,6 +151,7 @@ def reload_instance(opts):
     # collect list of dictionaries with all sites
     # known in this environment
     data = get_instance_list(opts, quiet = True)
+    print(data)
     instances = []
     names = list(data.keys())
     # all allows us do restore all backups
