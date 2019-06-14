@@ -16,6 +16,7 @@ POSTGRES_USER = 'odoo'
 POSTGRES_HOST = 'db'
 
 HOME = '/mnt/sites/'
+SITES_HOME = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 # ------------------------------------
 # get_value_from_config
 # gets a value from etc/open_erp.conf
@@ -41,6 +42,8 @@ def get_value_from_config(path, key=''):
 #   is returned
 # ------------------------------------
 def get_instance_list(opts, quiet = False):
+    if opts.test:
+        HOME = SITES_HOME
     dirs = [d for d in os.listdir(HOME) if os.path.isdir('%s/%s' % (HOME, d))]
     result = {}
     for d in dirs:
@@ -96,7 +99,7 @@ def reload_instance(opts):
         instances = names
     else:
         instances = [n for n in dbname.split(',') if n in names]
-    print(data)
+    #print(data)
     for instance in instances:
         # drop database
         dbname = data[instance]
@@ -141,41 +144,6 @@ def reload_instance(opts):
         else:
             p.communicate()
 
-
-def reload_instance(opts):
-    dbname = opts.reload
-    verbose = opts.verbose
-    if verbose:
-        print('*' * 80)
-        print('make sure container is stopped !!!')
-    # collect list of dictionaries with all sites
-    # known in this environment
-    data = get_instance_list(opts, quiet = True)
-    print(data)
-    instances = []
-    names = list(data.keys())
-    # all allows us do restore all backups
-    if dbname == 'all':
-        instances = names
-    else:
-        instances = [n for n in dbname.split(',') if n in names]
-    #print data
-    for instance in instances:
-        # drop database
-        dbname = data[instance]
-        cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD, '/usr/bin/psql',
-            "-h", POSTGRES_HOST, '-U', POSTGRES_USER, '-d', 'postgres',
-            '-c', '"drop database IF EXISTS %s;"' % dbname  ]
-        cmdline = ' '.join(cmds)
-        if verbose:
-            print('*' * 80)
-            print(cmdline)
-        # list databases
-        p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True)
-        if verbose:
-            print(p.communicate())
-        else:
-            p.communicate()
 
 def drop_instance(opts):
     dbname = opts.drop
@@ -257,6 +225,10 @@ def main():
     parser.add_argument("-s", "--shell",
                     action="store_true", dest="shell", default=False,
                     help="drop into an interactive shell")
+
+    parser.add_argument("-t", "--test",
+                    action="store_true", dest="test", default=True,
+                    help="test (probably using wing)")
 
     parser.add_argument("-v", "--verbose",
                     action="store_true", dest="verbose", default=True,
