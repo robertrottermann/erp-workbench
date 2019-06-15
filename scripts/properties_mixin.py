@@ -253,7 +253,9 @@ class PropertiesMixin(object):
         yaml_path = "%s/%s/yaml/%s.yaml" % (self.sitesinfo_path, site_dic.get('site_list_name', 'localhost'), site_name)
         if os.path.exists(yaml_path):
             yaml_data = read_yaml_file(yaml_path)
-            site_dic.update(yaml_data)
+            #site_dic.update(yaml_data)
+            if self.opts.verbose:
+                print(bcolors.WARNING, 'not reading %s.yaml' % site_name, bcolors.ENDC)
         site_dic['_yaml_dirty'] = False
 
     # site_name is the name of the site we are acting on
@@ -632,7 +634,12 @@ class PropertiesMixin(object):
             # so what we do is get the servers ip address from the site description
             # and use it, to get the server-description from the servers.yaml
             self._remote_sites_home = self.remote_servers.get(self.remote_server_ip, {}).get(
-                'remote_data_path', '-- remote sites home unknown --')
+                'remote_data_path', '')
+            if not self._remote_sites_home:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('%s is not defined in the list of remote servers' % self.remote_server_ip)
+                print(bcolors.ENDC)
         return self._remote_sites_home
  
     # both of the following is used 

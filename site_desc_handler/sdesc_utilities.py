@@ -98,18 +98,14 @@ def flatten_sites(sites):
                             else:
                                 if val_k not in vvkeys:
                                     v[key][val_k] = val_val
-                    elif isinstance(vvdata, list):
-                        xx
+                    elif isinstance(val, list):
+                        existing = v.get(key, [])
+                        v[key] = existing + \
+                            [vn for vn in val if vn not in existing]
                     else:
-                        yy
-                elif isinstance(val, list):
-                    existing = v.get(key, [])
-                    v[key] = existing + \
-                        [vn for vn in val if vn not in existing]
-                else:
-                    # ['site_name', 'servername', 'db_name']:
-                    if key in vkeys:
-                        continue
+                        # ['site_name', 'servername', 'db_name']:
+                        if key in vkeys:
+                            continue
 
 # --------------------------------------------
 # _construct_sa
