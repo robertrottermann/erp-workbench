@@ -205,14 +205,24 @@ class SitesHandler(SiteDescHandlerMixin):
                     act = os.getcwd()
                     #dp = '/' + '/'.join([p for p in running_path.split('/') if p][:-1])
                     os.chdir(sites_list_path)
-                    cmd_line = ['git clone %s %s' % (sites_list_url, sitelist_name)]
-                    p = subprocess.Popen(
-                        cmd_line,
-                        stdout=PIPE,
-                        stderr=PIPE,
-                        env=dict(os.environ,  PATH='/usr/bin'),
-                        shell=True)
+                    
+                    if os.path.exists('%s/%s/.git' % (sites_list_path, sitelist_name)):
+                        os.chdir(sitelist_name)
+                        p = subprocess.Popen(
+                            'git pull',
+                            stdout=PIPE,
+                            env=dict(os.environ,  PATH='/usr/bin'),
+                            shell=True)
+                    else:
+                        cmd_line = ['git clone %s %s' % (sites_list_url, sitelist_name)]
+                        p = subprocess.Popen(
+                            cmd_line,
+                            stdout=PIPE,
+                            stderr=PIPE,
+                            env=dict(os.environ,  PATH='/usr/bin'),
+                            shell=True)
                     result = p.communicate()
+                    os.chdir(sites_list_path) # we migth have changed
                     if p.returncode:
                         print(bcolors.FAIL)
                         print('Error:')
