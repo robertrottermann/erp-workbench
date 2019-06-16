@@ -98,6 +98,7 @@ SITE_CREATED_SERVER = """%s
 --------------------------------------------------------
 added a server with the %sip %%s for user %%s%s
 %sPlease check its content by editing config/servers.yaml
+to do so run: bin/e -s
 --------------------------------------------------------
 %s
 """ % (bcolors.OKGREEN, bcolors.FAIL, bcolors.ENDC, bcolors.OKGREEN, bcolors.ENDC)

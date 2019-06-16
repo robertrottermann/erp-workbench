@@ -39,10 +39,12 @@ from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
 # -------------------------------------------------------------
 # defined in messages.py
 #MARKER = '# ---------------- marker ----------------'
-SITES_LIST_INI ="""from .sites_local import SITES_L
-from .sites_global import SITES_G
+SITES_LIST_INI ="""from .sites_global import SITES_G
 """
+#from .sites_global import SITES_G
+#"""
 SITES_LIST_OUTER_HEAD = """
+SITELIST_VERSION = 2
 SITES_G = {}
 SITES_L = {}
 def set_orig(dic, orig):
@@ -54,11 +56,13 @@ SITES_LIST_OUTER_LINE = """
 from .%(file_name)s import SITES_G as SG_%(file_name)s
 set_orig(SG_%(file_name)s, '%(file_name)s')
 SITES_G.update(SG_%(file_name)s)
-from .%(file_name)s import SITES_L as SL_%(file_name)s
-set_orig(SL_%(file_name)s, '%(file_name)s')
-SITES_L.update(SL_%(file_name)s)
+#from .%(file_name)s import SITES_L as SL_%(file_name)s
+#set_orig(SL_%(file_name)s, '%(file_name)s')
+#SITES_L.update(SL_%(file_name)s)
 """
-
+SITES_LIST_OUTER_FOOTER = """
+from .localhost import SITES_G as SITES_L
+"""
 class SitesHandler(SiteDescHandlerMixin):
     
     subparser_name = ''
@@ -69,8 +73,7 @@ class SitesHandler(SiteDescHandlerMixin):
         self.template_name = template_name
         self.preset_values = preset_values
 
-
-    def _create_sites_rep(self, running_path):
+    def _create_sites_rep(self, running_path, force=None):
         """
         create sites_list structure
         @p1 : base path 
@@ -86,42 +89,43 @@ class SitesHandler(SiteDescHandlerMixin):
         # the its inner structure (how??, but it happens!)
         must_create = False
         did_change = False
-        for n in ['__init__.py', 'sites_global', 'sites_local']:
+        for n in ['__init__.py', 'sites_global']: #, 'sites_local']:
             if not os.path.exists(os.path.normpath('%s/%s' % (p1, n))):
                 must_create = True
                 break
-        if not os.path.exists(p1) or must_create:
+        if not os.path.exists(p1) or must_create or force:
             os.makedirs(p1, exist_ok=True)
             # add __init__.py
             ini_p = '%s/__init__.py' % p1
-            if not os.path.exists(ini_p):
+            if not os.path.exists(ini_p) or force:
                 open(ini_p, 'w').write(SITES_LIST_INI)
-            template = open('%s/newsite.py' % templates.__path__[0], 'r').read()
-            template = template.replace('xx.xx.xx.xx', 'localhost')
-            # default values for the demo sites
-            defaults = {
-                'site_name' : 'demo_global', 
-                'marker' : self.marker,
-                'base_sites_home' : '/home/%s/erp_workbench' % self.user,
-                'erp_provider' : self.erp_provider,
-                'erp_version': self.erp_version,
-                'erp_minor' : self.erp_minor,
-                'erp_nightly' : self.erp_nightly,
-                'base_url' : 'demo_global',
-                'local_user_mail' : 'mail@localhost.com',
-                'remote_server' : 'localhost',
-                'docker_port' : 8800,
-                'docker_long_poll_port' : 18800,
-                'docker_hub_name' : self.docker_hub_name,
-                'erp_image_version' : self.erp_image_version,
-            }                
+            if is_localhost:    
+                template = open('%s/newsite.py' % templates.__path__[0], 'r').read()
+                template = template.replace('xx.xx.xx.xx', 'localhost')
+                # default values for the demo sites
+                defaults = {
+                    'site_name' : 'demo_global', 
+                    'marker' : self.marker,
+                    'base_sites_home' : '/home/%s/erp_workbench' % self.user,
+                    'erp_provider' : self.erp_provider,
+                    'erp_version': self.erp_version,
+                    'erp_minor' : self.erp_minor,
+                    'erp_nightly' : self.erp_nightly,
+                    'base_url' : 'demo_global',
+                    'local_user_mail' : 'mail@localhost.com',
+                    'remote_server' : 'localhost',
+                    'docker_port' : 8800,
+                    'docker_long_poll_port' : 18800,
+                    'docker_hub_name' : self.docker_hub_name,
+                    'erp_image_version' : self.erp_image_version,
+                }                
             # create global sites
             global_dir = '%s/sites_global' % p1
             __ini__data = open('%s/sites_list__init__.py' % templates.__path__[0]).read()
             print_message = True
-            if not os.path.exists(global_dir):
+            if not os.path.exists(global_dir) or force:
                 did_change = True
-                os.mkdir(global_dir)
+                os.makedirs(global_dir, exist_ok=True)
                 open('%s/sites_global/__init__.py' % p1, 'w').write(__ini__data)
                 if is_localhost:
                     open('%s/sites_global/demo_global.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
@@ -133,43 +137,54 @@ class SitesHandler(SiteDescHandlerMixin):
                 if not os.path.exists(ini_p):
                     did_change = True
                     open('%s/sites_global/__init__.py' % p1, 'w').write(__ini__data)
-            # create local sites
-            local_dir = '%s/sites_local' % p1
-            __ini__data = __ini__data.replace('SITES_G', 'SITES_L')
-            if not os.path.exists(local_dir):
-                did_change = True
-                os.mkdir(local_dir)
-                open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
-                if is_localhost:
-                    defaults['site_name'] = 'demo_local'
-                    defaults['base_url'] = 'demo_local'
-                    open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
-                        'demo_local', template % defaults))
-            else:
-                print_message = False
-                # maybe we cloned sites_list without ini files
-                ini_p = '%s/sites_local/__init__.py' % p1
-                if not os.path.exists(ini_p):
-                    did_change = True
-                    open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
-            if print_message:
-                if is_localhost:
-                    print(LOCALSITESLIST_CREATED % (
-                        os.path.normpath('%s/sites_global/demo_global.py' % p1), 
-                        os.path.normpath('%s/sites_local/demo_local.py' % p1)))
+            ## create local sites
+            #local_dir = '%s/sites_local' % p1
+            #__ini__data = __ini__data.replace('SITES_G', 'SITES_L')
+            #if not os.path.exists(local_dir):
+                #did_change = True
+                #os.mkdir(local_dir)
+                #open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
+                #if is_localhost:
+                    #defaults['site_name'] = 'demo_local'
+                    #defaults['base_url'] = 'demo_local'
+                    #open('%s/sites_local/demo_local.py' % p1, 'w').write(SITES_GLOBAL_TEMPLATE % (
+                        #'demo_local', template % defaults))
+            #else:
+                #print_message = False
+                ## maybe we cloned sites_list without ini files
+                #ini_p = '%s/sites_local/__init__.py' % p1
+                #if not os.path.exists(ini_p):
+                    #did_change = True
+                    #open('%s/sites_local/__init__.py' % p1, 'w').write(__ini__data)
+            #if print_message:
+                #if is_localhost:
+                    #print(LOCALSITESLIST_CREATED % (
+                        #os.path.normpath('%s/sites_global/demo_global.py' % p1), 
+                        #os.path.normpath('%s/sites_local/demo_local.py' % p1)))
         return did_change
     
 
-    def check_and_create_sites_repo(self, force = False):
+    def check_and_create_sites_repo(self, force = False, must_update_ini=False):
         # check whether sites repo defined in BASEINFO exists
         # if not download and install it
         must_exit = False
-        must_update_ini = False
         sitelist_names = []
         #sites_list_path = BASE_INFO.get('sitesinfo_path')
         sites_list_path = self.base_info.get('sitesinfo_path')
         if not sites_list_path:
             return '' # not yet configured
+        if not force:            
+            try:
+                # switch to the siteslist and try to import from there
+                sys.path.insert(0, sites_list_path)
+                from sites_list import SITELIST_VERSION
+            except ImportError:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print('Due to changes in the site strucure, the sites list was reconstructed. Please restart')
+                print(bcolors.ENDC)
+                # force=true will (re)init the ini file and exit
+                self.check_and_create_sites_repo(force=True, must_update_ini=True)
         # create sitelisth path
         os.makedirs(sites_list_path, exist_ok=True)
         #siteinfos = BASE_INFO.get('siteinfos', [])
@@ -180,11 +195,11 @@ class SitesHandler(SiteDescHandlerMixin):
                 sitelist_names.append(sitelist_name)
                 running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
                 if sites_list_url == 'localhost':
-                    must_exit = self._create_sites_rep(running_path)
+                    must_exit = self._create_sites_rep(running_path, force=force)
                     # when we create the site-list, we must also create the ini file
                     if not os.path.exists('%s/__init__.py' % sites_list_path):
                         must_update_ini = True
-                elif not os.path.exists(running_path):
+                elif not os.path.exists(running_path) or force:
                     # try to git clone sites_list_url
                     must_update_ini = True
                     act = os.getcwd()
@@ -220,7 +235,9 @@ class SitesHandler(SiteDescHandlerMixin):
             if must_update_ini:
                 ini = SITES_LIST_OUTER_HEAD
                 for sn in sitelist_names:
-                    ini += (SITES_LIST_OUTER_LINE % {'file_name' : sn})
+                    if sn != 'localhost':
+                        ini += (SITES_LIST_OUTER_LINE % {'file_name' : sn})
+                ini += SITES_LIST_OUTER_FOOTER
                 with open('%s/__init__.py' % sites_list_path, 'w') as f:
                     f.write(ini)
                 sys.exit()
@@ -427,7 +444,7 @@ class SitesHandler(SiteDescHandlerMixin):
             'site_info' : outer_template,
         }
         
-    def check_pull(self, auto='check'):
+    def check_pull(self, auto='check', opts=None):
         """automatically update sites-list according to seettings
         config file.
         
@@ -443,10 +460,16 @@ class SitesHandler(SiteDescHandlerMixin):
                 return
         os.chdir(self.sites_list_path)
         folders = next(os.walk('.'))[1]
+        if folders and not opts.quiet:
+            print(bcolors.WARNING)
+            print('*' * 80)
+            print('pulling sites list (can be switched of runnning bin/e -c, option sites_autopull)')            
+            
         for folder in folders:
             if folder[0] == '_': # skip '__pycache__'
                 continue
             os.chdir('%s%s' % (self.sites_list_path, folder))
+            print('%s%s' % (self.sites_list_path, folder))
             p = subprocess.Popen(
                 'git pull',
                 stdout=PIPE,
@@ -454,11 +477,13 @@ class SitesHandler(SiteDescHandlerMixin):
                 shell=True)
             p.communicate()
         os.chdir(actual)
+        if folders and not opts.quiet:
+            print(bcolors.ENDC)
 
     def fix_sites_list(self, fix=False):
         """check if url to repository of sites list
         has changed. Try to update settings.
         """
-        pass
+        sitesinfo_path = self.base_info.get('sitesinfo_path')
 
 

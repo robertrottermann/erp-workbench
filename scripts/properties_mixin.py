@@ -639,6 +639,8 @@ class PropertiesMixin(object):
                 print(bcolors.FAIL)
                 print('*' * 80)
                 print('%s is not defined in the list of remote servers' % self.remote_server_ip)
+                print('you can add it by runnbing bin/s --add-server %s' % self.remote_server_ip)
+                print('please check/adapt the new server description afterwards')
                 print(bcolors.ENDC)
         return self._remote_sites_home
  
