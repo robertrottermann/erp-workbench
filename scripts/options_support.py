@@ -40,7 +40,7 @@ def add_options_support(parser, result_dic):
     parser_support.add_argument(
         "--fix-sites-list",
         action="store", dest="fix_sites_list",
-        help='Fix sites-list after you have changed the the url where to its repo'
+        help='Fix sites-list'
     )
     parser_support.add_argument(
         "--edit-site",

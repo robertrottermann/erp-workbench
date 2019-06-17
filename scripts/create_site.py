@@ -25,7 +25,6 @@ from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
 from config import sites_handler
-sites_handler.check_and_create_sites_repo()
 from config import SITES
 
 from config import BASE_INFO
@@ -127,7 +126,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     # the user has to use the support optin --fix-sites-list
     from config import sites_handler
     # ckeck wheter the the sites-list has to be autoloaded
-    sites_handler.check_pull()
+    sites_handler.check_pull(opts=opts)
     did_run_a_command = False
     # ----------------------
     # create commands
