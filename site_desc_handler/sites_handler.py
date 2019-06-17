@@ -188,71 +188,73 @@ class SitesHandler(SiteDescHandlerMixin):
         # create sitelisth path
         os.makedirs(sites_list_path, exist_ok=True)
         #siteinfos = BASE_INFO.get('siteinfos', [])
-        siteinfos = self.base_info.get('siteinfos', [])
-        if siteinfos:
-            for sitelist_name, sites_list_url in list(siteinfos.items()):
-                #sites_list_url = BASE_INFO.get('sitesinfo_url')
-                sitelist_names.append(sitelist_name)
-                running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
-                if sites_list_url == 'localhost':
-                    must_exit = self._create_sites_rep(running_path, force=force)
-                    # when we create the site-list, we must also create the ini file
-                    if not os.path.exists('%s/__init__.py' % sites_list_path):
-                        must_update_ini = True
-                elif not os.path.exists(running_path) or force:
-                    # try to git clone sites_list_url
+        siteinfos = self.base_info.get('siteinfos', {'localhost' : 'localhost'})
+        # make sure localhost exists
+        if not siteinfos.get('localhost'):
+            siteinfos['localhost'] = 'localhost'
+        for sitelist_name, sites_list_url in list(siteinfos.items()):
+            #sites_list_url = BASE_INFO.get('sitesinfo_url')
+            sitelist_names.append(sitelist_name)
+            running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
+            if sites_list_url == 'localhost':
+                must_exit = self._create_sites_rep(running_path, force=force)
+                # when we create the site-list, we must also create the ini file
+                if not os.path.exists('%s/__init__.py' % sites_list_path):
                     must_update_ini = True
-                    act = os.getcwd()
-                    #dp = '/' + '/'.join([p for p in running_path.split('/') if p][:-1])
-                    os.chdir(sites_list_path)
-                    
-                    if os.path.exists('%s/%s/.git' % (sites_list_path, sitelist_name)):
-                        os.chdir(sitelist_name)
-                        p = subprocess.Popen(
-                            'git pull',
-                            stdout=PIPE,
-                            env=dict(os.environ,  PATH='/usr/bin'),
-                            shell=True)
-                    else:
-                        cmd_line = ['git clone %s %s' % (sites_list_url, sitelist_name)]
-                        p = subprocess.Popen(
-                            cmd_line,
-                            stdout=PIPE,
-                            stderr=PIPE,
-                            env=dict(os.environ,  PATH='/usr/bin'),
-                            shell=True)
-                    result = p.communicate()
-                    os.chdir(sites_list_path) # we migth have changed
-                    if p.returncode:
-                        print(bcolors.FAIL)
-                        print('Error:')
-                        print('The commandline %s produced an error' % cmd_line)
-                        print('please check if the sites_list in config/config.yaml is properly formated')
-                        for part in result[1].split(b'\n'):
-                            print(part.decode("utf-8"))
-                        print(bcolors.ENDC)
-                        # clean up 
-                        if os.path.exists(running_path):
-                            os.unlink(running_path)
-                    else:
-                        print(bcolors.WARNING)
-                        print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
-                    os.chdir(act)
-                    # now create missing elements
-                    if not p.returncode:
-                        must_exit = self._create_sites_rep(running_path)
-            # create outer inifile if needed
-            if must_update_ini:
-                ini = SITES_LIST_OUTER_HEAD
-                for sn in sitelist_names:
-                    if sn != 'localhost':
-                        ini += (SITES_LIST_OUTER_LINE % {'file_name' : sn})
-                ini += SITES_LIST_OUTER_FOOTER
-                with open('%s/__init__.py' % sites_list_path, 'w') as f:
-                    f.write(ini)
-                sys.exit()
-            if must_exit:
-                sys.exit()
+            elif not os.path.exists(running_path) or force:
+                # try to git clone sites_list_url
+                must_update_ini = True
+                act = os.getcwd()
+                #dp = '/' + '/'.join([p for p in running_path.split('/') if p][:-1])
+                os.chdir(sites_list_path)
+                
+                if os.path.exists('%s/%s/.git' % (sites_list_path, sitelist_name)):
+                    os.chdir(sitelist_name)
+                    p = subprocess.Popen(
+                        'git pull',
+                        stdout=PIPE,
+                        env=dict(os.environ,  PATH='/usr/bin'),
+                        shell=True)
+                else:
+                    cmd_line = ['git clone %s %s' % (sites_list_url, sitelist_name)]
+                    p = subprocess.Popen(
+                        cmd_line,
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        env=dict(os.environ,  PATH='/usr/bin'),
+                        shell=True)
+                result = p.communicate()
+                os.chdir(sites_list_path) # we migth have changed
+                if p.returncode:
+                    print(bcolors.FAIL)
+                    print('Error:')
+                    print('The commandline %s produced an error' % cmd_line)
+                    print('please check if the sites_list in config/config.yaml is properly formated')
+                    for part in result[1].split(b'\n'):
+                        print(part.decode("utf-8"))
+                    print(bcolors.ENDC)
+                    # clean up 
+                    if os.path.exists(running_path):
+                        os.unlink(running_path)
+                else:
+                    print(bcolors.WARNING)
+                    print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
+                os.chdir(act)
+                # now create missing elements
+                if not p.returncode:
+                    must_exit = self._create_sites_rep(running_path)
+        # create outer inifile if needed
+        if must_update_ini:
+            ini = SITES_LIST_OUTER_HEAD
+            for sn in sitelist_names:
+                if sn != 'localhost':
+                    ini += (SITES_LIST_OUTER_LINE % {'file_name' : sn})
+            ini += SITES_LIST_OUTER_FOOTER
+            with open('%s/__init__.py' % sites_list_path, 'w') as f:
+                f.write(ini)
+            sys.exit()
+        if must_exit:
+            sys.exit()
         return sites_list_path
 
     @property
