@@ -34,6 +34,13 @@ RUN apt update;
 
 class DockerHandler(InitHandler, DBUpdater):
     master = '' # possible master site from which to copy
+    
+    """
+    this class needs a general fixing !!!!!!!!
+    we should use docker.from_env() to create the client 
+    and have everything done by this client and not by "import Client"
+    actually we seem not to use Client at all!!
+    """
     def __init__(self, opts, sites = {}, url='unix://var/run/docker.sock', use_tunnel=False):
         """
         """
@@ -49,6 +56,11 @@ class DockerHandler(InitHandler, DBUpdater):
 
         if not self.site:
             return # when we are creating the db container
+        
+        ####################
+        # self.client new 17th june 2019
+        self.client = docker.from_env()
+        
         # collect data from the site description
         self.setup_docker_env(self.site)
         # make sure the registry exists
@@ -542,15 +554,19 @@ class DockerHandler(InitHandler, DBUpdater):
         from templates.docker_templates import dumper_docker_template
         template = dumper_docker_template % {'postgres_version' : int(float(self.use_postgres_version))}
         docker_target_path = '%s/dumper/' % self.sites_home
+        dumper_image = self.docker_defaults.get('docker_dumper_image')
         with open('%sDockerfile' % docker_target_path, 'w') as f:
             f.write(template)
         try:
             docker_file = '%sDockerfile' % docker_target_path
             result = self.docker_client.build(
                 docker_target_path, 
-                tag='dbdumper',
-                dockerfile=docker_file)
-            is_ok = self._print_docker_result(result, docker_file, docker_target_path)
+                tag=dumper_image,
+                dockerfile=docker_file,
+                rm=True,
+            )
+            build_info = []
+            is_ok = self._print_docker_result(result, docker_file, docker_target_path, build_info)
             if is_ok:
                 print(bcolors.OKGREEN)
                 print('*' * 80)
@@ -849,15 +865,24 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         # todo should also check remotely
         return self.docker_client.images(image_name)
-
-    def createDumperImage(self):
-        """
-        """
-        act = os.getcwd()
-        p = '%s/dumper' % self.sites_home
-        os.chdir(p)
-        self.run_commands([['docker build  -t dbdumper .']], self.user, pw='')
-        os.chdir(act)
+    
+    #def _find_image(self, image_name):
+        #"""
+        #find an image by its tag
+        #"""
+        #name, tag = (image_name.split(':') + [''])[:2]
+        #images = self.client.images()
+        #for image in images:
+            ## I assume that a repotag is always name:tag
+            #for repo_tag in image.get('RepoTags', []):
+                #n,t = repo_tag.split(':')
+                #if n.lower() == name.lower():
+                    #if tag:
+                        #if tag.lower() == t.lower():
+                            #return image
+                    ## no tag, so accept any tag
+                    #return image
+                
 
     def doUpdate(self, db_update=True, norefresh=None, names=[], set_local=True):
         """
@@ -865,26 +890,22 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         # self.update_container_info()
         # we need to learn what ip address the local docker db is using
-        # if the container does not yet exists, we create them (master and slave)
-        self.check_and_create_container()
-        get_remote_server_info(self.opts, self.sites)
+
         # we have to decide, whether this is a local or remote
         dumper_image = self.docker_defaults.get('docker_dumper_image')
-        if not dumper_image:
+        dumper_info = self.checkImage(dumper_image)
+        if not dumper_info:
             print(bcolors.FAIL + \
                   'the %s image is not available. please create it first. ' \
                   'insturctions on how to do it , you find in %s/dumper' % (
                       dumper_image,
-                      self.default_values['sites_home'] + bcolors.ENDC))
-        if not self.checkImage(dumper_image):
-            self.createDumperImage()
-            if not self.checkImage(dumper_image):
-                print(bcolors.FAIL + \
-                      'the %s image is not available. please create it first. ' \
-                      'insturctions on how to do it , you find in %s/dumper' % (
-                          dumper_image,
-                          self.default_values['sites_home'] + bcolors.ENDC))
-                return
+                      self.default_values['sites_home']),
+                  '\nan easy way to do it is: bin/d -dbdumper' + bcolors.ENDC
+                )
+            return
+        # if the container does not yet exists, we create them (master and slave)
+        self.check_and_create_container()
+        get_remote_server_info(self.opts, self.sites)
 
         #mp = self.default_values.get('docker_path_map')
         #if mp and ACT_USER != 'root':
