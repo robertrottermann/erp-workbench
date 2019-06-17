@@ -325,7 +325,7 @@ class DBUpdater(object):
             remote_url = extra_data['remote_url']
         else:
             #remote_url = self.remote_url
-            remote_url = self.remote_http_url
+            remote_url = self.remote_server_ip
         # remote_data_path = self.remote_data_path # server_info['remote_data_path']
         if 'remote_data_path' in extra_data:
             remote_data_path = extra_data['remote_data_path']
