@@ -146,13 +146,13 @@ def flatten_sites(sites):
                 if isinstance(val, dict):
                     # make sure the dic exists otherwise we can not add the items
                     vvkeys = v.get(key, {}).keys()
-                    if not v.has_key(key):
+                    if not (key in v.keys()):
                         v[key] = {}
                     for val_k, val_val in val.items():
                         if isinstance(val_val, list):
                             # v is the element in the inherited site
                             # if v does not have a key we add it with an empty list
-                            if not v[key].has_key(val_k):
+                            if not (val_k in v[key].keys()):
                                 v[key][val_k] = []
                             [v[key][val_k].append(vi)
                                 for vi in val_val if vi not in v[key][val_k] and not ('-' + vi in v[key][val_k])]
@@ -164,7 +164,7 @@ def flatten_sites(sites):
                             # key is the key in the child
                             # val is the value in the child
                             # val_val
-                            if not v[key].has_key(val_k):
+                            if not (val_k in v[key].keys()):
                                 # so we have a target dict
                                 v[key][val_k] = {}
                             # now add elements to the the target dict
@@ -172,7 +172,7 @@ def flatten_sites(sites):
                             for val_val_k, val_val_v in val_val.items():
                                 # we do an other level of hierarchy
                                 if isinstance(val_val_v, list):
-                                    if not target.has_key(val_val_k):
+                                    if not (val_val_k in target.keys()):
                                         target[val_val_k] = []
                                     sub_target = target[val_val_k]
                                     for tk in val_val_v:
@@ -180,13 +180,13 @@ def flatten_sites(sites):
                                         if tk not in sub_target:
                                             sub_target.append(tk)
                                 elif isinstance(val_val_v, dict):
-                                    if not target.has_key(val_val_k):
+                                    if not (val_val_k in target.keys()):
                                         target[val_val_k] = {}
                                     sub_target = target[val_val_k]
                                     for val_val_v_k, val_val_v_v in val_val_v.items():
                                         sub_target[val_val_v_k] = val_val_v_v
                                 else:
-                                    if not target.has_key(val_val_k):
+                                    if not (val_val_k in target.keys()):
                                         target[val_val_k] = val_val_v
                         else:
                             if val_k not in vvkeys:
