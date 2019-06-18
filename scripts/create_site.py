@@ -392,6 +392,13 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.check_and_create_container(container_name='db')
             did_run_a_command = True
 
+        # set_erp_settings
+        # ----------------
+        # set local settings from the site description
+        if opts.set_erp_settings_docker:
+            handler.set_erp_settings(use_docker=True, local=False)
+            did_run_a_command = True
+
         # recreate container
         # ------------------
         # recreate a conainer
@@ -399,7 +406,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.check_and_create_container(recreate_container = True)
             did_run_a_command = True
             return
-        
+
         # rename container
         # ----------------
         # recreate a conainer
@@ -407,7 +414,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.check_and_create_container(rename_container = True)
             did_run_a_command = True
             return
-        
+
         # # build image
         # # ----------
         # # build docker image according to bitnami

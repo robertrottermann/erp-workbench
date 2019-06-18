@@ -38,7 +38,7 @@ def add_options_rpc(parser, result_dic):
     parser_rpc.add_argument("-SL", "--set-local-data",
                             action="store_true", dest="set_local_data", default=False,
                             help="set local data from the site description. Together with -F it can also be used remotely")
-    parser_rpc.add_argument("-SOS", "--set-odoo-settings",
+    parser_rpc.add_argument("-SOS", "--set-erp-settings",
                             action="store_true", dest="set_erp_settings", default=False,
                             help="set erp settings like the mail handlers. The script tries to define for what ip")
     parser_rpc.add_argument("-SN", "--set-null-smtp",
