@@ -83,6 +83,12 @@ def add_options_docker(parser, result_dic):
         help='rename container to have actual date in its name and recreate docker container. Name must be provided,'
     )
     parser_docker.add_argument(
+        "-dra", "--dremoveapps",
+        action="store", dest="dremoveapps", default='',
+        help='remove installed modules/apps, pass a comma separated list (no spaces)',
+        need_name=True
+    )
+    parser_docker.add_argument(
         "-dcdb", "--create_db_container",
         action="store_true", dest="docker_create_db_container", default=False,
         help='create a docker database container. It will be named db. It uses the postgres version in config/docker.yaml',
