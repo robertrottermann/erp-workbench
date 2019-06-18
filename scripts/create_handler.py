@@ -174,7 +174,13 @@ class RPC_Mixin(object):
                     print('about to open connection to:')
                     print('host:%s, port:%s, timeout: %s' %
                           (rpchost, rpcport, 1200))
-                #rpchost und rpcort sind nich von docker!!!!!
+                if not db_name:
+                    print(bcolors.FAIL)
+                    print('*' * 80)
+                    print('hoppalla no database defined')
+                    print(bcolors.ENDC)
+                    return
+                #rpchost und rpcort sind nicht von docker!!!!!
                 odoo = odoorpc.ODOO(rpchost, port=rpcport, timeout=1200)
                 if not no_db:  # used when creating db
                     if verbose:
@@ -1028,8 +1034,6 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # not know its real address
         if self.opts.use_ip:
             my_ip = self.opts.use_ip
-        elif use_docker and self.opts.use_ip_docker:
-            my_ip = self.opts.use_ip_docker
         elif local:
             my_ip = '127.0.0.1'
         else:
