@@ -145,6 +145,8 @@ def create_server_config(handler):
     erp_admin_pw = handler.site.get('odoo_admin_pw', '')
     base_info = handler.base_info 
     p = os.path.normpath('%s/%s' % (base_info['erp_server_data_path'], name))
+    # make sure we use an updated addons_path
+    handler.default_values['docker_site_addons_path'] = handler.docker_site_addons_path
     # now copy a template openerp-server.conf
     handler.default_values['erp_admin_pw'] = erp_admin_pw
     template = open(
