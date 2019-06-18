@@ -37,7 +37,7 @@ It knows enough about odoo to be able to treat some special values correctly
 
 """
 
-# after strt tag we start to lok for values
+# after start tag we start to look for values
 START_TAG = '[login_info]'
 # delimiter defines start of new value
 DELIMITER = '##----'
