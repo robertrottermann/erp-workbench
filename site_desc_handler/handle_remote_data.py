@@ -1,9 +1,7 @@
 import os
-import docker
 from copy import deepcopy
-from docker import Client
-from socket import gaierror
 from scripts.bcolors import bcolors
+from socket import gaierror
 from config import REMOTE_SERVERS
 
     # @property

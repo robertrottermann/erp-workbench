@@ -9,7 +9,7 @@ In this walktrough you learn:
 - Explanation of terms used
 - Define what type of erp you handle
 - Change editor to use
-- How to define a remote server
+- How to define/edit a remote server
 - Create a new erp site
 - Add existing modules to this new site
 - Create a local erp project running this site
@@ -74,4 +74,36 @@ in $WB/config/config.yaml change the line::
   # define what editor to use when editing site description
   site_editor: 'code' # <----- name the editor here. 
                       # It must be callable in a bash shell
+
+Change editor to use:
+---------------------
+
+When ever any of the workbenches config files are to be edited, they will be presented using an editor.
+
+By default this is *pico*.
+
+to change the editor used to an other one issue the following command::
+
+  bin/e -c
+
+  
+
+How to define/edit a remote server:
+-----------------------------------
+
+A remote server definition contains information on a server where a supported erp-system is running.
+
+To edit existing local servers issue::
+
+  bin/e -s
+
+All existing server definitions are presented using the configured editor.
+
+To create a new server definition issue::
+
+  bin/s -a USERNAME@IP_ADDRESS
+
+here USERNAME is the user as which you want to access the server running at address IP_ADDRESS.
+
+
 

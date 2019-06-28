@@ -318,7 +318,7 @@ class SitesHandler(SiteDescHandlerMixin):
         
         if template_name in list(SITES_L.keys()):
             site = SITES_L[template_name]
-            origin = site['site_list_name']
+            origin = site.get('site_list_name', 'localhost')
             try:
                 os.unlink(os.path.normpath('%s/%s/sites_local/%s.py' % (sites_list_path, origin, template_name)))
                 os.unlink(os.path.normpath('%s/%s/sites_local/%s.pyc' %
@@ -328,7 +328,7 @@ class SitesHandler(SiteDescHandlerMixin):
             return True
         elif template_name in list(SITES_G.keys()):
             site = SITES_G[template_name]
-            origin = site['site_list_name']
+            origin = site.get('site_list_name', 'localhost')
             try:
                 os.unlink(os.path.normpath('%s/%s/sites_global/%s.py' %
                                            (sites_list_path, origin, template_name)))

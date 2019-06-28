@@ -1,6 +1,4 @@
 import os
-import docker
-from docker import Client
 from scripts.properties_mixin import PropertiesMixin
 
 #from config import DOCKER_DEFAULTS

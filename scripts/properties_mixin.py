@@ -401,7 +401,7 @@ class PropertiesMixin(object):
         self._cp
         # the ip address to access the db container
         if self.docker_db_container:
-            return self.docker_db_container['NetworkSettings']['Networks']['bridge']['IPAddress']
+            return self.docker_db_container.attrs['NetworkSettings']['Networks']['bridge']['IPAddress']
         return ''
 
     # docker_rpc_host
@@ -446,10 +446,10 @@ class PropertiesMixin(object):
     def docker_client(self):
         self._cp
         if not self._cli:
-            from docker import Client
             url = 'unix://var/run/docker.sock'
-            cli = Client(base_url=url)
-            self._cli = cli
+            import docker
+            client = docker.from_env()
+            self._cli = client
         return self._cli
 
     # the name of the container we are dealing with

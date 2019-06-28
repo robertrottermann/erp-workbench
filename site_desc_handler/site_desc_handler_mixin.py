@@ -164,16 +164,14 @@ class SiteDescHandlerMixin(PropertiesMixin):
             docker_db_container = ''
             if self.subparser_name == 'docker':
                 docker_db_container_name = self.docker_db_container_name
-                db_container_list = self.docker_containers(filters = {'name' : docker_db_container_name})
-                if db_container_list:
-                    docker_db_container = db_container_list[0]
-                else:
+                docker_db_container = self.docker_containers.get(docker_db_container_name)
+                if not docker_db_container:
                     try:
                         # as this is a docker handler instance, try to create it
                         # but not if we are executing the command -dcdb to create a db container
                         if not self.opts.docker_create_db_container:
                             self.check_and_create_container(container_name='db')
-                            db_container_list = self.docker_containers(filters = {'name' : docker_db_container_name})
+                            db_container_list = self.docker_containers.get(docker_db_container_name)
                             if db_container_list:
                                 docker_db_container = db_container_list[0]                        
                     except Exception as e:

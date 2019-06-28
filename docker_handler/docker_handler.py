@@ -2,7 +2,17 @@
 # -*- encoding: utf-8 -*-
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
-from docker import Client
+from scripts.bcolors import bcolors
+import docker
+try:
+    from docker import Client
+    print(bcolors.FAIL)
+    print('*' * 80)
+    print('the Docker-library you are using is outdated')
+    print('please run pip uninstall docker-py && pip install -U docker')
+    print(' in an active workbench environment')
+except ImportError:
+    pass
 from config import ODOO_VERSIONS
 #from config.handlers import InitHandler, DBUpdater
 from scripts.create_handler import InitHandler
@@ -13,7 +23,6 @@ import sys
 import shutil
 from site_desc_handler.handle_remote_data import get_remote_server_info
 from scripts.bcolors import bcolors
-import docker
 import datetime
 from datetime import date
 from requests.exceptions import HTTPError
@@ -45,13 +54,6 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         super().__init__(opts, sites)
-        try:
-            from docker import Client
-        except ImportError:
-            print('*' * 80)
-            print('could not import docker')
-            print('please run bin/pip install -r install/requirements.txt')
-            return
         self.url = url
 
         if not self.site:
@@ -90,17 +92,17 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         registry = self.docker_registry
         cli = self.docker_client
-        exists = False
+        existing_container = None
         info = []
         if name:
             # check whether a container with the requested name exists.
             # similar to docker ps -a, we need to also consider the stoped containers
-            exists  = cli.containers(filters={'name' : name}, all=1)
-            if exists:
+            existing_container  = cli.containers.get(name)
+            if existing_container:
                 # collect info on the container
                 # this is equivalent to docker inspect name
                 try:
-                    info = cli.inspect_container(name)
+                    info = existing_container.attrs
                 except docker.errors.NotFound:
                     info = []
                 if info:
