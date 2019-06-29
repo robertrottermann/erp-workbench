@@ -210,6 +210,7 @@ class SitesHandler(SiteDescHandlerMixin):
                 
                 if os.path.exists('%s/%s/.git' % (sites_list_path, sitelist_name)):
                     os.chdir(sitelist_name)
+                    cmd_line = ['git pull']
                     p = subprocess.Popen(
                         'git pull',
                         stdout=PIPE,
@@ -230,12 +231,15 @@ class SitesHandler(SiteDescHandlerMixin):
                     print('Error:')
                     print('The commandline %s produced an error' % cmd_line)
                     print('please check if the sites_list in config/config.yaml is properly formated')
-                    for part in result[1].split(b'\n'):
-                        print(part.decode("utf-8"))
+                    print('and you have access to repo for %s' % sitelist_name)
+                    if result and result[1]: 
+                        for part in result[1].split(b'\n'):
+                            print(part.decode("utf-8"))
                     print(bcolors.ENDC)
                     # clean up 
                     if os.path.exists(running_path):
                         os.unlink(running_path)
+                    must_exit = True
                 else:
                     print(bcolors.WARNING)
                     print(LOCALSITESLIST_CLONED % (sites_list_url, os.getcwd()))
