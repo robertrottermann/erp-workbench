@@ -2,6 +2,9 @@
 # -*- encoding: utf-8 -*-
 
 #https://www.digitalocean.com/community/tutorials/how-to-set-up-a-private-docker-registry-on-ubuntu-14-04
+import os
+import re
+import sys
 from scripts.bcolors import bcolors
 import docker
 try:
@@ -9,17 +12,18 @@ try:
     print(bcolors.FAIL)
     print('*' * 80)
     print('the Docker-library you are using is outdated')
-    print('please run pip uninstall docker-py && pip install -U docker')
-    print(' in an active workbench environment')
+    print('please run:')
+    print('    pip uninstall docker-py && pip install -U docker')
+    print()
+    print('in an active workbench environment')
+    print(bcolors.ENDC)
+    sys.exit()
 except ImportError:
     pass
 from config import ODOO_VERSIONS
 #from config.handlers import InitHandler, DBUpdater
 from scripts.create_handler import InitHandler
 from scripts.update_local_db import DBUpdater
-import os
-import re
-import sys
 import shutil
 from site_desc_handler.handle_remote_data import get_remote_server_info
 from scripts.bcolors import bcolors

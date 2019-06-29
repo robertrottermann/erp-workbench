@@ -432,13 +432,11 @@ class PropertiesMixin(object):
     @property
     def docker_containers(self):
         self._cp
-        if self.subparser_name == 'docker':
-            # update the docker registry so we get info about the db_container_name
-            self.update_container_info()
+        # update the docker registry so we get info about the db_container_name
+        self.update_container_info()
 
-            # get the list of containers
-            return self.docker_client.containers
-        return {}
+        # get the list of containers
+        return self.docker_client.containers
 
     # the docker_client is the interface erp-workbench uses to access docker
     _cli = {}

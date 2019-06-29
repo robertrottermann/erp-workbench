@@ -164,6 +164,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             docker_db_container = ''
             if self.subparser_name == 'docker':
                 docker_db_container_name = self.docker_db_container_name
+                self.docker_client.containers.get(docker_db_container_name)
                 docker_db_container = self.docker_containers.get(docker_db_container_name)
                 if not docker_db_container:
                     try:
