@@ -796,13 +796,16 @@ class DockerHandler(InitHandler, DBUpdater):
         return_info = []
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.docker_client.build(
-                docker_target_path, 
+            result = self.docker_client.images.build(
+                path = docker_target_path, 
                 tag = tag, 
                 dockerfile=docker_file)
-            is_ok = self._print_docker_result(result, docker_file, docker_target_path, return_info)
-            if not is_ok:
-                return
+            if result:
+                image = result[0]
+                # https://techoverflow.net/2019/04/01/fixing-gcloud-warning-docker-credential-gcloud-not-in-system-path/
+                is_ok = self._print_docker_result(result[1], docker_file, docker_target_path, return_info)
+                if not is_ok:
+                    return
         except docker.errors.NotFound:
             print(DOCKER_IMAGE_CREATE_FAILED % (self.site_name, self.site_name))
         else:
