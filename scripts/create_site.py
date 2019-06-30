@@ -28,7 +28,7 @@ from config import sites_handler
 from config import SITES
 
 from config import BASE_INFO
-    
+
 from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.project_info import PROJECT_DEFAULTS
 
@@ -113,11 +113,11 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     #     handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
-       # _subparser_name = 'docker'
+        # _subparser_name = 'docker'
     # return handler to the test process if asked to
     if return_handler == 1:
         return handler
-    
+
     # ckeck whether the used option needs a name to work
     handler.check_name(need_names_dic=need_names_dic)
 
@@ -182,12 +182,12 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.create_folders(quiet=True)
             create_server_config(handler)
             did_run_a_command = True
-    
+
             # make sure project was added to bash_aliases
             handler.add_aliases()
             # checkout repositories
             checkout_sa(opts, handler)
-            
+
         # list_sites
         # ----------
         # list_sites lists all existing sites both from global and local sites
@@ -255,7 +255,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # - rpcport: the the odoo server is running at
         #   option: "-PO", "--port"
         #   default: 8069.
-    
+
         if opts.installown or opts.updateown or opts.removeown:
             handler.install_own_modules()
             did_run_a_command = True
@@ -345,7 +345,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         if opts.set_local_data:
             handler.set_local_data(use_remote_setting=False)
             did_run_a_command = True
-            
+
         # set_null_smtp
         # --------------
         # set null smtp handler from the site description
@@ -422,7 +422,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         #     handler.build_image_bitnami()
         #     did_run_a_command = True
         #     return
-            
+
         # build image
         # ----------
         # build docker image used by a site
@@ -442,7 +442,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.check_and_create_container(pull_image = True)
             did_run_a_command = True
             return
-    
+
         # push image
         # ----------
         # push docker image used by a site
@@ -458,16 +458,16 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.retag_image()
             did_run_a_command = True
             return
-        
-        
+
+
         # installown or updateown or removeown
         # ------------------------------------
         # installown install all modules declared in the selected site
         # updateown updates one or all modules declared in the selected site
         # removeown removes one or all modules declared in the selected site
-        
+
         # ----------> see create commands
-        
+
         if opts.dinstallown or opts.dupdateown or opts.dremoveown or opts.dinstall_erp_modules:
             #handler = dockerHandler(opts, default_values, site_name)
             handler.docker_install_own_modules()
@@ -512,7 +512,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             else:
                 handler.docker_show()
             did_run_a_command = True
-        
+
         # set_local_data
         # --------------
         # set local settings from the site description
@@ -535,7 +535,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.migrate_remove_apps()
             did_run_a_command = True
             return
-    
+
         if opts.migrate_dump_site:
             handler.migrate_dump_site()
             did_run_a_command = True
@@ -605,7 +605,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.add_server_to_server_list()
             did_run_a_command = True
             return
- 
+
         # upgrade
         # ----------
         # migrate to new odoo version
@@ -615,7 +615,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
 
-        
+
         if not did_run_a_command:
             print(bcolors.WARNING)
             print('*' * 80)
@@ -631,7 +631,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             handler.add_site_to_apache()
             did_run_a_command = True
             return
-    
+
         if opts.add_nginx:
             handler.add_site_to_nginx()
             did_run_a_command = True
@@ -649,7 +649,7 @@ def parse_args():
     print_banner = BASE_DEFAULTS.get('print_banner', True)
     if print_banner:
         print(banner)
-    
+
     argparse.ArgumentParser.set_default_subparser = set_default_subparser
     usage = ""
     need_names_dic = {
@@ -735,7 +735,7 @@ def parse_args():
     # manage remote server (can be localhost)
     # -----------------------------------------------
     add_options_remote(parser_remote, need_names_dic)
-    
+
     sub_parser = parser.set_default_subparser('create')
     args, unknownargs = parser.parse_known_args()
     command_line = ' '.join(sys.argv)
@@ -751,7 +751,7 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    
+
     args, sub_parser_name, need_names_dic = parse_args()
 
 
@@ -769,4 +769,4 @@ if __name__ == '__main__':
         print('it looks as if no valid comand was executed')
         print('*' * 80)
         print(bcolors.ENDC)
-        
+
