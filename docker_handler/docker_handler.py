@@ -709,14 +709,15 @@ class DockerHandler(InitHandler, DBUpdater):
             }
             data_str = DOCKER_APT_PIP_HEAD
             if apt_list or pip_list:
-                data_str += "RUN set -x; \\"
+                data_str += "RUN set -x; "
                 pref = ' ' * 8
                 if apt_list:
                     data_str += 'apt install -y '
                     data_str += self._clean_run_block('\n'.join(['%s%s \\' % (pref, a) for a in apt_list]))
                 if pip_list:
-                    if apt_list:
-                        data_str += ';\\\n'
+                    #if apt_list:
+                        #data_str += ';\\\n'
+                    data_str += "\nRUN "
                     data_str += '    pip install --cache-dir=.pip '
                     data_str +=  (' '.join(['%s' % p for p in pip_list]))
             data_dic['run_block'] = data_str
@@ -796,10 +797,19 @@ class DockerHandler(InitHandler, DBUpdater):
         return_info = []
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.docker_client.images.build(
+            from docker import APIClient
+            cli = APIClient(base_url='unix://var/run/docker.sock')
+            client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+            #result = self.docker_client.images.build(
+            #print('----> starting')
+            result = cli.build(
+            #result = client.images.build(
                 path = docker_target_path, 
                 tag = tag, 
-                dockerfile=docker_file)
+                dockerfile=docker_file,
+                rm=True,
+                quiet=False
+            )
             if result:
                 image = result[0]
                 # https://techoverflow.net/2019/04/01/fixing-gcloud-warning-docker-credential-gcloud-not-in-system-path/

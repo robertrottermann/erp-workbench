@@ -420,7 +420,7 @@ class DBUpdater(object):
             # if remote user is not root we first have to copy things where we can access it
             if remote_user != 'root':
                 """
-                dodump_remote.sh is run on the reote server, and copies everything to a place,
+                dodump_remote.sh is run on the remote server, and copies everything to a place,
                 where it can be accessed by user that is logged in to the remote server.
                 Assuming that the remote server is:
                     82.220.39.73
@@ -480,8 +480,8 @@ class DBUpdater(object):
             # $6 : target site name
             echo ssh $4@$2 'bash -s' < scripts/dodump.sh $1
             ssh $4@$2 'bash -s' < scripts/dodump.sh $1
-            echo rsync -avzC --delete $4@$2:/$3/$1/filestore/$1 $5/$6/filestore/$6
-            rsync -avzC --delete $4@$2:/$3/$1/filestore/$1 $5/$6/filestore/$6
+            echo rsync -avzC --delete $4@$2:/$3/$1/filestore/$1/ $5/$6/filestore/$6/
+            rsync -avzC --delete $4@$2:/$3/$1/filestore/$1/ $5/$6/filestore/$6/
             echo rsync -avzC --delete $4@$2:/$3/$1/dump/$1.dmp $5/$6/dump/$6.dmp
             rsync -avzC --delete $4@$2:/$3/$1/dump/$1.dmp $5/$6/dump/$6.dmp
             
@@ -489,6 +489,9 @@ class DBUpdater(object):
             if remote_user != 'root':
                 remote_user_data_path = remote_data_path
                 #remote_data_path = self.remote_user_data_path
+            # if the target site is != source site
+            # we must make sure, that target filestore folder exists
+            os.makedirs('%s/%s/filestore/%s' % (self.erp_server_data_path, use_site_name, use_site_name), exist_ok=True)
             os.system('%s/scripts/rsync_remote_local.sh %s %s %s %s %s %s' % (
                 self.sites_home,
                 site_name,

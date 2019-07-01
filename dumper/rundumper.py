@@ -17,13 +17,16 @@ SITES_HOME = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 try:
     os.chdir(SITES_HOME + '/config')
     sys.path.insert(0, '.')
+    sys.path.insert(0, 'config_data')
     BASE_INFO = {}
     n = 'base_info'
+    n_intern = 'BASE_DEFAULTS'
     fun = importlib.import_module(n)
-    BASE_INFO.update(getattr(fun, n))
+    BASE_INFO.update(getattr(fun, n_intern))
     os.chdir(SITES_HOME)
 except:
     print('trying to import base_info from %s/config failed' % SITES_HOME)
+    raise
     sys.exit()
 
 DATA_HOME = BASE_INFO['erp_server_data_path']
@@ -41,7 +44,7 @@ if dumper_cmd in ['-h', '-s']:
     cmd_line = '%(runsudo)s docker run -v %(data_home)s:/mnt/sites  -v %(sites_home)s/dumper/:/mnt/sites/dumper --rm=true --link db:db  dbdumper %(cmd)s' % dd
 else:
     cmd_line = '%(runsudo)s docker run -v %(data_home)s:/mnt/sites  -v %(sites_home)s/dumper/:/mnt/sites/dumper --rm=true --link db:db  dbdumper %(cmd)s %(dbname)s' % dd
-    
+
 (DATA_HOME, SITES_HOME, dumper_cmd, dbname)
 if verbose:
     print('--------- rundocker start ----------')

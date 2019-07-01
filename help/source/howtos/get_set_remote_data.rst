@@ -11,7 +11,7 @@ Sending data to the remote life server migth be advisable when a new site is dep
 after a massive local reconstruction or after an upgrade to a newer odoo version.
 
 
-The Commadns / Options to use are the following::
+The Commands / Options to use are the following::
 
     # -u        : update local data from the remote server taken from the site description
     # SOURCE    : the site to be used as source

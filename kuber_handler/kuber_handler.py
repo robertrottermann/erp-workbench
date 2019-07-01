@@ -215,14 +215,14 @@ try:
     from pyhelm.repo import from_repo
     HasPyhelm = True
 except ImportError as e:
-    print(bcolors.FAIL)
-    print('*' * 80)
-    print('pyhelm could not be installed')
-    print('please download and install it from:')
-    print('https://github.com/redcor/pyhelm.git')
-    print(str(e))
     HasPyhelm = False
-    print(bcolors.ENDC)
+    # print(bcolors.FAIL)
+    # print('*' * 80)
+    # print('pyhelm could not be installed')
+    # print('please download and install it from:')
+    # print('https://github.com/redcor/pyhelm.git')
+    # print(str(e))
+    # print(bcolors.ENDC)
 
 class KuberHandlerHelm(DockerHandler):
     """KuberHandlerHelm
