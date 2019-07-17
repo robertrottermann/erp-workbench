@@ -553,7 +553,7 @@ class DBUpdater(object):
                     '-c', "create database %s;" % use_site_name],
                 # do the actual reading of the database
                 # the database will have thae same name as on the remote server
-                ['%s/pg_restore' % where, '-O', '-U',
+                ['%s/pg_restore' % where, '-O', '--if-exists', '--clean', '-U',
                     user, '-d', use_site_name, dpath],
                 # set standard password
                 ['%s/psql' % where, '-U', user, '-d', use_site_name,  '-c',
