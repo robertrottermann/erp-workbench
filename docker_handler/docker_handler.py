@@ -33,11 +33,11 @@ from requests.exceptions import HTTPError
 import shlex
 
 from scripts.messages import DOCKER_DB_MISSING, DOCKER_DB_MISSING, DOCKER_INVALID_PORT, \
-     DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
-      DOCKER_IMAGE_PUSH_MISING_HUB_INFO, SITE_NOT_EXISTING, DOCKER_IMAGE_CREATE_ERROR, \
-      DOCKER_IMAGE_CREATE_MISING_HUB_INFO, DOCKER_IMAGE_CREATE_MISING_HUB_USER, ERP_VERSION_BAD, \
-      DOCKER_IMAGE_CREATE_MISING_HUB_USER, DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, \
-      DOCKER_IMAGE_CREATE_DONE
+    DOCKER_INVALID_PORT, DOCKER_IMAGE_PULLED, DOCKER_IMAGE_PULL_FAILED, DOCKER_IMAGE_NOT_FOUND, \
+    DOCKER_IMAGE_PUSH_MISING_HUB_INFO, SITE_NOT_EXISTING, DOCKER_IMAGE_CREATE_ERROR, \
+    DOCKER_IMAGE_CREATE_MISING_HUB_INFO, DOCKER_IMAGE_CREATE_MISING_HUB_USER, ERP_VERSION_BAD, \
+    DOCKER_IMAGE_CREATE_MISING_HUB_USER, DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, \
+    DOCKER_IMAGE_CREATE_DONE
 
 # DOCKER_APT_PIP_HEAD is used when constructing docker and either pip or 
 # apt libraries needs to be merged in
@@ -82,7 +82,14 @@ class DockerHandler(InitHandler, DBUpdater):
     _subparser_name = 'docker'
     @property
     def subparser_name(self):
-        return self._subparser_name     
+        return self._subparser_name
+
+    def get_container(self, name):
+        cli = self.docker_client
+        containers = cli.containers.list(filters={'name': name}, all=True)
+        if containers:
+            return containers[0]
+        
 
     def update_docker_info(self, name='', required=False, start=True):
         """
@@ -96,12 +103,12 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         registry = self.docker_registry
         cli = self.docker_client
-        existing_container = None
         info = []
         if name:
             # check whether a container with the requested name exists.
             # similar to docker ps -a, we need to also consider the stoped containers
-            existing_container  = cli.containers.get(name)
+            #existing_container  = cli.containers.get(name)
+            existing_container = self.get_container(name)
             if existing_container:
                 # collect info on the container
                 # this is equivalent to docker inspect name
@@ -112,11 +119,11 @@ class DockerHandler(InitHandler, DBUpdater):
                 if info:
                     if info['State']['Status'] != 'running':
                         if start:
-                            cli.restart(name)
-                            info = cli.containers(filters={'name' : name})
+                            existing_container.restart()
+                            existing_container = self.get_container(name)
+                            info = existing_container and existing_container.attrs
                             if not info:
                                 raise ValueError('could not restart container %s', name)
-                            info = info[0]
                         elif required:
                             raise ValueError('container %s is stoped, no restart is requested', name)
                     registry[name] = info
@@ -841,9 +848,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         if not name:
             name = self.docker_container_name
+        container = self.get_container(name)
         try:
-            print('stoping container %s' % name)
-            self.docker_client.stop(name)
+            print('stoping container %s' % name)            
+            container.stop()
             print('stopped %s' % name)
         except docker.errors.NotFound:
             print('container %s nicht gefunden' % name)
@@ -855,9 +863,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         if not name:
             name = self.site_name
+        container = self.get_container(name)
         try:
             print('starting container %s' % name)
-            self.docker_client.start(name)
+            container.start()
             print('started %s' % name)
         except docker.errors.NotFound:
             print('container %s nicht gefunden' % name)
@@ -867,9 +876,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         if not name:
             name = self.site_name
+        container = self.get_container(name)
         try:
             print('restarting container %s' % name)
-            self.docker_client.restart(name)
+            container.restart()
             print('restarted %s' % name)
         except docker.errors.NotFound:
             print('container %s nicht gefunden' % name)
@@ -883,7 +893,10 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         """
         # todo should also check remotely
-        return self.docker_client.images(image_name)
+        image_list = self.docker_client.images.list(image_name)
+        if image_list:
+            return image_list[0]
+        #return self.docker_client.images(image_name)
 
     #def _find_image(self, image_name):
         #"""
