@@ -46,7 +46,16 @@ class RemoteHandler(InitHandler):
         @opts             : option instance
         @default_values   : dictionary with default values
         """
-        raise ValueError('add_site_to_apache needs to learn where apache comes from')
+        # is the path to the apache executable set?
+        apache_path = self.http_server_fs_path
+        if not apache_path:
+            print(bcolors.FAIL)
+            print('*' * 80)
+            print('no path to the apache executabl defined')
+            print('please do so in the server description of this host')
+            print(bcolors.ENDC)
+            return
+
         opts = self.opts
         default_values = self.default_values
         default_values['marker'] = MARKER
