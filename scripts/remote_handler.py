@@ -51,9 +51,9 @@ class RemoteHandler(InitHandler):
         if not apache_path:
             print(bcolors.FAIL)
             print('*' * 80)
-            print('no path to the apache executable defined')
+            print('no path to the apache configuration defined')
             print('please do so in the server description of this host')
-            print('like: http_server_fs_path: /etc/nginx')
+            print('like: http_server_fs_path: /etc/apache2')
             print('the ip is: %s' % self.remote_server_ip)
             print(bcolors.ENDC)
             return

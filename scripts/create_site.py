@@ -119,6 +119,10 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         return handler
 
     # ckeck whether the used option needs a name to work
+    full_orig_name = handler.site_name
+    orig_name, orig_sites_list = (full_orig_name.split(':') + [''])[:2]
+    opts.orig_name = orig_name
+    opts.orig_sites_list = orig_sites_list
     handler.check_name(need_names_dic=need_names_dic)
 
     # ckeck wheter the path to the sites-list has to be adapted

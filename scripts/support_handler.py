@@ -110,17 +110,18 @@ class SupportHandler(InitHandler):
         # if there are severals, the user has to tell which one
         siteinfos = self.siteinfos
         siteinfo_names = siteinfos and list(siteinfos.keys()) or []
-        site_name, subsite_name = (opts.name.split(':') + [''])[:2]
+        site_name = opts.orig_name
         # make sure all other processes pick the rigth name
-        self.site_names = [site_name]
+        self.site_names = [self.opts.orig_name]
+        sublist_name = self.opts.orig_sites_list
         # when testing, we not allways call the main module, so just make sure
         # we have the site_name set
         if not self.site_name and self.site_names:
             self.site_name = self.site_names[0]
         if len(siteinfo_names) == 1:
             # if we have one subsite, use it
-            subsite_name = siteinfo_names[0]
-        elif not subsite_name in siteinfo_names:
+            sublist_name = siteinfo_names[0]
+        elif not sublist_name in siteinfo_names:
             print(bcolors.FAIL)
             print('*' * 80)
             print('There is more than one place to add the new site')
@@ -184,17 +185,17 @@ class SupportHandler(InitHandler):
         # else:
         #     self.default_values['remote_server'] = self.remote_data_path # bad naming!!
    
-        if opts.add_site:
+        if opts.add_site and not self.opts.orig_sites_list == 'localhost':
             # before we can construct a site description we need a a file with site values
             pvals = {} # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
             if 1: #preset_values:
                 if not sites_handler.site_name and self.opts.name:
                     # this can happen while testing ..
-                    sites_handler.site_name = self.opts.name.split(':')[0]                
+                    sites_handler.site_name = self.opts.orig_name         
                 sites_handler.reset_values() # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
-                result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=subsite_name)#, preset_values=preset_values)
+                result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=sublist_name)#, preset_values=preset_values)
                 if result:
                     if not opts.quiet:
                         print("%s added to sites.py" % self.site_name)
@@ -253,7 +254,7 @@ class SupportHandler(InitHandler):
                 'result' : result,
                 'type' : 'G'
             }
-        elif opts.add_site_local:
+        elif opts.add_site_local or self.opts.orig_sites_list == 'localhost':
             # we add to sites local
             # we read untill we find an empty }
             # before we can construct a site description we need a a file with site values
