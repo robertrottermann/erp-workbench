@@ -4,14 +4,14 @@
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Do NOT !!!!! sort imports
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!
-import os, sys, time
+import os, sys
 # robert: i usualy test in wingide
 if not os.environ.get('VIRTUAL_ENV') and not os.environ.get('WINGDB_ACTIVE') and not os.environ.get('UNIT_TESTING'):
     print('not running in a virtualenv')
     print('activate the worbench environment executing:')
     print('workon workbench')
     sys.exit()
-from argparse import RawTextHelpFormatter, ArgumentParser
+from argparse import ArgumentParser 
 import argparse
 
 try:
@@ -24,13 +24,13 @@ from scripts.banner import BANNER_HEAD, BANNER_TEXT
 from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
-from config import sites_handler
+#from config import sites_handler
 from config import SITES
 
-from config import BASE_INFO
+#from config import BASE_INFO
 
 from config.config_data.base_info import BASE_DEFAULTS
-from config.config_data.project_info import PROJECT_DEFAULTS
+#from config.config_data.project_info import PROJECT_DEFAULTS
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler

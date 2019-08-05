@@ -324,7 +324,14 @@ class SitesHandler(SiteDescHandlerMixin):
                 os.unlink(os.path.normpath('%s/%s/sites_local/%s.pyc' %
                                            (sites_list_path, origin, template_name)))
             except:
-                pass
+                # the site list name is 'localhost' we treat what is in there as local even in the global folder
+                try:
+                    if origin == 'localhost':
+                        os.unlink(os.path.normpath('%s/%s/sites_global/%s.py' % (sites_list_path, origin, template_name)))
+                        os.unlink(os.path.normpath('%s/%s/sites_global/%s.pyc' %
+                                                   (sites_list_path, origin, template_name)))
+                except:
+                    pass
             return True
         elif template_name in list(SITES_G.keys()):
             site = SITES_G[template_name]
