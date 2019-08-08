@@ -1,7 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
-from future.utils import iteritems
-import wingdbstub
+try:
+    import wingdbstub
+except ImportError:
+    pass
 import os
 import sys
 from io import StringIO
@@ -291,7 +293,7 @@ if options.add:
 
     def deep_update(dict1, dict2):
         result = {}
-        for (name, value) in iteritems(dict1):
+        for (name, value) in dict1.items():
             if name in dict2:
                 if isinstance(dict1[name], dict) and isinstance(dict2[name],
                                                                 dict):
@@ -300,7 +302,7 @@ if options.add:
                     result[name] = dict2[name]
             else:
                 result[name] = dict1[name]
-        for (name, value) in iteritems(dict2):
+        for (name, value) in dict2.items():
             if name not in dict1:
                 result[name] = value
         return result
@@ -322,9 +324,7 @@ if not os.path.exists(options.branch_dir):
 for version in options.migrations.split(','):
     if not os.path.exists(os.path.join(options.branch_dir, version)):
         os.mkdir(os.path.join(options.branch_dir, version))
-    for (name, addon_config) in iteritems(dict(
-            migrations[version]['addons'],
-            server=migrations[version]['server'])):
+    for (name, addon_config) in dict(migrations[version]['addons'], server=migrations[version]['server']).items():
         addon_config = addon_config\
             if isinstance(addon_config, dict)\
             else {'url': addon_config}
@@ -435,7 +435,7 @@ for version in options.migrations.split(','):
                           addon_conf.get('addons_dir', '')
                           if isinstance(addon_conf, dict) else '')
              for (name, addon_conf)
-             in iteritems(migrations[version]['addons'])]))
+             in migrations[version]['addons'].keys()]))
     config.set(
         'options',
         'root_path',
