@@ -10,7 +10,7 @@ from io import StringIO
 import psycopg2
 import psycopg2.extensions
 from optparse import OptionParser
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from functools import reduce
 try:
     import bzrlib.plugin
@@ -68,6 +68,23 @@ def copy_database(conn_parms):
 
 
 migrations = {
+    '12.0': {
+        'addons': {
+            'addons': {
+                'type': 'link',
+                'url': os.path.join('server', 'addons'),
+            },
+        },
+        'server': {
+            'type': 'git',
+            'url': 'git://github.com/OpenUpgrade/OpenUpgrade.git',
+            'branch': '12.0',
+            'addons_dir': os.path.join('odoo', 'addons'),
+            'root_dir': os.path.join(''),
+            'cmd': 'odoo-bin --update=all --database=%(db)s '
+                   '--config=%(config)s --stop-after-init --no-xmlrpc',
+            },
+    },
     '11.0': {
         'addons': {
             'addons': {
@@ -191,7 +208,7 @@ migrations = {
         },
     },
 }
-config = SafeConfigParser()
+config = ConfigParser()
 parser = OptionParser(
     description='Migrate script for the impatient or lazy. '
     'Makes a copy of your database, downloads the files necessary to migrate '
@@ -435,7 +452,7 @@ for version in options.migrations.split(','):
                           addon_conf.get('addons_dir', '')
                           if isinstance(addon_conf, dict) else '')
              for (name, addon_conf)
-             in migrations[version]['addons'].keys()]))
+             in migrations[version]['addons'].items()]))
     config.set(
         'options',
         'root_path',

@@ -477,14 +477,15 @@ class SupportHandler(InitHandler):
             print('the base project does not yet exist please create it')
             print(bcolors.ENDC)
             return
-        result_code, result_line = self.run_upgrade('bin/python %s/migrate.py -C %s -D %s -N %s -B %s -R "%s"' % (
+        cmd_line = 'bin/python %s/migrate.py -C %s -D %s -N %s -B %s -R "%s"' % (
             MIGRATE_FOLDER,
             config_path, 
             self.site_name, 
             target_site,
             MIGRATE_FOLDER, 
             target_version)
-        )
+        print(cmd_line,flush=True)
+        result_code, result_line = self.run_upgrade(cmd_line)
         # now a copy of the database has been created we can migrate migrate with openmigrate
         # this will be done in the target sites project environment
         # so we have to write out a script that can do this
