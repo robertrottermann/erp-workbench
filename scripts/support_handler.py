@@ -47,8 +47,8 @@ class SupportHandler(InitHandler):
     _subparser_name = 'support'
     @property
     def subparser_name(self):
-        return self._subparser_name  
-    
+        return self._subparser_name
+
     @property
     def preset_handler(self):
         pass
@@ -68,7 +68,7 @@ class SupportHandler(InitHandler):
         return editor
 
     # ----------------------------------
-    # drop_site 
+    # drop_site
     # remove site from list of site descriptions
     # ----------------------------------
     def drop_site(self):
@@ -133,7 +133,7 @@ class SupportHandler(InitHandler):
             print('valid site-list-names are %s' % siteinfo_names)
             print(bcolors.ENDC)
             sys.exit()
-                
+
         if not site_name or has_forbidden_chars(site_name):
             print(bcolors.FAIL)
             print('*' * 80)
@@ -151,7 +151,7 @@ class SupportHandler(InitHandler):
             # self.default_values['erp_version'] = erp_version
             # self.default_values['erp_minor'] = erp_minor
             # self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
-        
+
         # if the site allready exist, we bail out
         if self.sites.get(self.site_name):
             print("site %s allready defined" % self.site_name)
@@ -175,16 +175,16 @@ class SupportHandler(InitHandler):
         docker_long_poll_port = docker_port + 10000
         # self.default_values['docker_port'] = docker_port
         # self.default_values['docker_long_poll_port'] = docker_long_poll_port
-        
+
         # # docker hub
         # self.default_values['docker_hub_name'] = self.docker_hub_name
-        # self.default_values['erp_image_version'] = self.erp_image_version   
+        # self.default_values['erp_image_version'] = self.erp_image_version
 
         # if opts.remote_server:
         #     self.default_values['remote_server'] = opts.remote_server
         # else:
         #     self.default_values['remote_server'] = self.remote_data_path # bad naming!!
-   
+
         if opts.add_site and not self.opts.orig_sites_list == 'localhost':
             # before we can construct a site description we need a a file with site values
             pvals = {} # dict to get link to the preset-vals-file
@@ -192,7 +192,7 @@ class SupportHandler(InitHandler):
             if 1: #preset_values:
                 if not sites_handler.site_name and self.opts.name:
                     # this can happen while testing ..
-                    sites_handler.site_name = self.opts.orig_name         
+                    sites_handler.site_name = self.opts.orig_name
                 sites_handler.reset_values() # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
                 result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=sublist_name)#, preset_values=preset_values)
@@ -283,7 +283,7 @@ class SupportHandler(InitHandler):
     def edit_yaml_file(self, file_name):
         yaml_path = os.path.normpath("%s/config/%s" % (self.sites_home, file_name))
         self.edit_site_or_server(yaml_path)
-        
+
 
     # ----------------------------------
     # add_server_to_server_list
@@ -295,10 +295,10 @@ class SupportHandler(InitHandler):
         @opts             : option instance
         @default_values   : dictionary with default values
         """
-        #needs to be adapted to the using of yaml       
+        #needs to be adapted to the using of yaml
         opts = self.opts
         server_info = opts.add_server.strip().split('@')
-    
+
         if not len(server_info) == 2:
             print(SITE_CREATED_SERVER_BAD_IP % opts.add_server)
             return
@@ -309,7 +309,7 @@ class SupportHandler(InitHandler):
         new_server = BLOCK_WITH_NEW_SERVER % {
             'remote_ip': server_info and server_info[-1],
             'BASE_PATH': remote_data_path,
-            'remote_user' : server_info[0]}   
+            'remote_user' : server_info[0]}
 
         with open('%s/config/servers.yaml' % self.sites_home, 'a') as f:
             f.write('\n')
@@ -403,7 +403,7 @@ class SupportHandler(InitHandler):
                 print(bcolors.FAIL)
                 print(str(e))
                 print(bcolors.ENDC)
-                
+
 
     # list_ports
     # ----------
@@ -450,6 +450,7 @@ class SupportHandler(InitHandler):
     def upgrade(self, target_site):
         site = self.site
         #check whether target_site exists
+        target_site, target_site_list = (target_site.split(':') + [''])[:2]
         if not self.sites.get(target_site):
             print(bcolors.FAIL)
             print('*' * 80)
@@ -465,10 +466,10 @@ class SupportHandler(InitHandler):
             print('please create it by executing bin/c -c %s' % target_site)
             print(bcolors.ENDC)
             return
-            
+
         # for the time beeing we only do one step upgrade
         # construct the command line like:
-        # -C /home/robert/projects/breitschtraeff10/breitschtraeff10/etc/odoo.cfg -D breitschtraeff10 -B migrations -R "11.0" 
+        # -C /home/robert/projects/breitschtraeff10/breitschtraeff10/etc/odoo.cfg -D breitschtraeff10 -B migrations -R "11.0"
         config_path = '%s/etc/odoo.cfg' % self.default_values['inner']
         target_version = self.sites[target_site].get('erp_version', self.sites[target_site].get('odoo_version'))
         if not os.path.exists(config_path):
@@ -477,14 +478,44 @@ class SupportHandler(InitHandler):
             print('the base project does not yet exist please create it')
             print(bcolors.ENDC)
             return
-        cmd_line = 'bin/python %s/migrate.py -C %s -D %s -N %s -B %s -R "%s"' % (
-            MIGRATE_FOLDER,
-            config_path, 
-            self.site_name, 
+        migrate_py = os.path.normpath('%s/migrate.py' % MIGRATE_FOLDER)
+        cmd_line = 'bin/python %s -C %s -D %s -N %s -B %s -R "%s"' % (
+            migrate_py,
+            config_path,
+            self.site_name,
             target_site,
-            MIGRATE_FOLDER, 
+            MIGRATE_FOLDER,
             target_version)
         print(cmd_line,flush=True)
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print('about to execute the following command:')
+        print(cmd_line)
+        print("""
+        The following values are used:
+        mygration.py:
+            This is the command executed with the following parameters:
+                -C %s
+                    This is the config file loaded
+                -D %s
+                    current odoo database (required if not given in config)
+                - N %s
+                    name of the new  database
+                - B %s
+                    the directory to download openupgrade-server code to
+                -R %s
+                    comma separated list of migrations to run
+
+        """  % (
+            migrate_py,
+            config_path,
+            self.site_name,
+            target_site,
+            MIGRATE_FOLDER,
+            target_version )
+        )
+        print(bcolors.ENDC)
+
         result_code, result_line = self.run_upgrade(cmd_line)
         # now a copy of the database has been created we can migrate migrate with openmigrate
         # this will be done in the target sites project environment
@@ -516,9 +547,9 @@ class SupportHandler(InitHandler):
         print('there you find a script called do_migrate.sh')
         print('which you should execute')
         print(bcolors.ENDC)
-        
+
         return
-    
+
     def run_upgrade(self, command):
         process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
         while True:

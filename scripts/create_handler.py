@@ -269,7 +269,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
     def __init__(self, opts, sites, parsername=''):
         if opts.name:
-            self.site_names = [opts.name]
+            full_orig_name = opts.name
+            orig_name, orig_sites_list = (full_orig_name.split(':') + [''])[:2]
+            opts.orig_name = orig_name
+            opts.orig_sites_list = orig_sites_list
+            self.site_names = [orig_name]
         else:
             self.site_names = []
         self.opts = opts
