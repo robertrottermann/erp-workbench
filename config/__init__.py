@@ -196,7 +196,7 @@ FLECTRA_VERSIONS = {
 
     },
 }
-
+# also check templates/version.py
 ODOO_VERSIONS_ = {
     '7.0' : { # elfero
         'python_ver' : 'python2',
@@ -226,6 +226,10 @@ ODOO_VERSIONS = {
     '10' : ODOO_VERSIONS_['10.0'],
     '11' : ODOO_VERSIONS_['11.0'],
     '12' : {
+        'python_ver' : 'python3',
+        'python_path' : '/usr/bin/python3',
+    },
+    '13' : {
         'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
     },

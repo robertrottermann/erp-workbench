@@ -389,9 +389,9 @@ class SiteDescHandlerMixin(PropertiesMixin):
         """
         self.set_passwords(running_site)
         # # resolve inheritance within sites
+        self._site_addons_list = self.collect_addons() 
         flatten_sites(self._sites)        
         # construct the addons path
-        self._site_addons_list = self.collect_addons() 
         self.handle_skip_list()
         self.handle_apt_modules()
         self.handle_pip_modules()
