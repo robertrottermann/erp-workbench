@@ -656,7 +656,7 @@ class PropertiesMixin(object):
  
     # local_base_addons:
     # path to the odoo addons in a local installation
-    # in the siteses project folder
+    # in the site's project folder
     @property
     def local_base_addons(self):
         base_addon = self.base_info.get('local_base_addons' '')
@@ -673,7 +673,7 @@ class PropertiesMixin(object):
     # prefix added to each addon element in a local installation
     @property
     def local_addon_path_prefix(self):
-        prefix =  self.base_info.get('local_addon_path_prefix', ',')
+        prefix = self.base_info.get('local_addon_path_prefix', ',')
         if not prefix.strip().startswith(','):
             prefix = ',%s' % prefix.strip()
         return prefix % {'site_data_dir' : self.site_data_dir}
@@ -719,8 +719,6 @@ class PropertiesMixin(object):
     @property
     def site_addons_list(self):
         return self._site_addons_list
-
-    _site_addons_list = []
 
     @property
     def erp_addons(self):

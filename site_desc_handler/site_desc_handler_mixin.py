@@ -397,6 +397,15 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.handle_pip_modules()
         self.handle_addons()
         
+    def construct_docker_addons_path(self):
+        """
+        depending on the needed python version, we have to adapt
+        check what we have in config
+        """
+        return ''
+        '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
+        
+        
     # ----------------------------------
     # construct_defaults
     # construct defaultvalues for a site
@@ -454,9 +463,8 @@ class SiteDescHandlerMixin(PropertiesMixin):
         default_values['db_name'] = self.site_name
         default_values['outer'] = self.outer_path
         default_values['inner'] = self.inner_path
-        default_values['local_site_addons_path'] = self.local_site_addons_path
         # if we are using docker, the addon path is very different
-        default_values['addons_path_docker'] = '/mnt/extra-addons,/usr/lib/python2.7/dist-packages/openerp/addons'
+        default_values['addons_path_docker'] = self.construct_docker_addons_path()
         default_values['skeleton'] = self.skeleton_path
 
         # modules we have to deal with in a special way

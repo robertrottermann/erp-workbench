@@ -46,7 +46,7 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         if self.site_name:
             existed = self.check_project_exists()
             # construct list of addons read from site
-            with  open(LOGIN_INFO_FILE_TEMPLATE % self.inner_path, 'w') as f:
+            with open(LOGIN_INFO_FILE_TEMPLATE % self.inner_path, 'w') as f:
                 f.write(config_info) # % self.default_values)
             # overwrite requrements.txt with values we collected from the site descrition
             # but we want to preserve changes in the requirements.txt
