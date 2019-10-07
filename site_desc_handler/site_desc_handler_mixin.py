@@ -10,6 +10,7 @@ from scripts.bcolors import bcolors
 from argparse import Namespace
 from scripts.messages import SITE_NOT_EXISTING, SITE_HAS_NO_REMOTE_INFO, SITE_UNKNOW_IP
 from site_desc_handler.sdesc_utilities import flatten_sites
+from templates.openerp_cfg_defaults import CONFIG_DEFAULTS
 
 class DummyNamespace(Namespace):
     # we need a namespace that just ignores unknow options
@@ -510,6 +511,20 @@ class SiteDescHandlerMixin(PropertiesMixin):
         self.default_values['create_database'] = True
         self.default_values['foldernames'] = self.foldernames
         self.default_values['projectname'] = self.projectname
+
+        # finally make sure, that all the values that could be used in the config files
+        keys = default_values.keys()
+        for k,v in CONFIG_DEFAULTS.items():
+            if not k in keys:
+                if isinstance(v, str):                    
+                    if not '%' in v:
+                        # avoid recoursion when replacing values
+                        default_values[k] = v
+                    else:
+                        default_values[k] = '--dummy--'
+                else:
+                    default_values[k] = v
+
 
     def remove_virtual_env(self, site_name):
         """remove an existing virtual env

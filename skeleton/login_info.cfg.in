@@ -18,7 +18,7 @@ erp_nightly = %(erp_nightly)s
 ##---------------------------------
 # should demo data be OMITED when creating the database?
 # this is of interest only when the database is created for the first time
-without_demo = all
+without_demo = %(without_demo)s
 ##---------------------------------
 # as what user are we running odoo locally (not on the remote server!)
 current_user = %(username)s
@@ -26,7 +26,7 @@ current_user = %(username)s
 # what is the name of the local database (can be different from the remote database name)
 db_name = %(projectname)s
 ##---------------------------------
-# which db's should be filtere
+# which db's should be filtered
 dbfilter = %(projectname)s
 ##---------------------------------
 # on what host is the db running?
