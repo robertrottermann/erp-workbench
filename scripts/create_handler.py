@@ -10,8 +10,7 @@ import socket
 import subprocess
 from subprocess import PIPE
 from config import SITES, SITES_LOCAL, \
-    NO_NEED_SERVER_IP, ODOO_VERSIONS, FLECTRA_VERSIONS, \
-    DB_PASSWORD
+    NO_NEED_SERVER_IP, ODOO_VERSIONS, DB_PASSWORD
 #from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
 from scripts.bcolors import bcolors

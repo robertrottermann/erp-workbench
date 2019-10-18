@@ -24,8 +24,7 @@ DROP DATABASE
 postgres=# create database redproducts;
 CREATE DATABASE
 """
-PROCESS_NAMES_DIC = {'odoo': 'odoo_bin',
-                     'flectra': 'flectra_bin', 'start_openerp': ''}
+PROCESS_NAMES_DIC = {'odoo': 'odoo_bin', 'start_openerp': ''}
 PROCESS_NAMES = list(PROCESS_NAMES_DIC.keys())
 #sys.path.insert(0, SITES_HOME)
 from site_desc_handler.handle_remote_data import get_remote_server_info
@@ -581,7 +580,7 @@ class DBUpdater(object):
         os.chdir(self.inner_path)
         # create a new config file with nothing changed but db stuff
         found = False
-        for f_name in ['openerp.cfg', 'odoo.cfg', 'flectra.cfg', 'odoo.conf']:
+        for f_name in ['openerp.cfg', 'odoo.cfg', 'odoo.conf']:
             if os.path.isfile('etc/%s' % f_name):
                 found = True
                 break
@@ -596,7 +595,7 @@ class DBUpdater(object):
         d = open('etc/no_db_%s' % f_name, 'w').write(d)
         # what process should we start
         found = False
-        for p_name in ['start_openerp', 'start_odoo', 'start_flectra', 'odoo']:
+        for p_name in ['start_openerp', 'start_odoo', 'odoo']:
             if os.path.isfile('bin/%s' % p_name):
                 found = True
                 break
@@ -714,7 +713,7 @@ class DBUpdater(object):
             if set_local:
                 # kill the process
                 if not process_info:
-                    print('odoo/flectra not running')
+                    print('odoo not running')
                 else:
                     if not norefresh:
                         p = psutil.Process(process_info[0][0])

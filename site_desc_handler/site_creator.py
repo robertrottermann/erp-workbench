@@ -100,8 +100,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
                         python_version = 'python3'
                 except:
                     python_version = 'python3'
-            elif st == 'flectra':
-                python_version = 'python3'
             self.create_virtual_env(inner_path, python_version=python_version)
         return existed
 
@@ -144,11 +142,8 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             print('Hoppalla, seems that %s is not a valid name' % self.site_name)
             print(bcolors.ENDC)
             sys.exit()            
-        from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_FLECTRA, FILES_TO_COPY_ODOO
-        if self.site.get('erp_provider', 'odoo') == 'flectra':
-            FILES_TO_COPY.update(FILES_TO_COPY_FLECTRA)
-        elif 1:  # self.erp_version != '9.0':
-            FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
+        from skeleton.files_to_copy import FILES_TO_COPY, FILES_TO_COPY_ODOO
+        FILES_TO_COPY.update(FILES_TO_COPY_ODOO)
         self.handle_file_copy_move(
             source, inner_target, FILES_TO_COPY['project'])
         # create directories and readme in the project home
@@ -156,10 +151,6 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
             self.handle_file_copy_move(
                 '', outer_target, FILES_TO_COPY['project_home'])
             # now create a versions file
-            from templates.versions import VERSIONS, VERSIONS_FLECTRA
-            if self.site.get('erp_provider', 'odoo') == 'flectra':
-                open('%s/versions.cfg' % outer_target,
-                     'w').write(VERSIONS_FLECTRA[self.erp_version])
-            else:
-                open('%s/versions.cfg' % outer_target,
-                     'w').write(VERSIONS[self.erp_version])
+            from templates.versions import VERSIONS
+            open('%s/versions.cfg' % outer_target,
+                    'w').write(VERSIONS[self.erp_version])

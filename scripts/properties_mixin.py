@@ -111,7 +111,7 @@ class PropertiesMixin(object):
         return self.site.get('projectname', self.site.get('site_name', self.site.get('server_name', self.site.get('db_name', ''))))
 
     # theoretically the erp workbench can handle other erp systems
-    # than odoo like flectra or erp next
+    # than odoo
     # the value of erp_provider tells what the running site is based on
     _erp_provider = 'odoo'
     @property

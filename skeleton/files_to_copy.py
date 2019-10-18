@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- encoding: utf-8 -*-
 
-# for flectra we merge FILES_TO_COPY_FLECTRA into FILES_TO_COPY
-
 FILES_TO_COPY = {
     # F = File
     # O = File, allways overwrite
@@ -19,7 +17,7 @@ FILES_TO_COPY = {
         'bin'               : {
             # we want to link to the original dosetup.py so we can update it
             #'dosetup.py' : ('L','$FILE$'),
-            'dosetup.py' : ('U', 'X'),
+            #'dosetup.py' : ('U', 'X'),
             # python and pip are created whe running dosetup
             # we just want to link to them to be able to access them more easyily
             'pip' : ('L', '../python/bin/pip'),
@@ -94,24 +92,6 @@ FILES_TO_COPY_ODOO = {
             'create_db.py' : ('U', 'X'),
             'odoo' : ('U', 'X'),
             'erp_runner.py' : ('U', 'X'),
-            '__init__.py' : 'T',
-        },
-        'install'           : {
-            'requirements.txt' : 'U',
-        },
-        'login_info.cfg.in' : 'O',
-    },
-}
-
-FILES_TO_COPY_FLECTRA = {
-    'project' : {
-        'bin' : {
-            # we want to link to the original dosetup.py so we can update it
-            #'dosetup.py' : ('L','$FILE$'),
-            'flectra' : ('U', 'X'),
-            'dosetup_flectra.py' : ('U','X'),
-            'build_flectra.sh' : ('U', 'X'),
-            'flectra-bin' : ('L', '../flectra/flectra-bin'),
             '__init__.py' : 'T',
         },
         'install'           : {
