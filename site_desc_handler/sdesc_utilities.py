@@ -4,14 +4,17 @@ import subprocess
 from copy import deepcopy
 from config import BASE_INFO
 
+
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
 
+
 class UpdateError(subprocess.CalledProcessError):
     """Specific class for errors occurring during updates of existing repos.
     """
+
 
 # ----------------------------------
 # flatten_sites
@@ -26,20 +29,24 @@ def flatten_sitesXX(sites):
     # we allow only one inheritance level
     # check this
     for k, v in list(sites.items()):
-        inherits = v.get('inherit')
+        inherits = v.get("inherit")
         vkeys = list(v.keys())
         if inherits:
             # also the inherited site must be deepcopied
             # otherwise we copy the original to our copy that is in fact nothing but a reference fo the original
             inherited = deepcopy(sites.get(inherits))
             if not inherited:
-                print('*' * 80)
-                print('warning !!! site description %s tries to inherit %s which does not exist' % (
-                    k, inherits))
-            elif inherited.get('inherit'):
-                print('*' * 80)
-                print('warning !!! site description %s tries to inherit %s which does also inherit from a site. this is forbidden' % (
-                    k, inherits))
+                print("*" * 80)
+                print(
+                    "warning !!! site description %s tries to inherit %s which does not exist"
+                    % (k, inherits)
+                )
+            elif inherited.get("inherit"):
+                print("*" * 80)
+                print(
+                    "warning !!! site description %s tries to inherit %s which does also inherit from a site. this is forbidden"
+                    % (k, inherits)
+                )
                 sys.exit()
             # first copy the running site to a temporary var
             # result = v # deepcopy(v)
@@ -61,11 +68,16 @@ def flatten_sitesXX(sites):
                                 # if v does not have a key we add it with an empty list
                                 if val_k not in v[key]:
                                     v[key][val_k] = []
-                                [v[key][val_k].append(vi)
-                                    for vi in val_val if vi not in v[key][val_k] and not ('-' + vi in v[key][val_k])]
+                                [
+                                    v[key][val_k].append(vi)
+                                    for vi in val_val
+                                    if vi not in v[key][val_k]
+                                    and not ("-" + vi in v[key][val_k])
+                                ]
                                 # clean resulting list
-                                v[key][val_k] = [vi for vi in v[key]
-                                                    [val_k] if not vi.startswith('-')]
+                                v[key][val_k] = [
+                                    vi for vi in v[key][val_k] if not vi.startswith("-")
+                                ]
                             elif isinstance(val_val, dict):
                                 # v is the site into which we inherit (the parent)
                                 # key is the key in the child
@@ -90,7 +102,9 @@ def flatten_sitesXX(sites):
                                         if val_val_k not in target:
                                             target[val_val_k] = {}
                                         sub_target = target[val_val_k]
-                                        for val_val_v_k, val_val_v_v in list(val_val_v.items()):
+                                        for val_val_v_k, val_val_v_v in list(
+                                            val_val_v.items()
+                                        ):
                                             sub_target[val_val_v_k] = val_val_v_v
                                     else:
                                         if val_val_k not in target:
@@ -100,12 +114,12 @@ def flatten_sitesXX(sites):
                                     v[key][val_k] = val_val
                     elif isinstance(val, list):
                         existing = v.get(key, [])
-                        v[key] = existing + \
-                            [vn for vn in val if vn not in existing]
+                        v[key] = existing + [vn for vn in val if vn not in existing]
                     else:
                         # ['site_name', 'servername', 'db_name']:
                         if key in vkeys:
                             continue
+
 
 # ----------------------------------
 # flatten_sites
@@ -121,20 +135,24 @@ def flatten_sites(sites):
     # we allow only one inheritance level
     # check this
     for k, v in sites.items():
-        inherits = v.get('inherit')
+        inherits = v.get("inherit")
         vkeys = v.keys()
         if inherits:
             # also the inherited site must be deepcopied
             # otherwise we copy the original to our copy that is in fact nothing but a reference fo the original
             inherited = deepcopy(sites.get(inherits))
             if not inherited:
-                print('*' * 80)
-                print('warning !!! site description %s tries to inherit %s which does not exist' % (
-                    k, inherits))
-            elif inherited.get('inherit'):
-                print('*' * 80)
-                print('warning !!! site description %s tries to inherit %s which does also inherit from a site. this is forbidden' % (
-                    k, inherits))
+                print("*" * 80)
+                print(
+                    "warning !!! site description %s tries to inherit %s which does not exist"
+                    % (k, inherits)
+                )
+            elif inherited.get("inherit"):
+                print("*" * 80)
+                print(
+                    "warning !!! site description %s tries to inherit %s which does also inherit from a site. this is forbidden"
+                    % (k, inherits)
+                )
                 sys.exit()
             # first copy the running site to a temporary var
             # result = v # deepcopy(v)
@@ -154,11 +172,16 @@ def flatten_sites(sites):
                             # if v does not have a key we add it with an empty list
                             if not (val_k in v[key].keys()):
                                 v[key][val_k] = []
-                            [v[key][val_k].append(vi)
-                                for vi in val_val if vi not in v[key][val_k] and not ('-' + vi in v[key][val_k])]
+                            [
+                                v[key][val_k].append(vi)
+                                for vi in val_val
+                                if vi not in v[key][val_k]
+                                and not ("-" + vi in v[key][val_k])
+                            ]
                             # clean resulting list
-                            v[key][val_k] = [vi for vi in v[key]
-                                             [val_k] if not vi.startswith('-')]
+                            v[key][val_k] = [
+                                vi for vi in v[key][val_k] if not vi.startswith("-")
+                            ]
                         elif isinstance(val_val, dict):
                             # v is the site into which we inherit (the parent)
                             # key is the key in the child
@@ -193,8 +216,7 @@ def flatten_sites(sites):
                                 v[key][val_k] = val_val
                 elif isinstance(val, list):
                     existing = v.get(key, [])
-                    v[key] = existing + \
-                        [vn for vn in val if vn not in existing]
+                    v[key] = existing + [vn for vn in val if vn not in existing]
                 else:
                     # ['site_name', 'servername', 'db_name']:
                     if key in vkeys:
@@ -208,24 +230,27 @@ def flatten_sites(sites):
 def _construct_sa(site_name, site_addons, skip_list):
     """
     """
-    from scripts.utilities import find_addon_names    # avoid circular import 
+    from scripts.utilities import find_addon_names  # avoid circular import
+
     added = []
-    name = ''
-    for a in (site_addons or []):
+    name = ""
+    for a in site_addons or []:
         names = find_addon_names(a)
         for name in names:
             if not name:
                 continue
             if name and name in skip_list:
                 continue
-            ap = a.get('add_path')
+            ap = a.get("add_path")
             if ap:
                 p = os.path.normpath(
-                    '%s/%s/addons/%s' % (BASE_INFO['erp_server_data_path'], site_name, ap))
+                    "%s/%s/addons/%s"
+                    % (BASE_INFO["erp_server_data_path"], site_name, ap)
+                )
             else:
                 p = os.path.normpath(
-                    '%s/%s/addons' % (BASE_INFO['erp_server_data_path'], site_name))
+                    "%s/%s/addons" % (BASE_INFO["erp_server_data_path"], site_name)
+                )
             if p not in added:
                 added.append(p)
-    return '\n'.join(['    local %s' % a for a in added])
-
+    return "\n".join(["    local %s" % a for a in added])

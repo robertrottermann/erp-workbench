@@ -26,7 +26,7 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-TAGS = ["erp_version", "erp_minor", "erp_nightly"]
+TAGS = ["erp_version", "erp_minor", "erp_nightly", "is_enterprise"]
 
 # to find executable python
 
@@ -44,18 +44,12 @@ def main(opts):  # nosetup=False, onlysetup=False):
     """
     print(PROJECT_HOME)
     PROJECT_NAME = os.path.split(PROJECT_HOME)[-1]
-    # create folder for odoo_addons
-    is_enterprise = True
-    if not is_enterprise:
-        try:
-            os.mkdir("downloads")
-        except:
-            pass  # allready exists
     tags = OrderedDict()
     collect_tags(tags, TAGS)
     VERSION = tags.get("erp_version")
     ODOO_MINOR = tags.get("erp_minor", "")
     NIGHTLY = tags.get("erp_nightly", "")
+    IS_ENTERPRISE = tags.get("is_enterprise", "")
     # the following line would read something like
     # erp_version : '11.0' -> will become '11'
     # erp_minor: '.0' <-- will be wrapped into version
@@ -90,6 +84,13 @@ def main(opts):  # nosetup=False, onlysetup=False):
     python_cmd = ""
 
     adir = os.getcwd()
+    # create folder for odoo_addons
+    is_enterprise = IS_ENTERPRISE or opts.enterprise
+    if not is_enterprise:
+        try:
+            os.mkdir("downloads")
+        except:
+            pass  # allready exists
     # delete an existing download if force is activated
     if not is_enterprise:
         if opts.force:
@@ -109,7 +110,7 @@ def main(opts):  # nosetup=False, onlysetup=False):
             p = Popen(cmd, stdout=PIPE)
             p.communicate()
     else:
-        # we are installin enterprise
+        # we are installing enterprise
         cmd = [
             "git",
             "clone",
@@ -242,6 +243,14 @@ if __name__ == "__main__":
         dest="demo_data",
         default=False,
         help="create a database with demo-data",
+    )
+    parser.add_option(
+        "-e",
+        "--enterprise",
+        action="store_true",
+        dest="enterprise",
+        default=False,
+        help="install enterprise version",
     )
     parser.add_option(
         "-f",

@@ -61,6 +61,7 @@ TAGS = [
     "erp_minor",
     "erp_nightly",
     "without_demo",
+    "is_enterprise",
 ]
 
 
@@ -84,7 +85,7 @@ def collect_tags(tags_dic, _tags=TAGS):
     collects values from LOGIN_FILE
 
     Arguments:
-        tags OrderedDict -- return collected values 
+        tags OrderedDict -- return collected values
     """
     result = {}
     with open(LOGIN_FILE, "r") as fh:

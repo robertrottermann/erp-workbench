@@ -16,6 +16,9 @@ erp_minor = %(erp_minor)s
 # odoo nightly
 erp_nightly = %(erp_nightly)s
 ##---------------------------------
+# is_enterprise
+is_enterprise = %(is_enterprise)s
+##---------------------------------
 # should demo data be OMITED when creating the database?
 # this is of interest only when the database is created for the first time
 without_demo = %(without_demo)s
