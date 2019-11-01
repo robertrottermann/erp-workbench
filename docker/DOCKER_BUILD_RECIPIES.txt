@@ -11,7 +11,7 @@ build postgres image
 
 use postgres image to to create db container
 --------------------------------------------
-  docker run --name db -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo -d/postgres:9.6 -P
+  docker run --name db -e POSTGRES_USER=odoo -e POSTGRES_PASSWORD=odoo -d postgres:10.0 -P
 
 
 setting permissions:
