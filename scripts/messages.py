@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 from scripts.bcolors import bcolors
-MARKER = '# ---------------- marker ----------------'
+
+MARKER = "# ---------------- marker ----------------"
 
 SITE_EXISTED = """------------------------------------------------
 To use the new settings (if any) execute
@@ -30,34 +31,55 @@ cd %%(project_path)s
 bin/build_%%(erp_provider)s.py
 bin/dosetup_%%(erp_provider)s
 ------------------------------------------------
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
-SITE_NOT_EXISTING ="""%s------------------------------------------------
+SITE_NOT_EXISTING = """%s------------------------------------------------
 site with name %%s does not exist
 ------------------------------------------------%s
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 VCS_MSG = """
-%supdating %%s from %%s%s""" % (bcolors.WARNING, bcolors.ENDC)
+%supdating %%s from %%s%s""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 VCS_MSG_DEVELOP = """
 %sfound %%s in %%s
 not updating!
 %s
-""" % (bcolors.OKBLUE, bcolors.ENDC)
+""" % (
+    bcolors.OKBLUE,
+    bcolors.ENDC,
+)
 
 VCS_OK = """
 %supdated %%s from %%s%s
-""" % (bcolors.OKGREEN, bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 
 VCS_ERROR = """
 %s--------------------------------------------------------
 updating %%s produced the following error
 --------------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 VCS_ERROR_END = """%s--------------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 SITE_NOT_EDITED = """%s
 --------------------------------------------------------
@@ -66,7 +88,10 @@ in %%s
 and replace 'xx.xx.xx.xx' with a valid ip address
 --------------------------------------------------------
 %s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 SITE_HAS_NO_REMOTE_INFO = """%s
 --------------------------------------------------------
 please edit the site description of %%s
@@ -82,7 +107,10 @@ and add a remote block like
         },
 --------------------------------------------------------
 %s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 SITE_UNKNOW_IP = """%s
 --------------------------------------------------------
@@ -92,7 +120,10 @@ you can do so by executing:
 bin/s --add-server %%s@%%s
 --------------------------------------------------------
 %s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 SITE_CREATED_SERVER = """%s
 --------------------------------------------------------
@@ -101,7 +132,13 @@ added a server with the %sip %%s for user %%s%s
 to do so run: bin/e -s
 --------------------------------------------------------
 %s
-""" % (bcolors.OKGREEN, bcolors.FAIL, bcolors.ENDC, bcolors.OKGREEN, bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.FAIL,
+    bcolors.ENDC,
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 
 SITE_CREATED_SERVER_BAD_IP = """%s
 --------------------------------------------------------
@@ -110,7 +147,10 @@ is not valid.
 Must be of the form username@server_ip
 --------------------------------------------------------
 %s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 SITE_ADDED_NO_DOT = """%s
 --------------------------------------------------------
@@ -119,7 +159,10 @@ is not valid.
 No dot allowed
 --------------------------------------------------------
 %s
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 SITE_DESCRIPTION_RELOADED = """%s
 --------------------------------------------------------
@@ -129,7 +172,10 @@ site name(s) %%s reloaded.
 You need to reexecute %%s
 --------------------------------------------------------
 %s
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 # -------------------------------------
 # sites_handler
 # -------------------------------------
@@ -143,14 +189,20 @@ could not be created.
 %%s
 =======================================================
 ----------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 EXTRA_SCRIPT_NOT_EXISTING = """
 %sScript to execute not found!
 ------------------------------
 The script %%s
 could not be found.
 ----------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 LOCALDATA_CREATED = """
 A new set of remote servers was created for you!
 ----------------------------------------------------
@@ -162,7 +214,10 @@ must be removed!
 this can be done executing:
 bin/s --edit-server
 ----------------------------------------------------
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 LOCALDATA_NOT_EDITED = """
 The local data
@@ -174,7 +229,12 @@ you can use bin/c
 must be removed!%s
 this can be done executing:
 bin/s --edit-server
-""" % (bcolors.FAIL, bcolors.ENDC, bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 LOCALDATA_MOVED = """
 %%s has been moved
@@ -182,7 +242,10 @@ LOCALDATA_MOVED = """
 it is now in %%s
 %sPlease check its content and restart bin/c%s
 ----------------------------------------------------
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 # SITE_TEMPLATE also exists in splitter as SITE_TEMPLATE
 SITES_GLOBAL_TEMPLATE = """%s = {
@@ -200,7 +263,10 @@ bin/c -ls
 and
 bin/s --edit-site demo_global
 ----------------------------------------------------
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 LOCALSITESLIST_CLONED = """
 %s----------------------------------------------------
@@ -209,14 +275,20 @@ The siteslists have been cloned from:
 into %%s/sites_list
 Please check their content
 ----------------------------------------------------%s
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 LOCALSITESLIST_BASEPATH_MISSING = """
 Can not  create sites list
 %s----------------------------------------------------
 directory %%s
 does not exist. Please create it.
 ----------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 LOCALSITESLIST_MARKER_MISSING = """
 %s
 the marker
@@ -230,7 +302,12 @@ REMOTE_SERVERS = {
 do do so, you can execute:
 bin/s --edit-server
 %s
-""" % (bcolors.FAIL, MARKER, MARKER,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    MARKER,
+    MARKER,
+    bcolors.ENDC,
+)
 
 
 # -------------------------------------
@@ -245,7 +322,10 @@ Consider adding on in the form of:
     'addons' : ['xx', 'yy'],
 },
 ----------------------------------------------------
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 # -------------------------------------
 # geting git repro
@@ -256,7 +336,10 @@ GIT_REPO_DIVERGED = """
 and must be merged manually
 ----------------------------------------------------
 %s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 # =============================================================
 # add site to bash_aliases
@@ -305,7 +388,7 @@ alias  wwbw="workon workbench"
 """
 ALIAS_LINE = 'alias  %(sname)s="cd %(path)s"\n'
 ALIAS_LINE_PULL = 'alias  %(sname)s="cd %(path)s; git pull"\n'
-AMARKER = '##-----wb alias-marker %s-----##'
+AMARKER = "##-----wb alias-marker %s-----##"
 ABLOCK = """%(aliasmarker_start)s
 # please do not change the lines between the two markers
 # they are managed by the erp-workbench scripts
@@ -341,16 +424,22 @@ cd_function_w() {
 # -------------------------------------
 # odoo
 # -------------------------------------
-ERP_VERSION_BAD ="""%s------------------------------------------------
+ERP_VERSION_BAD = """%s------------------------------------------------
 Site %%s has a badly defined odoo version %%s
 it should be a string like '9.0', '10.0', '11.0' ..
 ------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
-ERP_NOT_RUNNING ="""%s------------------------------------------------
+ERP_NOT_RUNNING = """%s------------------------------------------------
 Site %%s seems not to run!
 ------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 # -------------------------------------
 # docker_handler
@@ -362,7 +451,10 @@ please create it.
 do do so, you can execute:
 bin/d -dcdb
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_PULLED = """
 %s--------------------------------------------
@@ -371,32 +463,47 @@ please stop and recreate all containers using it
 you can do so by executing:
 bin/d -dr SITENAME
 ---------------------------------------------%s
-""" % (bcolors.OKGREEN,bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_PUSHED = """
 %s--------------------------------------------
 image %%s for container %%s was pushed
 ---------------------------------------------%s
-""" % (bcolors.OKGREEN,bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_PUSH_MISING_HUB_INFO = """
 %s--------------------------------------------
 mage for container %%s could not be pushed
 since there is no docker hub info
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_NOT_FOUND = """
 %s--------------------------------------------
 image %%s could not be found
 ---------------------------------------------%s
-""" % (bcolors.WARNING,bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_PULL_FAILED = """
 %s--------------------------------------------
 a new image %%s for container %%s could not be pulled
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE = """
 %s--------------------------------------------
@@ -405,13 +512,19 @@ please stop and recreate all container using it
 you can do so by executing:
 bin/d -dr SITENAME
 ---------------------------------------------%s
-""" % (bcolors.OKGREEN,bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE_FAILED = """
 %s--------------------------------------------
 a new image %%s for container %%s could not be created
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE_ERROR = """
 %s--------------------------------------------
@@ -423,7 +536,11 @@ You can try to build it like so:
 cd %%s
 docker build .
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.WARNING,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE_MISING_HUB_INFO = """
 %s--------------------------------------------
@@ -432,14 +549,20 @@ since there is no docker hub info provided!
 You can set it either in the site description or 
 in the config/docker.yaml file.
 ---------------------------------------------%s
-""" % (bcolors.WARNING,bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE_MISING_HUB_USER = """
 %s--------------------------------------------
 To uplad the new created image %%s to the docker-hub
 you will need to provide a hub-user and a password
 ---------------------------------------------%s
-""" % (bcolors.WARNING,bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 DOCKER_INVALID_PORT = """
 %s--------------------------------------------
@@ -448,14 +571,20 @@ invalid docker port '??'
 to fix it, you can execute:
 bin/s --edit-site %%s
 ---------------------------------------------%s
-""" % (bcolors.FAIL,bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE_PLEASE_WAIT = """
 %s--------------------------------------------
 About to create a new docker image. Please be patient
 This process will take up to some minutes.
 ---------------------------------------------%s
-""" % (bcolors.WARNING, bcolors.ENDC)
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
 
 DOCKER_IMAGE_CREATE_DONE = """
 %s--------------------------------------------
@@ -481,7 +610,10 @@ execute:
 
     bin/d -dc %%s
 ---------------------------------------------%s
-""" % (bcolors.OKGREEN, bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 DOCKER_BITNAMI_IMAGE_CREATE_DONE = """
 %s--------------------------------------------
 Finished to create docker image for site 
@@ -501,23 +633,32 @@ and then:
 
     docker push %%s
 ---------------------------------------------%s
-""" % (bcolors.OKGREEN, bcolors.ENDC)
+""" % (
+    bcolors.OKGREEN,
+    bcolors.ENDC,
+)
 # -------------------------------------
 # missing modules
 # -------------------------------------
-MODULE_MISSING ="""%s------------------------------------------------
+MODULE_MISSING = """%s------------------------------------------------
 %%s could not be loaded.
 
 To install it, please execute following commands:
 wwb;bin/pip install -r install/requirements.txt
 ------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)
 
 # -------------------------------------
 # email stuff
 # -------------------------------------
-CUSTOMER_UNKNOWN ="""%s------------------------------------------------
+CUSTOMER_UNKNOWN = """%s------------------------------------------------
 froxlor customer %%(customer)s defined for site %%(site_name)s
 does not exist in the froxlor db
 ------------------------------------------------%s
-""" % (bcolors.FAIL, bcolors.ENDC)
+""" % (
+    bcolors.FAIL,
+    bcolors.ENDC,
+)

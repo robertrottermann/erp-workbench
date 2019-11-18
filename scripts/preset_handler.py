@@ -2,7 +2,6 @@
 # -*- encoding: utf-8 -*-
 
 
-
 class DummyHandler(object):
     """a dummy so we can test the PrestHandler
     from the command line
@@ -65,7 +64,11 @@ class PrestHandler(object):
         if is_local:
             # read preset values from skeleton and mix it into the site description
             # first we read it an write preset file
-            from skeleton.base_preset import BASE_PRESET as base_preset, MODELS_TO_USE as models_to_use
+            from skeleton.base_preset import (
+                BASE_PRESET as base_preset,
+                MODELS_TO_USE as models_to_use,
+            )
+
             # base_preset is an ordered dictonary
 
             # keys define model and field of the preset values
