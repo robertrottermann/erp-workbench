@@ -5,6 +5,7 @@
     "%(site_name)s": {
         'site_name': '%(site_name)s',
         'servername': '%(site_name)s',
+        'enterprise' : '',
         'erp_admin_pw': '',
         'erp_version': '%(erp_version)s',
         'erp_minor': '%(erp_minor)s',

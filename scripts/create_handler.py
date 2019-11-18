@@ -1074,6 +1074,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             pass
 
         print(bcolors.OKGREEN, '*' * 80)
+        mail_user = ''
         if do_incoming:
             # write the incomming email server
             i_server = odoo.env['fetchmail.server']
