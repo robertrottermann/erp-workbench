@@ -4,6 +4,8 @@
 """
 
 import argparse
+
+
 class ParserHandler(argparse.ArgumentParser):
     """extend argparse to allow extra elements in is add option
     
@@ -25,16 +27,14 @@ class ParserHandler(argparse.ArgumentParser):
         self.keys = list(info_dic.keys())
 
     def add_argument(self, *args, **kwargs):
-        # collect the extra flags and remove them from 
+        # collect the extra flags and remove them from
         # key words
         for kwarg, val in list(kwargs.items()):
             if kwarg in self.keys:
                 k_vals = self.info_dic.get(kwarg, [])
-                dest = kwargs.get('dest')
+                dest = kwargs.get("dest")
                 if dest and val:
                     k_vals.append(dest)
                 kwargs.pop(kwarg)
-        #super().add_argument(*args, **kwargs)
+        # super().add_argument(*args, **kwargs)
         self.parser.add_argument(*args, **kwargs)
-                
-

@@ -3,29 +3,29 @@ import logging
 import tempfile
 
 
-LOG_FILENAME = tempfile.NamedTemporaryFile().name #'/tmp/completer.log'
-logging.basicConfig(filename=LOG_FILENAME,
-                    level=logging.DEBUG,
-                    )
+LOG_FILENAME = tempfile.NamedTemporaryFile().name  #'/tmp/completer.log'
+logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
+
 
 class SimpleCompleter(object):
     """
     """
+
     match_index = None
-    default = ''
-    def __init__(self, parsername, options, default='', prompt=''):
-        #options = sites_dic.keys()
-        options = [ w for w in options
-            if w.startswith(default) ]
+    default = ""
+
+    def __init__(self, parsername, options, default="", prompt=""):
+        # options = sites_dic.keys()
+        options = [w for w in options if w.startswith(default)]
         self.options = sorted(options)
         self.default = default
         self.parsername = parsername
         self.prompt = prompt
         # Register our completer function
-        #readline.set_completer(SimpleCompleter(['start', 'stop', 'list', 'print']).complete)
+        # readline.set_completer(SimpleCompleter(['start', 'stop', 'list', 'print']).complete)
         readline.set_completer(self.complete)
         # Use the tab key for completion
-        readline.parse_and_bind('tab: complete')
+        readline.parse_and_bind("tab: complete")
         return
 
     def complete(self, text, state):
@@ -35,13 +35,11 @@ class SimpleCompleter(object):
         if text:
             if self.default:
                 text = self.default + text
-                #self.default = ''
+                # self.default = ''
         if state == 0:
             # This is the first time for this text, so build a match list.
             if text:
-                self.matches = [s
-                                for s in self.options
-                                if s and s.startswith(text)]
+                self.matches = [s for s in self.options if s and s.startswith(text)]
             else:
                 self.matches = self.options[:]
 
@@ -60,8 +58,11 @@ class SimpleCompleter(object):
         line = self.default
         go_on = True
         while go_on:
-            #line = (raw_input('%s / %s("q" to quit, tab for options): ' % (self.parsername, self.prompt)) + (line and '(%s)' % line or ''))
-            line = input('%s / "q" to quit, tab for options) %s:%s' % (self.parsername, self.prompt, self.default)) 
+            # line = (raw_input('%s / %s("q" to quit, tab for options): ' % (self.parsername, self.prompt)) + (line and '(%s)' % line or ''))
+            line = input(
+                '%s / "q" to quit, tab for options) %s:%s'
+                % (self.parsername, self.prompt, self.default)
+            )
             if line:
                 line = line.strip()
             if line in self.options:
@@ -70,7 +71,7 @@ class SimpleCompleter(object):
             if self.default + line in self.options:
                 go_on = False
                 return self.default + line
-            if line == 'q':
+            if line == "q":
                 return
             if self.match_index:
                 try:
@@ -81,6 +82,5 @@ class SimpleCompleter(object):
                     pass
 
 
-
 # Prompt the user for text
-#input_loop()
+# input_loop()
