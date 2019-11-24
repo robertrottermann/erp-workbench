@@ -3,7 +3,7 @@ Checkout site to new Name
 
 When getting a remote site, we can copy the sites data to a new folder
 
-The Commadns / Options to use are the following::
+The Commands / Options to use are the following::
 
     # -dump     : dump the data from the actually running local site
     # SOURCE    : the site to be used as source

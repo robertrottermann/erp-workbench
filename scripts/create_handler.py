@@ -15,7 +15,6 @@ from config import (
     SITES_LOCAL,
     NO_NEED_SERVER_IP,
     ODOO_VERSIONS,
-    FLECTRA_VERSIONS,
     DB_PASSWORD,
 )
 
@@ -301,7 +300,7 @@ class RPC_Mixin(object):
             languages: list of language codes like ['de_CH, 'fr_CH']
 
         return:
-            dictonary {code : id, ..}     
+            dictonary {code : id, ..}
         """
         # what fields do we want to handle?
         # we get the source and target model
@@ -322,7 +321,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
     def __init__(self, opts, sites, parsername=""):
         if opts.name:
-            self.site_names = [opts.name]
+            full_orig_name = opts.name
+            orig_name, orig_sites_list = (full_orig_name.split(':') + [''])[:2]
+            opts.orig_name = orig_name
+            opts.orig_sites_list = orig_sites_list
+            self.site_names = [orig_name]
         else:
             self.site_names = []
         self.opts = opts
@@ -485,9 +488,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         need_names_dic is a dictonary with two lists:
         need_names_dic = {
             'need_name' : [], # we need a name
-            'name_valid': [], # given name must be valid  
+            'name_valid': [], # given name must be valid
         }
-          
+
         """
         opts = self.opts
         name = self.site_name
@@ -1129,7 +1132,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             if not s_data.get("erp_settings", {}).get("mail_incomming"):
                 do_incoming = False
         # use proxy on development server
-        proxy = ""
+        proxy = my_ip
         if not s_data:
             s_data = remote_servers.get(remote_servers.get("proxy"))
             proxy = remote_servers.get("proxy")
@@ -1155,8 +1158,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             from sites_pw import SITES_PW
 
             email_pws = SITES_PW.get(self.site_name, {}).get(
-                "email", SITES_PW.get(self.site_name, {}).get("email_settings", {})
-            )
+                'email', SITES_PW.get(self.site_name, {}).get('email_settings', {}))
+            if email_pws:
+                email_pws = email_pws.get(proxy, email_pws.get('127.0.0.1', {}))
+
         except ImportError:
             email_pws = {}
             pass
@@ -1169,11 +1174,13 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             print("incomming email")
             i_ids = i_server.search([])
             i_id = 0
-            i_data = s_data.get("erp_settings", {}).get("mail_incomming")
-            if not i_data and s_data.get("odoo_settings", {}).get(
-                "mail_incomming"
-            ):  # bb
-                i_data = s_data.get("odoo_settings", {}).get("mail_incomming")
+            i_data = s_data.get('erp_settings', s_data.get('odoo_settings', {})).get('mail_incomming')
+            if not i_data and s_data.get('odoo_settings', {}).get('mail_incomming'): # bb
+                i_data = s_data.get('odoo_settings', {}).get('mail_incomming')
+            # set user
+            mail_user = email_pws.get('mail_user')
+            if mail_user:
+                i_data['password'] = mail_user
             # do we have a password
             if not local:
                 i_data["password"] = email_pws.get("email_pw_incomming", "")
@@ -1188,9 +1195,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         print("-" * 80)
         print("outgoing email")
         # now do the same for the outgoing server
-        o_data = s_data.get("erp_settings", {}).get("mail_outgoing")
-        if not o_data and s_data.get("odoo_settings", {}).get("mail_outgoing"):
-            o_data = s_data.get("odoo_settings", {}).get("mail_outgoing")
+        o_data = s_data.get('erp_settings', {}).get('mail_outgoing')
+        if not o_data and s_data.get('odoo_settings', {}).get('mail_outgoing'):
+            o_data = s_data.get('odoo_settings', {}).get('mail_outgoing')
+        if mail_user:
+            o_data['smtp_user'] = mail_user
         if not local:
             o_data["smtp_pass"] = email_pws.get("email_pw_outgoing", "")
         o_server = odoo.env["ir.mail_server"]
@@ -1774,7 +1783,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     def add_aliases_to_git_exclude(self):
         """
         exclude site folders from beeing handled by git
-        less .git/info/exclude 
+        less .git/info/exclude
         """
         names = list(SITES.keys())
         names.sort()
@@ -1878,7 +1887,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
     def _get_shortest(self, name, names, min_len=2):
         """get stortes string uniqe beginnin name
-        
+
         Arguments:
             name {strin} -- name we want to find shortes elemen
             names {list of strings} -- strings we test against

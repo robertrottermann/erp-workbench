@@ -24,7 +24,7 @@ DROP DATABASE
 postgres=# create database redproducts;
 CREATE DATABASE
 """
-PROCESS_NAMES_DIC = {"odoo": "odoo_bin", "flectra": "flectra_bin", "start_openerp": ""}
+PROCESS_NAMES_DIC = {'odoo': 'odoo_bin', 'start_openerp': ''}
 PROCESS_NAMES = list(PROCESS_NAMES_DIC.keys())
 # sys.path.insert(0, SITES_HOME)
 from site_desc_handler.handle_remote_data import get_remote_server_info
@@ -180,7 +180,7 @@ class DBUpdater(object):
                     print(("*" * 80))
                     print(
                         (
-                            "site %s is running, not %s, I can not determin what to so. leaving!"
+                            "site %s is running, not %s, I can not determin what to do. Therefore I am leaving!"
                             % (runnig_db, dbname)
                         )
                     )
@@ -471,7 +471,7 @@ class DBUpdater(object):
             # if remote user is not root we first have to copy things where we can access it
             if remote_user != "root":
                 """
-                dodump_remote.sh is run on the reote server, and copies everything to a place,
+                dodump_remote.sh is run on the remote server, and copies everything to a place,
                 where it can be accessed by user that is logged in to the remote server.
                 Assuming that the remote server is:
                     82.220.39.73
@@ -535,27 +535,27 @@ class DBUpdater(object):
             # $6 : target site name
             echo ssh $4@$2 'bash -s' < scripts/dodump.sh $1
             ssh $4@$2 'bash -s' < scripts/dodump.sh $1
-            echo rsync -avzC --delete $4@$2:/$3/$1/filestore/$1 $5/$6/filestore/$6
-            rsync -avzC --delete $4@$2:/$3/$1/filestore/$1 $5/$6/filestore/$6
+            echo rsync -avzC --delete $4@$2:/$3/$1/filestore/$1/ $5/$6/filestore/$6/
+            rsync -avzC --delete $4@$2:/$3/$1/filestore/$1/ $5/$6/filestore/$6/
             echo rsync -avzC --delete $4@$2:/$3/$1/dump/$1.dmp $5/$6/dump/$6.dmp
             rsync -avzC --delete $4@$2:/$3/$1/dump/$1.dmp $5/$6/dump/$6.dmp
-            
+
             """
             if remote_user != "root":
                 remote_user_data_path = remote_data_path
-                # remote_data_path = self.remote_user_data_path
-            os.system(
-                "%s/scripts/rsync_remote_local.sh %s %s %s %s %s %s"
-                % (
-                    self.sites_home,
-                    site_name,
-                    remote_url,
-                    remote_data_path,
-                    remote_user,
-                    self.erp_server_data_path,
-                    use_site_name,
-                )
-            )
+                #remote_data_path = self.remote_user_data_path
+            # if the target site is != source site
+            # we must make sure, that target filestore folder exists
+            os.makedirs('%s/%s/filestore/%s' % (self.erp_server_data_path, use_site_name, use_site_name), exist_ok=True)
+            os.system('%s/scripts/rsync_remote_local.sh %s %s %s %s %s %s' % (
+                self.sites_home,
+                site_name,
+                remote_url,
+                remote_data_path,
+                remote_user,
+                self.erp_server_data_path,
+                use_site_name,
+            ))
             if not os.path.exists(dpath):
                 print("-------------------------------------------------------")
                 print("%s not found" % dpath)
@@ -641,7 +641,8 @@ class DBUpdater(object):
                 ],
                 # do the actual reading of the database
                 # the database will have thae same name as on the remote server
-                ["%s/pg_restore" % where, "-O", "-U", user, "-d", use_site_name, dpath],
+                ['%s/pg_restore' % where, '-O', '--if-exists', '--clean', '-U',
+                    user, '-d', use_site_name, dpath],
                 # set standard password
                 [
                     "%s/psql" % where,
@@ -699,8 +700,8 @@ class DBUpdater(object):
         os.chdir(self.inner_path)
         # create a new config file with nothing changed but db stuff
         found = False
-        for f_name in ["openerp.cfg", "odoo.cfg", "flectra.cfg", "odoo.conf"]:
-            if os.path.isfile("etc/%s" % f_name):
+        for f_name in ['openerp.cfg', 'odoo.cfg', 'odoo.conf']:
+            if os.path.isfile('etc/%s' % f_name):
                 found = True
                 break
         if not found:
@@ -714,8 +715,8 @@ class DBUpdater(object):
         d = open("etc/no_db_%s" % f_name, "w").write(d)
         # what process should we start
         found = False
-        for p_name in ["start_openerp", "start_odoo", "start_flectra", "odoo"]:
-            if os.path.isfile("bin/%s" % p_name):
+        for p_name in ['start_openerp', 'start_odoo', 'odoo']:
+            if os.path.isfile('bin/%s' % p_name):
                 found = True
                 break
         if not found:
@@ -835,7 +836,7 @@ class DBUpdater(object):
             if set_local:
                 # kill the process
                 if not process_info:
-                    print("odoo/flectra not running")
+                    print('odoo not running')
                 else:
                     if not norefresh:
                         p = psutil.Process(process_info[0][0])

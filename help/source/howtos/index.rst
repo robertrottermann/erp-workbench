@@ -14,3 +14,4 @@ Some handy howtos
     create_docker_image
     checkout_site_to_new_name
     delete_local
+    set_local_data

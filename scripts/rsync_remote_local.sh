@@ -11,7 +11,7 @@
 # $6 : target site name
 # echo ssh $4@$2 'bash -s' < scripts/dodump.sh $1
 # ssh $4@$2 'bash -s' < scripts/dodump.sh $1 '/root/erp_workbench'
-echo rsync -avzC --delete $4@$2:/$3/$1/filestore/$1 $5/$6/filestore/$6
-rsync -avzC --delete $4@$2:/$3/$1/filestore/$1 $5/$6/filestore/$6
+echo rsync -avzC --delete $4@$2:/$3/$1/filestore/$1/ $5/$6/filestore/$6/
+rsync -avzC --delete $4@$2:/$3/$1/filestore/$1/ $5/$6/filestore/$6/
 echo rsync -avzC --delete $4@$2:/$3/$1/dump/$1.dmp $5/$6/dump/$6.dmp
 rsync -avzC --delete $4@$2:/$3/$1/dump/$1.dmp $5/$6/dump/$6.dmp

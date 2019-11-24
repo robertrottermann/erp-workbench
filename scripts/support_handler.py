@@ -129,15 +129,16 @@ class SupportHandler(InitHandler):
         siteinfo_names = siteinfos and list(siteinfos.keys()) or []
         site_name, subsite_name = (opts.name.split(":") + [""])[:2]
         # make sure all other processes pick the rigth name
-        self.site_names = [site_name]
+        self.site_names = [self.opts.orig_name]
+        sublist_name = self.opts.orig_sites_list
         # when testing, we not allways call the main module, so just make sure
         # we have the site_name set
         if not self.site_name and self.site_names:
             self.site_name = self.site_names[0]
         if len(siteinfo_names) == 1:
             # if we have one subsite, use it
-            subsite_name = siteinfo_names[0]
-        elif not subsite_name in siteinfo_names:
+            sublist_name = siteinfo_names[0]
+        elif not sublist_name in siteinfo_names:
             print(bcolors.FAIL)
             print("*" * 80)
             print("There is more than one place to add the new site")
@@ -200,19 +201,17 @@ class SupportHandler(InitHandler):
         # else:
         #     self.default_values['remote_server'] = self.remote_data_path # bad naming!!
 
-        if opts.add_site:
+        if opts.add_site and not self.opts.orig_sites_list == 'localhost':
             # before we can construct a site description we need a a file with site values
             pvals = {}  # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
             if 1:  # preset_values:
                 if not sites_handler.site_name and self.opts.name:
                     # this can happen while testing ..
-                    sites_handler.site_name = self.opts.name.split(":")[0]
-                sites_handler.reset_values()  # force to reread the values, they were read when no site_name was yet known
+                    sites_handler.site_name = self.opts.orig_name
+                sites_handler.reset_values() # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
-                result = sites_handler.add_site_global(
-                    handler=sites_handler, template_name=template, sublist=subsite_name
-                )  # , preset_values=preset_values)
+                result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=sublist_name)#, preset_values=preset_values)
                 if result:
                     if not opts.quiet:
                         print("%s added to sites.py" % self.site_name)
@@ -268,8 +267,12 @@ class SupportHandler(InitHandler):
                 # preset_values=preset_values)
             if result:
                 print("%s added to sites.py" % self.site_name)
-            return {"added": self.site_name, "result": result, "type": "G"}
-        elif opts.add_site_local:
+            return {
+                'added' : self.site_name,
+                'result' : result,
+                'type' : 'G'
+            }
+        elif opts.add_site_local or self.opts.orig_sites_list == 'localhost':
             # we add to sites local
             # we read untill we find an empty }
             # before we can construct a site description we need a a file with site values
@@ -468,7 +471,8 @@ class SupportHandler(InitHandler):
     # using openupgrade
     def upgrade(self, target_site):
         site = self.site
-        # check whether target_site exists
+        #check whether target_site exists
+        target_site, target_site_list = (target_site.split(':') + [''])[:2]
         if not self.sites.get(target_site):
             print(bcolors.FAIL)
             print("*" * 80)
@@ -488,27 +492,53 @@ class SupportHandler(InitHandler):
         # for the time beeing we only do one step upgrade
         # construct the command line like:
         # -C /home/robert/projects/breitschtraeff10/breitschtraeff10/etc/odoo.cfg -D breitschtraeff10 -B migrations -R "11.0"
-        config_path = "%s/etc/odoo.cfg" % self.default_values["inner"]
-        target_version = self.sites[target_site].get(
-            "erp_version", self.sites[target_site].get("odoo_version")
-        )
+        config_path = '%s/etc/odoo.cfg' % self.default_values['inner']
+        target_version = self.sites[target_site].get('erp_version', self.sites[target_site].get('odoo_version'))
         if not os.path.exists(config_path):
             print(bcolors.FAIL)
             print("*" * 80)
             print("the base project does not yet exist please create it")
             print(bcolors.ENDC)
             return
-        result_code, result_line = self.run_upgrade(
-            'bin/python %s/migrate.py -C %s -D %s -N %s -B %s -R "%s"'
-            % (
-                MIGRATE_FOLDER,
-                config_path,
-                self.site_name,
-                target_site,
-                MIGRATE_FOLDER,
-                target_version,
-            )
+        migrate_py = os.path.normpath('%s/migrate.py' % MIGRATE_FOLDER)
+        cmd_line = 'bin/python %s -C %s -D %s -N %s -B %s -R "%s"' % (
+            migrate_py,
+            config_path,
+            self.site_name,
+            target_site,
+            MIGRATE_FOLDER,
+            target_version)
+        print(cmd_line,flush=True)
+        print(bcolors.WARNING)
+        print('*' * 80)
+        print('about to execute the following command:')
+        print(cmd_line)
+        print("""
+        The following values are used:
+        mygration.py:
+            This is the command executed with the following parameters:
+                -C %s
+                    This is the config file loaded
+                -D %s
+                    current odoo database (required if not given in config)
+                - N %s
+                    name of the new  database
+                - B %s
+                    the directory to download openupgrade-server code to
+                -R %s
+                    comma separated list of migrations to run
+
+        """  % (
+            migrate_py,
+            config_path,
+            self.site_name,
+            target_site,
+            MIGRATE_FOLDER,
+            target_version )
         )
+        print(bcolors.ENDC)
+
+        result_code, result_line = self.run_upgrade(cmd_line)
         # now a copy of the database has been created we can migrate migrate with openmigrate
         # this will be done in the target sites project environment
         # so we have to write out a script that can do this

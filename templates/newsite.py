@@ -5,10 +5,14 @@
     "%(site_name)s": {
         'site_name': '%(site_name)s',
         'servername': '%(site_name)s',
+        'enterprise' : '',
         'erp_admin_pw': '',
         'erp_version': '%(erp_version)s',
         'erp_minor': '%(erp_minor)s',
         'erp_nightly': '%(erp_nightly)s', # what folder on nightly if not version like 'master'
+        # should demo data be loaded
+        # default is 'all'
+        #'without_demo'  : '',
         # servertype is odoo or flectra
         'erp_provider': '%(erp_provider)s',
         'db_name': '%(site_name)s',

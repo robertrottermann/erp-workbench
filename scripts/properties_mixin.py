@@ -71,7 +71,7 @@ class PropertiesMixin(object):
     # -------------------------------------------------------------
 
     def _pep_up(self, value_dic):
-        # some of the values migth have yet placeholders
+        # some of the values might have yet placeholders
         for k, v in value_dic.items():
             try:
                 value_dic[k] = v % self.default_values
@@ -125,10 +125,15 @@ class PropertiesMixin(object):
     # that will be generated
     @property
     def projectname(self):
-        return self.site.get("projectname", self.site.get("site_name", ""))
+        return self.site.get(
+            "projectname",
+            self.site.get(
+                "site_name", self.site.get("server_name", self.site.get("db_name", ""))
+            ),
+        )
 
     # theoretically the erp workbench can handle other erp systems
-    # than odoo like flectra or erp next
+    # than odoo
     # the value of erp_provider tells what the running site is based on
     _erp_provider = "odoo"
 
@@ -244,7 +249,7 @@ class PropertiesMixin(object):
         may 12th 2019: we want to slowly replace/enhance the content of
         the site description with a site specific yaml file
         This can be found in $SITESLIST-HOME/$SITESLIST-NAME/yaml/$SITE-NAME.yaml
-        We do not want to read all of them at start up time, so keep a flag 
+        We do not want to read all of them at start up time, so keep a flag
         _yaml_dirty
         that tells us in the site-description , whether the yaml file is read.
         This flag is set to true when the sites are loaded at startup time
@@ -266,7 +271,7 @@ class PropertiesMixin(object):
 
     def get_site_yaml(self, site_name, site_dic):
         """read site specifig yaml file and clear _yml_dirty flag
-        
+
         Arguments:
             site_name {string} -- name of the sit
             site_dic {dictionary} -- content of the site description
@@ -338,7 +343,7 @@ class PropertiesMixin(object):
 
     @property
     def erp_admin_pw(self):
-        return self._erp_admin_pw  # constructed by set_passwords
+        return self._erp_admin_pw  # constructed by set_passwords_and_site_values
 
     # the user running erp-workbench
     @property
@@ -437,9 +442,9 @@ class PropertiesMixin(object):
         self._cp
         # the ip address to access the db container
         if self.docker_db_container:
-            return self.docker_db_container["NetworkSettings"]["Networks"]["bridge"][
-                "IPAddress"
-            ]
+            return self.docker_db_container.attrs["NetworkSettings"]["Networks"][
+                "bridge"
+            ]["IPAddress"]
         return ""
 
     # docker_rpc_host
@@ -473,13 +478,11 @@ class PropertiesMixin(object):
     @property
     def docker_containers(self):
         self._cp
-        if self.subparser_name == "docker":
-            # update the docker registry so we get info about the db_container_name
-            self.update_container_info()
+        # update the docker registry so we get info about the db_container_name
+        self.update_container_info()
 
-            # get the list of containers
-            return self.docker_client.containers
-        return {}
+        # get the list of containers
+        return self.docker_client.containers
 
     # the docker_client is the interface erp-workbench uses to access docker
     _cli = {}
@@ -488,11 +491,11 @@ class PropertiesMixin(object):
     def docker_client(self):
         self._cp
         if not self._cli:
-            from docker import Client
-
             url = "unix://var/run/docker.sock"
-            cli = Client(base_url=url)
-            self._cli = cli
+            import docker
+
+            client = docker.from_env()
+            self._cli = client
         return self._cli
 
     # the name of the container we are dealing with
@@ -584,6 +587,14 @@ class PropertiesMixin(object):
     def erp_nightly(self):
         self._cp
         return self._erp_nightly
+
+    # is_enterprise
+    _is_enterprise = ""
+
+    @property
+    def is_enterprise(self):
+        self._cp
+        return self._is_enterprise
 
     # major version number of the odoo used like 11, 12
     _erp_version = ""
@@ -727,7 +738,7 @@ class PropertiesMixin(object):
 
     # local_base_addons:
     # path to the odoo addons in a local installation
-    # in the siteses project folder
+    # in the site's project folder
     @property
     def local_base_addons(self):
         base_addon = self.base_info.get("local_base_addons" "")
@@ -780,13 +791,34 @@ class PropertiesMixin(object):
             )
         else:
             addons_path = self.local_addon_path_prefix.join(self._site_addons_list)
+        # now we have to check, whether one of the modules to load have a inner_paths value
+        inner_paths = []
+        if self._site_addons_list:
+            # we only do it, when there are addons collected
+            for addon in self.site.get("addons"):
+                inner_ps = addon.get("inner_paths", [])
+                for ip in inner_ps:
+                    inner_paths.append(
+                        "%s/%s" % (addon.get("add_path", addon.get("group", "")), ip)
+                    )
+        ip_str = ""
+        if inner_paths:
+            ip_str = self.local_addon_path_prefix + self.local_addon_path_prefix.join(
+                inner_paths
+            )
+
         # the above procedure produce out of: self.local_addon_path_prefix.join(['a','b'])
         # something line 'a,/home/robert/workbench/afbschweiz/addons/b'
         # so we have to prepend it with self.local_addon_path_prefix
         # to make it '/home/robert/workbench/afbschweiz/addons/a,/home/robert/workbench/afbschweiz/addons/b'
         # and finaly we appen self.local_addon_path_prefix so that also modules that are added
         # directly into addons are found also
-        return self.local_addon_path_prefix + addons_path + self.local_addon_path_prefix
+        return (
+            self.local_addon_path_prefix
+            + addons_path
+            + ip_str
+            + self.local_addon_path_prefix
+        )
 
     # site_addons is the list of addons_entries in the odoo config
     _site_addons = {}
@@ -800,8 +832,6 @@ class PropertiesMixin(object):
     @property
     def site_addons_list(self):
         return self._site_addons_list
-
-    _site_addons_list = []
 
     @property
     def erp_addons(self):

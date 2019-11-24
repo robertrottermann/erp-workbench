@@ -171,32 +171,7 @@ NEED_TARGET = [
 NO_NEED_SERVER_IP = [
     'edit_site',
 ]
-FLECTRA_VERSIONS = {
-    '1.0' : {
-        'python_ver' : 'python3',
-        'python_path' : '/usr/bin/python3',
-        'branch' : '1.0',
-        'tag' : 'v1.0.0',
-    },
-    '1.1.0' : {
-        'python_ver' : 'python3',
-        'python_path' : '/usr/bin/python3',
-        'branch' : '1.0',
-        'tag' : 'v1.1.0',
-    },
-    '1.2.0' : {
-        'python_ver' : 'python3',
-        'python_path' : '/usr/bin/python3',
-        'branch' : '1.0',
-        'tag' : 'v1.2.0',
-        'pip' : [
-            'phonenumbers',
-            ''
-        ]
-
-    },
-}
-
+# also check templates/version.py
 ODOO_VERSIONS_ = {
     '7.0' : { # elfero
         'python_ver' : 'python2',
@@ -226,6 +201,10 @@ ODOO_VERSIONS = {
     '10' : ODOO_VERSIONS_['10.0'],
     '11' : ODOO_VERSIONS_['11.0'],
     '12' : {
+        'python_ver' : 'python3',
+        'python_path' : '/usr/bin/python3',
+    },
+    '13' : {
         'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
     },

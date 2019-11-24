@@ -4,8 +4,7 @@
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!
 # Do NOT !!!!! sort imports
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!
-import os, sys, time
-
+import os, sys
 # robert: i usualy test in wingide
 if (
     not os.environ.get("VIRTUAL_ENV")
@@ -16,7 +15,7 @@ if (
     print("activate the worbench environment executing:")
     print("workon workbench")
     sys.exit()
-from argparse import RawTextHelpFormatter, ArgumentParser
+from argparse import ArgumentParser
 import argparse
 
 try:
@@ -29,13 +28,13 @@ from scripts.banner import BANNER_HEAD, BANNER_TEXT
 from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
-from config import sites_handler
+#from config import sites_handler
 from config import SITES
 
-from config import BASE_INFO
+#from config import BASE_INFO
 
 from config.config_data.base_info import BASE_DEFAULTS
-from config.config_data.project_info import PROJECT_DEFAULTS
+#from config.config_data.project_info import PROJECT_DEFAULTS
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler
@@ -120,7 +119,7 @@ def main(opts, parsername, need_names_dic, return_handler=False):
     #     handler = MailHandler(opts, SITES)
     else:
         handler = SiteCreator(opts, SITES)
-    # _subparser_name = 'docker'
+        # _subparser_name = 'docker'
     # return handler to the test process if asked to
     if return_handler == 1:
         return handler
@@ -479,13 +478,8 @@ def main(opts, parsername, need_names_dic, return_handler=False):
 
         # ----------> see create commands
 
-        if (
-            opts.dinstallown
-            or opts.dupdateown
-            or opts.dremoveown
-            or opts.dinstall_erp_modules
-        ):
-            # handler = dockerHandler(opts, default_values, site_name)
+        if opts.dinstallown or opts.dupdateown or opts.dremoveown or opts.dinstall_erp_modules:
+            #handler = dockerHandler(opts, default_values, site_name)
             handler.docker_install_own_modules()
             did_run_a_command = True
 
@@ -706,7 +700,7 @@ def parse_args():
     parser_manage = subparsers.add_parser(
         "create",
         help="""
-        create is used to manage local and remote sites by reading 
+        create is used to manage local and remote sites by reading
         site descrition created using the sites command set
         """,
         parents=[parent_parser],  # [parser_rpc, parent_parser],
