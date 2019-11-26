@@ -202,7 +202,7 @@ class DBUpdater(object):
             sys.exit()
         # if we want to copy the dumped stuff to a remote site
         # do it now
-        if opts.use_ip_target:
+        if opts.use_ip_target or opts.new_target_site:
             # we want to move the data to some remote server
             # so we have to look up what path we need remotely
             # this probably only works if we have root permission on the target
@@ -228,7 +228,9 @@ class DBUpdater(object):
                 target_site_name,
                 target_site_name,
             )
-            ipt = opts.use_ip_target
+            ipt = server_dic['remote_url']
+            if opts.use_ip_target:
+                ipt = opts.use_ip_target
             if ipt in ["localhost", "127.0.0.1"]:
                 rfst_path = "%s/%s/filestore/%s" % (
                     BASE_INFO["erp_server_data_path"],
