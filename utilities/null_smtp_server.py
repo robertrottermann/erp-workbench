@@ -41,12 +41,13 @@ workbench can set the email server for you:
 Metadata about the project
 """
 
-__author__ = 'Robert Rottermann based on work from Matthew Peveler'
-__version__ = '0.1.0'
-__license__ = 'Unlicense (Public Domain)'
+__author__ = "Robert Rottermann based on work from Matthew Peveler"
+__version__ = "0.1.0"
+__license__ = "Unlicense (Public Domain)"
 
 SMTP_PORT = 25
 SMTP_FALLBACK_PORT = 2525
+
 
 class FakeSMTPServer(smtpd.SMTPServer):
     """A Fake smtp server"""
@@ -63,7 +64,7 @@ class FakeSMTPServer(smtpd.SMTPServer):
 Logger module for NullSMTP
 """
 
-LOGGER_NAME = 'nullsmtpd'
+LOGGER_NAME = "nullsmtpd"
 
 
 # pylint: disable=too-few-public-methods
@@ -73,6 +74,7 @@ class InfoFilter(logging.Filter):
     to allow us to best split the logging where WARN and above are on sys.stderr and
     INFO and below are on sys.stdout.
     """
+
     def filter(self, record):
         return record.levelno in (logging.DEBUG, logging.INFO)
 
@@ -87,7 +89,7 @@ def configure_logging(mail_dir, console_logging=False):
     logger = get_logger()
     logger.setLevel(logging.DEBUG)
 
-    file_logger = logging.FileHandler(os.path.join(mail_dir, 'nullsmtpd.log'))
+    file_logger = logging.FileHandler(os.path.join(mail_dir, "nullsmtpd.log"))
     file_logger.setLevel(logging.ERROR)
 
     info_format = "%(asctime)s [%(levelname)-7.7s] %(message)s"
@@ -139,6 +141,7 @@ class NullSMTPDHandler(object):
     built in Vagrant/Docker and that we don't have a proper domain for and we don't really
     care to real all emails via a web interface.
     """
+
     def __init__(self, logger, mail_dir, output_messages=True, quiet=False):
         """
 
@@ -167,20 +170,19 @@ class NullSMTPDHandler(object):
         if msg.is_multipart():
             for part in msg.walk():
                 ctype = part.get_content_type()
-                cdispo = str(part.get('Content-Disposition'))
+                cdispo = str(part.get("Content-Disposition"))
                 try:
                     lines = part.get_payload(decode=1)
                     if lines and isinstance(lines, str):
-                        lines = lines.split('\n')
+                        lines = lines.split("\n")
                     elif lines and isinstance(lines, bytes):
-                        lines = lines.split(b'\n')
+                        lines = lines.split(b"\n")
                     else:
                         lines = [lines]
                     for line in lines:
-                        print(line.decode('utf8'))
+                        print(line.decode("utf8"))
                 except:
                     pass
-
 
     # pylint: disable=invalid-name
     async def handle_DATA(self, _, __, envelope):
@@ -198,7 +200,7 @@ class NullSMTPDHandler(object):
         # peer = session.peer
         mail_from = envelope.mail_from
         rcpt_tos = envelope.rcpt_tos
-        data = envelope.content.decode('utf-8')
+        data = envelope.content.decode("utf-8")
 
         self.logger.info("Incoming mail from {:s}".format(mail_from))
         for recipient in rcpt_tos:
@@ -207,15 +209,15 @@ class NullSMTPDHandler(object):
             mail_path = os.path.join(self.mail_dir, recipient, mail_file)
             if not os.path.isdir(os.path.join(self.mail_dir, recipient)):
                 os.mkdir(os.path.join(self.mail_dir, recipient))
-            with open(mail_path, 'a') as open_file:
+            with open(mail_path, "a") as open_file:
                 open_file.write(data + "\n")
             if not self._quiet:
-                print('%s --> %s' % (recipient, mail_path))
+                print("%s --> %s" % (recipient, mail_path))
 
             if self.print_messages:
                 self.print_mail(data)
-                #self.logger.info(data)
-        return '250 OK'
+                # self.logger.info(data)
+        return "250 OK"
 
 
 def _parse_args():
@@ -225,23 +227,46 @@ def _parse_args():
     :return: namespace containing the arguments parsed from the CLI
     """
     parser = argparse.ArgumentParser(description="")
-    parser.add_argument("--fork", action="store_true", default=False,
-                        help="Fork and run nullsmtpd as a daemon. This will stop printing"
-                             "all log messages to stdout/stderr and all emails to stdout.")
-    parser.add_argument("-H", "--host", type=str, default="localhost",
-                        help="Host to listen on (defaults to localhost)")
-    parser.add_argument("-P", "--port", type=int, default=SMTP_PORT,
-                        help="Port to listen on (defaults to 25, fallback 2525)")
-    parser.add_argument("--mail-dir", type=str, default=NULLSMTPD_DIRECTORY,
-                        help="Location to write logs and emails (defaults to ~/.nullsmtpd)")
+    parser.add_argument(
+        "--fork",
+        action="store_true",
+        default=False,
+        help="Fork and run nullsmtpd as a daemon. This will stop printing"
+        "all log messages to stdout/stderr and all emails to stdout.",
+    )
+    parser.add_argument(
+        "-H",
+        "--host",
+        type=str,
+        default="localhost",
+        help="Host to listen on (defaults to localhost)",
+    )
+    parser.add_argument(
+        "-P",
+        "--port",
+        type=int,
+        default=SMTP_PORT,
+        help="Port to listen on (defaults to 25, fallback 2525)",
+    )
+    parser.add_argument(
+        "--mail-dir",
+        type=str,
+        default=NULLSMTPD_DIRECTORY,
+        help="Location to write logs and emails (defaults to ~/.nullsmtpd)",
+    )
     parser.add_argument("-q", "--quiet", action="store_true", default=False)
     return parser.parse_args()
 
+
 def get_controller(host, port, logger, mail_dir, output_messages, quiet):
-    controller = Controller(NullSMTPDHandler(logger, mail_dir, output_messages, quiet=quiet), hostname=host,
-                            port=port)
+    controller = Controller(
+        NullSMTPDHandler(logger, mail_dir, output_messages, quiet=quiet),
+        hostname=host,
+        port=port,
+    )
     return controller
-    
+
+
 def main():
     """
     Main process where we get the CLI arguments, set up our loggers and then start NullSMTP,
@@ -258,31 +283,39 @@ def main():
 
     host = args.host
     port = args.port
-    output_messages = True #'fork' in args and args.fork
+    output_messages = True  #'fork' in args and args.fork
     logger = configure_logging(args.mail_dir, output_messages)
     mail_dir = args.mail_dir
     quiet = args.quiet
 
     try:
-        logger.info("Starting nullsmtpd {:s} on {:s}:{:d}".format(__version__, host, port))
-        controller = get_controller(host, port, logger, mail_dir, output_messages, quiet)
+        logger.info(
+            "Starting nullsmtpd {:s} on {:s}:{:d}".format(__version__, host, port)
+        )
+        controller = get_controller(
+            host, port, logger, mail_dir, output_messages, quiet
+        )
         controller.start()
     except PermissionError:
         port = SMTP_FALLBACK_PORT
-        logger.info("Starting nullsmtpd {:s} on {:s}:{:d}".format(__version__, host, port))
-        controller = get_controller(host, port, logger, mail_dir, output_messages, quiet=quiet)
+        logger.info(
+            "Starting nullsmtpd {:s} on {:s}:{:d}".format(__version__, host, port)
+        )
+        controller = get_controller(
+            host, port, logger, mail_dir, output_messages, quiet=quiet
+        )
         controller.start()
         if output_messages:
             while 1:
-                input('nullsmtpd running. Press ^C to stop server and exit.')
+                input("nullsmtpd running. Press ^C to stop server and exit.")
             raise SystemExit
 
     except Exception as e:
         print(str(e))
         raise
-    #finally:
-        #logger.info('Stopping nullsmtpd')
-        #controller.stop()
+    # finally:
+    # logger.info('Stopping nullsmtpd')
+    # controller.stop()
 
 
 if __name__ == "__main__":
@@ -291,9 +324,9 @@ if __name__ == "__main__":
 
 if __name__ == "__mainXX__":
     try:
-        smtp_server = FakeSMTPServer(('localhost', SMTP_PORT), None)
+        smtp_server = FakeSMTPServer(("localhost", SMTP_PORT), None)
     except:
-        smtp_server = FakeSMTPServer(('localhost', SMTP_FALLBACK_PORT), None)
+        smtp_server = FakeSMTPServer(("localhost", SMTP_FALLBACK_PORT), None)
 
     try:
         asyncore.loop()

@@ -13,22 +13,24 @@ alias  %(urname)shome="cd %(urhome)s"
 PROS = """# projects
 alias  pro="cd %(prohome)s/%(prn)s" """
 
+
 def cleanData(data):
     # remove superfluous newlines
-    while data.find('\n\n\n') > -1:
-        data = data.replace('\n\n\n', '\n\n')
+    while data.find("\n\n\n") > -1:
+        data = data.replace("\n\n\n", "\n\n")
     return data
+
 
 def collect_aliases(alias_path, aDic):
     try:
-        data = open(alias_path, 'r').read().split('\n')
+        data = open(alias_path, "r").read().split("\n")
     except:
         return
-    running = ''
-    pattern = r'# +(\w+)[ ]*$'
-    apat = r'alias +(\w+)=.*'
+    running = ""
+    pattern = r"# +(\w+)[ ]*$"
+    apat = r"alias +(\w+)=.*"
     regex = re.compile(pattern)
-    areg  = re.compile(apat)
+    areg = re.compile(apat)
     counter = 0
     for line in data:
         counter += 1
@@ -42,7 +44,7 @@ def collect_aliases(alias_path, aDic):
         elif ma:
             if not running:
                 continue
-            add_str = ''
+            add_str = ""
             if counter:
                 add_str = str(counter)
             aDic[running + add_str] = ma.groups()[0]
@@ -52,20 +54,21 @@ def find_alias(aDic, candidate):
     keys = list(aDic.keys())
     keyr = list(aDic.values())
     if candidate in keys:
-        return ''
-    for i in range(len(candidate)-4):
-        if not candidate[:4+i] in keyr:
-            return candidate[:4+i]
-    raise ValueError('could not construct alias')
+        return ""
+    for i in range(len(candidate) - 4):
+        if not candidate[: 4 + i] in keyr:
+            return candidate[: 4 + i]
+    raise ValueError("could not construct alias")
+
 
 def delete_alias(alias_path, candidate):
     try:
-        data = open(alias_path, 'r').read().split('\n')
+        data = open(alias_path, "r").read().split("\n")
     except:
         return
-    pattern = r'# +(\w+)[ ]*$'
+    pattern = r"# +(\w+)[ ]*$"
     regex = re.compile(pattern)
-    f = open(alias_path, 'w')
+    f = open(alias_path, "w")
     started = False
     for line in data:
         if not line and started:
@@ -79,46 +82,59 @@ def delete_alias(alias_path, candidate):
             # skip line
             continue
         else:
-            f.write('%s\n' % line.strip())
+            f.write("%s\n" % line.strip())
     f.close()
+
 
 def main():
     usage = "alias.py -h for help on usage"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
-        "-n", "--name",
-        action="store", dest="name", default='',
-        help="name of the projects, default autodetected"
+        "-n",
+        "--name",
+        action="store",
+        dest="name",
+        default="",
+        help="name of the projects, default autodetected",
     )
 
     parser.add_option(
-        "-p", "--projects",
-        action="store", dest="projects", default='/projects',
-        help="home of the projects, default /projects"
+        "-p",
+        "--projects",
+        action="store",
+        dest="projects",
+        default="/projects",
+        help="home of the projects, default /projects",
     )
 
     parser.add_option(
-        "-f", "--fullpath",
-        action="store", dest="fullpath", default='',
-        help="full path to the project"
+        "-f",
+        "--fullpath",
+        action="store",
+        dest="fullpath",
+        default="",
+        help="full path to the project",
     )
 
     parser.add_option(
-        "-F", "--force",
-        action="store_true", dest="force", default=False,
-        help="force overwrite of alias"
+        "-F",
+        "--force",
+        action="store_true",
+        dest="force",
+        default=False,
+        help="force overwrite of alias",
     )
 
     (opts, args) = parser.parse_args()
 
     projects = opts.projects
     prn = projects
-    if prn.startswith('/'):
+    if prn.startswith("/"):
         prn = prn[1:]
-    
+
     home = os.path.expanduser("~")
-    #alias_script = "bash_aliases"
+    # alias_script = "bash_aliases"
 
     # assuming we are running tis script in PROJECTNAME/PROJECTNAME
     if opts.fullpath:
@@ -133,9 +149,9 @@ def main():
         proname = prohome[-1]
     else:
         proname = opts.name
-    MARKER = '# %s' % proname.strip()
+    MARKER = "# %s" % proname.strip()
     # go up the folder hierarchy and search the projects home
-    i=0
+    i = 0
     for item in prohome:
         if item == prn:
             prohome = "/".join(prohome[:i])
@@ -154,61 +170,62 @@ def main():
         elif dist[1].strip("\n") == "Ubuntu":
             alias_script = "bash_aliases"
     except:
-        print('could not determine linux distribution')
+        print("could not determine linux distribution")
         pass
-    
-    alias_path = '%s/.%s' % (home, alias_script)
+
+    alias_path = "%s/.%s" % (home, alias_script)
     if opts.force:
         delete_alias(alias_path, proname)
-        
+
     try:
-        data = open(alias_path, 'r').read()
+        data = open(alias_path, "r").read()
     except:
-        data = ''
+        data = ""
 
     # get rid of superfluous newlines
     data = cleanData(data)
     aDict = {}
     collect_aliases(alias_path, aDict)
-    PRO = PROS % {'prohome' : prohome, 'prn' : prn}
+    PRO = PROS % {"prohome": prohome, "prn": prn}
     alias_name = find_alias(aDict, proname)
     if not alias_name:
         return
 
     ALIASES = ALIASESS % {
-        'home' : home,
-        'marker' : MARKER,
-        'projects' : platform.processor() == 'x86_64' and ('%s/' % prn) or '',
-        'ur' : ur,
-        'urname' : alias_name,
-        'urhome' : urhome,
-        'proname' : proname
+        "home": home,
+        "marker": MARKER,
+        "projects": platform.processor() == "x86_64" and ("%s/" % prn) or "",
+        "ur": ur,
+        "urname": alias_name,
+        "urhome": urhome,
+        "proname": proname,
     }
 
-    newdata = ''
+    newdata = ""
     started = False
     profound = False
-    for line in data.split('\n'):
+    for line in data.split("\n"):
         if line.find('alias pro="') > -1:
             profound = True
         # if we find the marker for this project
         # we keep on reading till we find a newline
         if not started:
-            if line.strip()== MARKER:
+            if line.strip() == MARKER:
                 started = True
             else:
-                newdata += ('%s\n' % line)
+                newdata += "%s\n" % line
         else:
             if not line:
                 started = False
     newdata += ALIASES
     if not profound:
-        newdata += PRO % {'prohome' : prohome}
-    #print newdata
-    f = open('%s/.%s' % (home, alias_script), 'w')
+        newdata += PRO % {"prohome": prohome}
+    # print newdata
+    f = open("%s/.%s" % (home, alias_script), "w")
     f.write(newdata)
     f.close()
 
-if __name__=='__main__':
-    #import pudb;pu.db
+
+if __name__ == "__main__":
+    # import pudb;pu.db
     main()

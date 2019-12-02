@@ -6,19 +6,21 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, String, Integer, Date, Table, ForeignKey, Boolean
 from sqlalchemy.orm import relationship, backref
 
-engine = create_engine('postgresql://robert:admin@localhost:5432/moviedb')
+engine = create_engine("postgresql://robert:admin@localhost:5432/moviedb")
 Session = sessionmaker(bind=engine)
 
 Base = declarative_base()
 
 movies_actors_association = Table(
-    'movies_actors', Base.metadata,
-    Column('movie_id', Integer, ForeignKey('movies.id')),
-    Column('actor_id', Integer, ForeignKey('actors.id'))
+    "movies_actors",
+    Base.metadata,
+    Column("movie_id", Integer, ForeignKey("movies.id")),
+    Column("actor_id", Integer, ForeignKey("actors.id")),
 )
 
+
 class Movie(Base):
-    __tablename__ = 'movies'
+    __tablename__ = "movies"
 
     id = Column(Integer, primary_key=True)
     title = Column(String)
@@ -31,7 +33,7 @@ class Movie(Base):
 
 
 class Actor(Base):
-    __tablename__ = 'actors'
+    __tablename__ = "actors"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
@@ -41,13 +43,14 @@ class Actor(Base):
         self.name = name
         self.birthday = birthday
 
+
 class Stuntman(Base):
-    __tablename__ = 'stuntmen'
+    __tablename__ = "stuntmen"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     active = Column(Boolean)
-    actor_id = Column(Integer, ForeignKey('actors.id'))
+    actor_id = Column(Integer, ForeignKey("actors.id"))
     actor = relationship("Actor", backref=backref("stuntman", uselist=False))
 
     def __init__(self, name, active, actor):
@@ -55,19 +58,21 @@ class Stuntman(Base):
         self.active = active
         self.actor = actor
 
+
 class ContactDetails(Base):
-    __tablename__ = 'contact_details'
+    __tablename__ = "contact_details"
 
     id = Column(Integer, primary_key=True)
     phone_number = Column(String)
     address = Column(String)
-    actor_id = Column(Integer, ForeignKey('actors.id'))
+    actor_id = Column(Integer, ForeignKey("actors.id"))
     actor = relationship("Actor", backref="contact_details")
 
     def __init__(self, phone_number, address, actor):
         self.phone_number = phone_number
         self.address = address
-        self.actor = actor        
+        self.actor = actor
+
 
 Base.metadata.create_all(engine)
 
@@ -120,4 +125,3 @@ session.add(mark_stuntman)
 # 10 - commit and close session
 session.commit()
 session.close()
-
