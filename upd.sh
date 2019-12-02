@@ -6,8 +6,8 @@ echo 'passwords'
 echo '---------'
 (cd robert_priv; svn up)
 (git pull)
-echo 'passwords'
+echo 'siteslist'
 echo '---------'
-(wwlire; git pull)
+(cd sites_list/redo2oo; git pull)
 
 
