@@ -39,7 +39,7 @@ from scripts.messages import DOCKER_DB_MISSING, DOCKER_DB_MISSING, DOCKER_INVALI
     DOCKER_IMAGE_CREATE_MISING_HUB_USER, DOCKER_IMAGE_CREATE_PLEASE_WAIT, DOCKER_IMAGE_CREATE_FAILED, \
     DOCKER_IMAGE_CREATE_DONE
 
-# DOCKER_APT_PIP_HEAD is used when constructing docker and either pip or 
+# DOCKER_APT_PIP_HEAD is used when constructing docker and either pip or
 # apt libraries needs to be merged in
 DOCKER_APT_PIP_HEAD = """WORKDIR /odoo
 RUN apt update;
@@ -50,7 +50,7 @@ class DockerHandler(InitHandler, DBUpdater):
 
     """
     this class needs a general fixing !!!!!!!!
-    we should use docker.from_env() to create the client 
+    we should use docker.from_env() to create the client
     and have everything done by this client and not by "import Client"
     actually we seem not to use Client at all!!
     """
@@ -89,7 +89,7 @@ class DockerHandler(InitHandler, DBUpdater):
         containers = cli.containers.list(filters={'name': name}, all=True)
         if containers:
             return containers[0]
-        
+
 
     def update_docker_info(self, name='', required=False, start=True):
         """
@@ -163,7 +163,7 @@ class DockerHandler(InitHandler, DBUpdater):
             if self.subparser_name == 'docker':
                 if not self.opts.docker_build_image:
                     # collect info on database container which normally is named 'db'
-                    self.update_docker_info(self.docker_db_container_name, required=True) 
+                    self.update_docker_info(self.docker_db_container_name, required=True)
                     self.update_docker_info(self.docker_container_name)
 
     # -------------------------------
@@ -258,7 +258,7 @@ class DockerHandler(InitHandler, DBUpdater):
                     #'erp_image_version': 'odoo:9.0',
                     #'container_name'    : 'afbs',
                     #'erp_port'         : '8070',
-                #},        
+                #},
                 container_name = self.docker_container_name
             erp_port = self.docker_rpc_port
             if erp_port == '??':
@@ -281,7 +281,7 @@ class DockerHandler(InitHandler, DBUpdater):
                         print('the value for %s is not set but is needed to create a docker container.' % k)
                         print('*' * 80)
                         print(bcolors.ENDC)
-                        sys.exit()                
+                        sys.exit()
             info_dic['docker_site_addons_path'] = self.docker_site_addons_path
             info_dic['docker_db_container_name'] = self.docker_db_container_name
             # some of the docker templates have many elements in common, get them
@@ -289,8 +289,8 @@ class DockerHandler(InitHandler, DBUpdater):
             docker_common = DC % info_dic
             info_dic['docker_common'] = docker_common  # values for the docker config
 
-            # if we are running as user root, we make sure that the 
-            # folders that are accessed from within odoo belong to the respective 
+            # if we are running as user root, we make sure that the
+            # folders that are accessed from within odoo belong to the respective
             # we do that before we start the container, so it has immediat access
             if os.geteuid() == 0:
                 # cd to the site folder, preserve old folder
@@ -327,7 +327,7 @@ class DockerHandler(InitHandler, DBUpdater):
             # make sure the container is stopped
             from templates.docker_templates import docker_delete_template
             self.stop_container(container_name)
-            self._create_container(docker_delete_template, info_dic)                    
+            self._create_container(docker_delete_template, info_dic)
 
         elif update_container:
             # create a container that runs etc/odoorunner.sh as entrypoint
@@ -340,7 +340,7 @@ class DockerHandler(InitHandler, DBUpdater):
             self.stop_container(container_name)
             info_dic['docker_common'] = ''
             self._create_container(docker_delete_template, info_dic)
-            print('container %s deleted' % name) 
+            print('container %s deleted' % name)
 
         elif recreate_container or rename_container or self.docker_registry \
              and container_name or (container_name == 'db'):
@@ -349,9 +349,9 @@ class DockerHandler(InitHandler, DBUpdater):
                 if self.erp_provider == 'flectra':
                     docker_template = flectra_docker_template
                 # robert june 19, do not recreate if container allready exists
-                if not self.docker_registry.get(container_name):                    
+                if not self.docker_registry.get(container_name):
                     self._create_container(docker_template, info_dic)
-                    print('created container %s' % name)                
+                    print('created container %s' % name)
             else:
                 # we need a postgres version
                 pg_version = self.use_postgres_version
@@ -376,7 +376,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 try:
                     self.run_commands([logout_template], user=self.user, pw='')
                 except:
-                    pass 
+                    pass
                 # now create the db container
                 try:
                     self.run_commands([docker_template], user=self.user, pw='')
@@ -572,8 +572,15 @@ class DockerHandler(InitHandler, DBUpdater):
             f.write(template)
         try:
             docker_file = '%sDockerfile' % docker_target_path
-            result = self.docker_client.build(
-                docker_target_path, 
+            from docker import APIClient
+            cli = APIClient(base_url='unix://var/run/docker.sock')
+            client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+            #result = self.docker_client.images.build(
+            #print('----> starting')
+            result = cli.build(
+            #result = client.images.build(
+            # result = self.docker_client.build(
+                docker_target_path,
                 tag=dumper_image,
                 dockerfile=docker_file,
                 rm=True,
@@ -625,10 +632,10 @@ class DockerHandler(InitHandler, DBUpdater):
             if isinstance(line, dict):
                 if line.get('errorDetail'):
                     print(DOCKER_IMAGE_CREATE_ERROR % (
-                        self.site_name, 
-                        self.site_name, 
-                        line.get('errorDetail'), 
-                        docker_file, 
+                        self.site_name,
+                        self.site_name,
+                        line.get('errorDetail'),
+                        docker_file,
                         docker_target_path))
                     is_ok = False
                 status = line.get('status')
@@ -730,7 +737,7 @@ class DockerHandler(InitHandler, DBUpdater):
             data_dic['run_block'] = data_str
             data_dic['env_vars'] = en_vars
             data_dic['run_extra_run_block'] = run_extra_run_block
-            docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\') 
+            docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\')
             result.write(docker_file)
         # construct folder layout as expected by the base image
         # see https://github.com/camptocamp/docker-odoo-project/tree/master/example
@@ -744,7 +751,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 td = '%s%s' % (docker_target_path, f)
                 if not os.path.exists(td):
                     os.mkdir(td )
-            except OSError: 
+            except OSError:
                 pass
         for f in [
             ('VERSION', docker_erp_setup_version % str(date.today())),
@@ -811,8 +818,8 @@ class DockerHandler(InitHandler, DBUpdater):
             #print('----> starting')
             result = cli.build(
             #result = client.images.build(
-                path = docker_target_path, 
-                tag = tag, 
+                path = docker_target_path,
+                tag = tag,
                 dockerfile=docker_file,
                 rm=True,
                 quiet=False
@@ -830,7 +837,7 @@ class DockerHandler(InitHandler, DBUpdater):
             # the last line is something like:
             # {"stream":"Successfully built 97cea8884220\n"}
             print(DOCKER_IMAGE_CREATE_DONE % (
-                self.site_name,result, dockerhub_user or 'YOUR_DOCKERHUB_ACCOUNT', 
+                self.site_name,result, dockerhub_user or 'YOUR_DOCKERHUB_ACCOUNT',
                 result, self.site_name))
 
     def rename_container(self, name, new_name):
@@ -850,7 +857,7 @@ class DockerHandler(InitHandler, DBUpdater):
             name = self.docker_container_name
         container = self.get_container(name)
         try:
-            print('stoping container %s' % name)            
+            print('stoping container %s' % name)
             container.stop()
             print('stopped %s' % name)
         except docker.errors.NotFound:
@@ -1014,7 +1021,7 @@ class DockerHandler(InitHandler, DBUpdater):
             exe_start= cli.exec_start(exec_id=exe, stream=True, tty=True,)
 
             #for val in exe_start:
-                #print (val)    
+                #print (val)
 
             for line in exe_start:
                 try:
@@ -1024,7 +1031,7 @@ class DockerHandler(InitHandler, DBUpdater):
                 except ValueError:
                     # If we are not able to deserialize the received line as JSON object, just print it out
                     print(line)
-                    continue    
+                    continue
 
 
         #http://stackoverflow.com/questions/35207295/docker-py-exec-start-howto-stream-the-output-to-stdout    # execute_in_shell
@@ -1034,7 +1041,7 @@ class DockerHandler(InitHandler, DBUpdater):
         """
         runs self.execute_in_shell and installs openssh server
         using apt get.
-        It then creates a /root/.ssh folder in the container and 
+        It then creates a /root/.ssh folder in the container and
         copies the id_rsa.pub found in the local .ssh folder to
         the containers /root/.ssh/autorized_keys file
 
@@ -1069,7 +1076,7 @@ class DockerHandler(InitHandler, DBUpdater):
 
     def docker_show(self, what='base'):
         """
-        docker_show displays a list information about a containe        
+        docker_show displays a list information about a containe
         Args:
 
         Returns:

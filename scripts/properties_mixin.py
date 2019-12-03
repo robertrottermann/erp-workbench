@@ -718,7 +718,7 @@ class PropertiesMixin(object):
                     % self.remote_server_ip
                 )
                 print(
-                    "you can add it by runnbing bin/s --add-server %s"
+                    "you can add it by running bin/s --add-server %s"
                     % self.remote_server_ip
                 )
                 print("please check/adapt the new server description afterwards")
