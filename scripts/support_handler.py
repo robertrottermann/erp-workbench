@@ -3,16 +3,29 @@
 import os
 import re
 import sys
-from config import SITES, BASE_INFO, MARKER, ODOO_VERSIONS, MIGRATE_FOLDER, sites_handler
+from config import (
+    SITES,
+    BASE_INFO,
+    MARKER,
+    ODOO_VERSIONS,
+    MIGRATE_FOLDER,
+    sites_handler,
+)
 from scripts.bcolors import bcolors
 from site_desc_handler.sites_handler import UpdateError
 from scripts.create_handler import InitHandler
-from scripts.messages import SITE_CREATED_SERVER, SITE_CREATED_SERVER_BAD_IP, LOCALSITESLIST_MARKER_MISSING, VCS_OK
+from scripts.messages import (
+    SITE_CREATED_SERVER,
+    SITE_CREATED_SERVER_BAD_IP,
+    LOCALSITESLIST_MARKER_MISSING,
+    VCS_OK,
+)
 import subprocess
 import shlex
 import stat
-#from utilities import collect_options, _construct_sa
-#from scripts.messages import *
+
+# from utilities import collect_options, _construct_sa
+# from scripts.messages import *
 
 # ----------------------------------
 # diff_modules
@@ -36,6 +49,8 @@ BLOCK_WITH_NEW_SERVER = """
         # filesystem path to the http server config folder
         http_server_fs_path: /etc/nginx
 """
+
+
 class SupportHandler(InitHandler):
     # _preset_handler will be imported and instantiated on demand
     _preset_handler = None
@@ -44,7 +59,8 @@ class SupportHandler(InitHandler):
         self.need_login_info = True
         super(SupportHandler, self).__init__(opts, sites)
 
-    _subparser_name = 'support'
+    _subparser_name = "support"
+
     @property
     def subparser_name(self):
         return self._subparser_name
@@ -59,12 +75,12 @@ class SupportHandler(InitHandler):
     @property
     def editor(self):
         # first check whether an editor is defined in BASE_INFO
-        editor = BASE_INFO.get('site_editor')
+        editor = BASE_INFO.get("site_editor")
         if not editor:
-            editor = os.environ.get('EDITOR')
+            editor = os.environ.get("EDITOR")
             if not editor:
-                #editor = '/usr/bin/atom'
-                editor = '/bin/nano'
+                # editor = '/usr/bin/atom'
+                editor = "/bin/nano"
         return editor
 
     # ----------------------------------
@@ -96,16 +112,17 @@ class SupportHandler(InitHandler):
         returns dictonary with info about what happened, mainly for testing purposes
         """
         from config import sites_handler
+
         # check if user wants to copy an existing site
-        template = '' #!!!!!!!!!!!!!!!!!!! does not work anymore
+        template = ""  #!!!!!!!!!!!!!!!!!!! does not work anymore
         opts = self.opts
-        if '::' in self.opts.name:
-            name, template = self.opts.name.split('::')
+        if "::" in self.opts.name:
+            name, template = self.opts.name.split("::")
             self.site_names = [name]
             self.opts.name = name
-        #site_name = self.site_name
-        #name = site_name
-        has_forbidden_chars=re.compile(r'[^A-Za-z0-9_]').search
+        # site_name = self.site_name
+        # name = site_name
+        has_forbidden_chars = re.compile(r"[^A-Za-z0-9_]").search
         # if we have only on sub -site_list, we can take this one.
         # if there are severals, the user has to tell which one
         siteinfos = self.siteinfos
@@ -123,31 +140,33 @@ class SupportHandler(InitHandler):
             sublist_name = siteinfo_names[0]
         elif not sublist_name in siteinfo_names:
             print(bcolors.FAIL)
-            print('*' * 80)
-            print('There is more than one place to add the new site')
-            print('You have to add the subsite name to the sitename after a colon')
+            print("*" * 80)
+            print("There is more than one place to add the new site")
+            print("You have to add the subsite name to the sitename after a colon")
             if site_name:
-                print('like %s:%s' % (site_name, siteinfo_names[0]))
+                print("like %s:%s" % (site_name, siteinfo_names[0]))
             else:
-                print('like new_site_name:localhost')
-            print('valid site-list-names are %s' % siteinfo_names)
+                print("like new_site_name:localhost")
+            print("valid site-list-names are %s" % siteinfo_names)
             print(bcolors.ENDC)
             sys.exit()
 
         if not site_name or has_forbidden_chars(site_name):
             print(bcolors.FAIL)
-            print('*' * 80)
-            print('The name %s contains forbidden charaters or is too short' % opts.name)
-            print('only [A-Za-z0-9_] allowed')
+            print("*" * 80)
+            print(
+                "The name %s contains forbidden charaters or is too short" % opts.name
+            )
+            print("only [A-Za-z0-9_] allowed")
             print(bcolors.ENDC)
             sys.exit()
         # was a version option used
         if opts.erp_version:
             erp_version = opts.erp_version
-            parts = erp_version.split('.') + ['.0']
+            parts = erp_version.split(".") + [".0"]
             erp_version, erp_minor = parts[:2]
-            if erp_minor == '0':
-                erp_minor = '.0'
+            if erp_minor == "0":
+                erp_minor = ".0"
             # self.default_values['erp_version'] = erp_version
             # self.default_values['erp_minor'] = erp_minor
             # self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
@@ -155,10 +174,7 @@ class SupportHandler(InitHandler):
         # if the site allready exist, we bail out
         if self.sites.get(self.site_name):
             print("site %s allready defined" % self.site_name)
-            return {
-                'existed' : self.site_name,
-                'site' : self.sites[self.site_name]
-            }
+            return {"existed": self.site_name, "site": self.sites[self.site_name]}
 
         # make sure the variables for the the docker port and remote site are set
         if opts.docker_port:
@@ -166,10 +182,10 @@ class SupportHandler(InitHandler):
                 docker_port = int(opts.docker_port)
             except Exception as e:
                 print((bcolors.FAIL))
-                print(('*' * 80))
-                print(('%s is not a valid port number' % opts.docker_port))
+                print(("*" * 80))
+                print(("%s is not a valid port number" % opts.docker_port))
                 print((bcolors.ENDC))
-                return {'error' : e}
+                return {"error": e}
         else:
             docker_port = self.docker_default_port
         docker_long_poll_port = docker_port + 10000
@@ -185,34 +201,38 @@ class SupportHandler(InitHandler):
         # else:
         #     self.default_values['remote_server'] = self.remote_data_path # bad naming!!
 
-        if opts.add_site and not self.opts.orig_sites_list == 'localhost':
+        if opts.add_site and not self.opts.orig_sites_list == "localhost":
             # before we can construct a site description we need a a file with site values
-            pvals = {} # dict to get link to the preset-vals-file
+            pvals = {}  # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
-            if 1: #preset_values:
+            if 1:  # preset_values:
                 if not sites_handler.site_name and self.opts.name:
                     # this can happen while testing ..
                     sites_handler.site_name = self.opts.orig_name
-                sites_handler.reset_values() # force to reread the values, they were read when no site_name was yet known
+                sites_handler.reset_values()  # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
-                result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=sublist_name)#, preset_values=preset_values)
+                result = sites_handler.add_site_global(
+                    handler=sites_handler, template_name=template, sublist=sublist_name
+                )  # , preset_values=preset_values)
                 if result:
                     if not opts.quiet:
                         print("%s added to sites.py" % self.site_name)
             else:
-                if pvals.get('pvals_path'):
+                if pvals.get("pvals_path"):
                     print((bcolors.WARNING))
-                    print(('*' * 80))
-                    print('a file with values for the new site was created')
-                    print((pvals.get('pvals_path')))
-                    print('please edit and adapt it. It will be incorporated in the site description')
-                    print('and will be used to set the site values')
-                    print(('*' * 80))
+                    print(("*" * 80))
+                    print("a file with values for the new site was created")
+                    print((pvals.get("pvals_path")))
+                    print(
+                        "please edit and adapt it. It will be incorporated in the site description"
+                    )
+                    print("and will be used to set the site values")
+                    print(("*" * 80))
                     print((bcolors.ENDC))
             # no preset stuff yet
             return {
-                'added' : self.site_name,
-                'site' : result, #self.sites[self.site_name],
+                "added": self.site_name,
+                "site": result,  # self.sites[self.site_name],
             }
             # before we can construct a site description we need a file with site values
             if opts.use_preset:
@@ -244,21 +264,17 @@ class SupportHandler(InitHandler):
                 #     return {'pvals' : 'still ??'}
             else:
                 result = sites_handler.add_site_global(
-                    handler=self,
-                    template_name=template)
-                    #preset_values=preset_values)
+                    handler=self, template_name=template
+                )
+                # preset_values=preset_values)
             if result:
                 print("%s added to sites.py" % self.site_name)
-            return {
-                'added' : self.site_name,
-                'result' : result,
-                'type' : 'G'
-            }
-        elif opts.add_site_local or self.opts.orig_sites_list == 'localhost':
+            return {"added": self.site_name, "result": result, "type": "G"}
+        elif opts.add_site_local or self.opts.orig_sites_list == "localhost":
             # we add to sites local
             # we read untill we find an empty }
             # before we can construct a site description we need a a file with site values
-            if opts.__dict__.get('use_preset'):
+            if opts.__dict__.get("use_preset"):
                 pass
                 # pvals = {}  # dict to get link to the preset-vals-file
                 # preset_values = self.preset_handler.get_preset_values(pvals, is_local=True)
@@ -266,15 +282,12 @@ class SupportHandler(InitHandler):
                 #     handler=self, template_name=template, preset_values=preset_values)
             else:
                 result = sites_handler.add_site_local(
-                    handler=self, template_name=template) #, preset_values=preset_values)
+                    handler=self, template_name=template
+                )  # , preset_values=preset_values)
             if result:
                 print("%s added to sites.py (local)" % self.site_name)
-            return {
-                'added' : self.site_name,
-                'result' : result,
-                'type' : 'L'
-            }
-        return {'error' : 'should not have come here'}
+            return {"added": self.site_name, "result": result, "type": "L"}
+        return {"error": "should not have come here"}
 
     # ----------------------------------
     # edit_yaml_file
@@ -283,7 +296,6 @@ class SupportHandler(InitHandler):
     def edit_yaml_file(self, file_name):
         yaml_path = os.path.normpath("%s/config/%s" % (self.sites_home, file_name))
         self.edit_site_or_server(yaml_path)
-
 
     # ----------------------------------
     # add_server_to_server_list
@@ -295,24 +307,25 @@ class SupportHandler(InitHandler):
         @opts             : option instance
         @default_values   : dictionary with default values
         """
-        #needs to be adapted to the using of yaml
+        # needs to be adapted to the using of yaml
         opts = self.opts
-        server_info = opts.add_server.strip().split('@')
+        server_info = opts.add_server.strip().split("@")
 
         if not len(server_info) == 2:
             print(SITE_CREATED_SERVER_BAD_IP % opts.add_server)
             return
-        if server_info[0] == 'root':
-            remote_data_path = '/root/erp_workbench'
+        if server_info[0] == "root":
+            remote_data_path = "/root/erp_workbench"
         else:
-            remote_data_path = '/home/%s/erp_workbench' % server_info[0]
+            remote_data_path = "/home/%s/erp_workbench" % server_info[0]
         new_server = BLOCK_WITH_NEW_SERVER % {
-            'remote_ip': server_info and server_info[-1],
-            'BASE_PATH': remote_data_path,
-            'remote_user' : server_info[0]}
+            "remote_ip": server_info and server_info[-1],
+            "BASE_PATH": remote_data_path,
+            "remote_user": server_info[0],
+        }
 
-        with open('%s/config/servers.yaml' % self.sites_home, 'a') as f:
-            f.write('\n')
+        with open("%s/config/servers.yaml" % self.sites_home, "a") as f:
+            f.write("\n")
             f.write(new_server)
 
         print(SITE_CREATED_SERVER % (server_info[1], server_info[0]))
@@ -328,19 +341,19 @@ class SupportHandler(InitHandler):
         uninstalled = []
         to_upgrade = []
         self.collect_info(cursor, req, installed, uninstalled, to_upgrade, [])
-        bt = ''
-        btl = '\n        %s,'
+        bt = ""
+        btl = "\n        %s,"
         if list_only:
             for t in installed:
                 print(t)
         elif rewrite:
-            f = open(mod_path, 'w')
+            f = open(mod_path, "w")
             for t in installed:
-                f.write('%s\n' % str(t))
+                f.write("%s\n" % str(t))
             f.close()
         else:
             try:
-                data = open(mod_path, 'r').read().split('\n')
+                data = open(mod_path, "r").read().split("\n")
             except IOError:
                 print([])
                 return
@@ -348,7 +361,7 @@ class SupportHandler(InitHandler):
                 if not str(t) in data:
                     bt += btl % str(t)
             if bt:
-                print('please add the following block to templates/install_blocks.py')
+                print("please add the following block to templates/install_blocks.py")
                 print(BLOCK_TEMPLATE % bt)
 
     def pull_sites(self):
@@ -357,29 +370,35 @@ class SupportHandler(InitHandler):
         """
         try:
             sites_handler.check_pull(auto=False)
-            print(VCS_OK % ('sites_global', BASE_INFO['sitesinfo_url']))
+            print(VCS_OK % ("sites_global", BASE_INFO["sitesinfo_url"]))
         except UpdateError as e:
             print(bcolors.WARNING)
             print(str(e))
             print(bcolors.ENDC)
 
-    def edit_site_or_server(self, fname=''):
+    def edit_site_or_server(self, fname=""):
         # first we get the editor
         editor = self.editor
         if not fname:
             if self.opts.edit_server:
                 # we are editing config/localdata.py
-                fname = '%s/config/config_data/servers_info.py' % self.sites_home
+                fname = "%s/config/config_data/servers_info.py" % self.sites_home
             elif self.opts.edit_site:
                 site_name = self.site_name
-                site_name_transformed = site_name.replace('-', '_').replace('.', '_')
-                list_origin = self.site.get('site_list_name', '')
-                if self.site.get('is_local'):
-                    fname = '%s/%s/sites_local/%s.py' % (
-                        BASE_INFO['sitesinfo_path'], list_origin, site_name_transformed)
+                site_name_transformed = site_name.replace("-", "_").replace(".", "_")
+                list_origin = self.site.get("site_list_name", "")
+                if self.site.get("is_local"):
+                    fname = "%s/%s/sites_local/%s.py" % (
+                        BASE_INFO["sitesinfo_path"],
+                        list_origin,
+                        site_name_transformed,
+                    )
                 else:
-                    fname = '%s/%s/sites_global/%s.py' % (
-                        BASE_INFO['sitesinfo_path'], list_origin, site_name_transformed)
+                    fname = "%s/%s/sites_global/%s.py" % (
+                        BASE_INFO["sitesinfo_path"],
+                        list_origin,
+                        site_name_transformed,
+                    )
             # command = editor + " " + fname
             # status = os.system(command)
         fname = os.path.normpath(fname)
@@ -391,19 +410,21 @@ class SupportHandler(InitHandler):
             print(bcolors.ENDC)
         except OSError as e:
             print(bcolors.FAIL)
-            print('trying to edit the list of server using %s produced the following error' % editor)
-            print('falling back to use pico')
+            print(
+                "trying to edit the list of server using %s produced the following error"
+                % editor
+            )
+            print("falling back to use pico")
             print(str(e))
             print(bcolors.WARNING)
-            #input('hit Enter to continue')
+            # input('hit Enter to continue')
             print(bcolors.ENDC)
             try:
-                subprocess.check_call(['pico', fname])
+                subprocess.check_call(["pico", fname])
             except Exception as e:
                 print(bcolors.FAIL)
                 print(str(e))
                 print(bcolors.ENDC)
-
 
     # list_ports
     # ----------
@@ -413,35 +434,34 @@ class SupportHandler(InitHandler):
         """return list of all ports used in remote servers
         """
         n_map = {
-            '176.9.142.21'  : 'alice2',
-            '144.76.184.20' : 'frieda',
-            '195.48.80.84'  : 'kinesys',
-            '88.198.51.174' : 'lisa',
-            '46.4.89.241'   : 'salome',
-            '178.63.103.72' : 'susanne',
-            'xx.xx.xx.xx' : 'xx.xx.xx.xx',
-            'localhost' : 'localhost',
+            "176.9.142.21": "alice2",
+            "144.76.184.20": "frieda",
+            "195.48.80.84": "kinesys",
+            "88.198.51.174": "lisa",
+            "46.4.89.241": "salome",
+            "178.63.103.72": "susanne",
+            "xx.xx.xx.xx": "xx.xx.xx.xx",
+            "localhost": "localhost",
         }
         result = {}
         data = list(self.sites.items())
         data.sort()
         for sname, site in data:
             try:
-                port = site['docker']['odoo_port']
-                url = n_map.get(site['remote_server']['remote_url'], 'unknown-url')
+                port = site["docker"]["odoo_port"]
+                url = n_map.get(site["remote_server"]["remote_url"], "unknown-url")
                 result[url] = result.get(url, []) + [(port, sname)]
             except:
-                print('no docker:', sname)
+                print("no docker:", sname)
         servers = list(n_map.values())
         servers.sort()
         for url in servers:
-            print(('server: %s, number of sites: %s' % (url, len(result.get(url, [])))))
+            print(("server: %s, number of sites: %s" % (url, len(result.get(url, [])))))
             result_lines = result.get(url, [])
             if result_lines:
                 result_lines.sort()
                 for rl in result_lines:
-                    print(('    %s %s' % (rl[0], rl[1])))
-
+                    print(("    %s %s" % (rl[0], rl[1])))
 
     # upgrade
     # ----------
@@ -449,49 +469,53 @@ class SupportHandler(InitHandler):
     # using openupgrade
     def upgrade(self, target_site):
         site = self.site
-        #check whether target_site exists
-        target_site, target_site_list = (target_site.split(':') + [''])[:2]
+        # check whether target_site exists
+        target_site, target_site_list = (target_site.split(":") + [""])[:2]
         if not self.sites.get(target_site):
             print(bcolors.FAIL)
-            print('*' * 80)
-            print('%s is not a valid site' % target_site)
+            print("*" * 80)
+            print("%s is not a valid site" % target_site)
             print(bcolors.ENDC)
             return
-        target_outer = '%s/%s' % (BASE_INFO['project_path'], target_site)
-        target_inner = '%s/%s' % (target_outer, target_site)
+        target_outer = "%s/%s" % (BASE_INFO["project_path"], target_site)
+        target_inner = "%s/%s" % (target_outer, target_site)
         if not os.path.exists(target_inner):
             print(bcolors.FAIL)
-            print('*' * 80)
-            print('%s does not exist' % target_inner)
-            print('please create it by executing bin/c -c %s' % target_site)
+            print("*" * 80)
+            print("%s does not exist" % target_inner)
+            print("please create it by executing bin/c -c %s" % target_site)
             print(bcolors.ENDC)
             return
 
         # for the time beeing we only do one step upgrade
         # construct the command line like:
         # -C /home/robert/projects/breitschtraeff10/breitschtraeff10/etc/odoo.cfg -D breitschtraeff10 -B migrations -R "11.0"
-        config_path = '%s/etc/odoo.cfg' % self.default_values['inner']
-        target_version = self.sites[target_site].get('erp_version', self.sites[target_site].get('odoo_version'))
+        config_path = "%s/etc/odoo.cfg" % self.default_values["inner"]
+        target_version = self.sites[target_site].get(
+            "erp_version", self.sites[target_site].get("odoo_version")
+        )
         if not os.path.exists(config_path):
             print(bcolors.FAIL)
-            print('*' * 80)
-            print('the base project does not yet exist please create it')
+            print("*" * 80)
+            print("the base project does not yet exist please create it")
             print(bcolors.ENDC)
             return
-        migrate_py = os.path.normpath('%s/migrate.py' % MIGRATE_FOLDER)
+        migrate_py = os.path.normpath("%s/migrate.py" % MIGRATE_FOLDER)
         cmd_line = 'bin/python %s -C %s -D %s -N %s -B %s -R "%s"' % (
             migrate_py,
             config_path,
             self.site_name,
             target_site,
             MIGRATE_FOLDER,
-            target_version)
-        print(cmd_line,flush=True)
+            target_version,
+        )
+        print(cmd_line, flush=True)
         print(bcolors.WARNING)
-        print('*' * 80)
-        print('about to execute the following command:')
+        print("*" * 80)
+        print("about to execute the following command:")
         print(cmd_line)
-        print("""
+        print(
+            """
         The following values are used:
         mygration.py:
             This is the command executed with the following parameters:
@@ -506,13 +530,15 @@ class SupportHandler(InitHandler):
                 -R %s
                     comma separated list of migrations to run
 
-        """  % (
-            migrate_py,
-            config_path,
-            self.site_name,
-            target_site,
-            MIGRATE_FOLDER,
-            target_version )
+        """
+            % (
+                migrate_py,
+                config_path,
+                self.site_name,
+                target_site,
+                MIGRATE_FOLDER,
+                target_version,
+            )
         )
         print(bcolors.ENDC)
 
@@ -521,31 +547,35 @@ class SupportHandler(InitHandler):
         # this will be done in the target sites project environment
         # so we have to write out a script that can do this
         from templates.update_script import UPDATE_SCRIPT_TEMPLATE
-        target_data = {
-            'upgrade_folder' : MIGRATE_FOLDER,
-            'upgrade_line' : result_line,
-        }
+
+        target_data = {"upgrade_folder": MIGRATE_FOLDER, "upgrade_line": result_line}
         update_script = UPDATE_SCRIPT_TEMPLATE % target_data
         # write it out
-        out_path = '%s/do_migrate.sh' % target_inner
-        open(out_path, 'w').write(update_script)
+        out_path = "%s/do_migrate.sh" % target_inner
+        open(out_path, "w").write(update_script)
         # set executable
         st = os.stat(out_path)
         os.chmod(out_path, st.st_mode | stat.S_IEXEC)
 
         # finaly we have to copy the filestore from the old to the new site
-        lfst_path = '%s/%s/filestore/%s' % (
-            BASE_INFO['erp_server_data_path'], self.site_name, self.site_name)
-        rfst_path = '%s/%s/filestore/%s' % (
-            BASE_INFO['erp_server_data_path'], target_site, target_site)
-        cmdline = 'rsync -av %s/ %s/ --delete' % (lfst_path, rfst_path)
+        lfst_path = "%s/%s/filestore/%s" % (
+            BASE_INFO["erp_server_data_path"],
+            self.site_name,
+            self.site_name,
+        )
+        rfst_path = "%s/%s/filestore/%s" % (
+            BASE_INFO["erp_server_data_path"],
+            target_site,
+            target_site,
+        )
+        cmdline = "rsync -av %s/ %s/ --delete" % (lfst_path, rfst_path)
         self.run_upgrade(cmdline)
         print(bcolors.OKGREEN)
-        print('*' * 80)
-        print('halleluja, the first step is done')
-        print('now go to the target environment by executing %sw' % target_site)
-        print('there you find a script called do_migrate.sh')
-        print('which you should execute')
+        print("*" * 80)
+        print("halleluja, the first step is done")
+        print("now go to the target environment by executing %sw" % target_site)
+        print("there you find a script called do_migrate.sh")
+        print("which you should execute")
         print(bcolors.ENDC)
 
         return
@@ -554,11 +584,10 @@ class SupportHandler(InitHandler):
         process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
         while True:
             output = process.stdout.readline()
-            if output in ['', b''] and process.poll() is not None:
+            if output in ["", b""] and process.poll() is not None:
                 break
             if output:
                 last_line = output.strip()
                 print(last_line)
         rc = process.poll()
         return (rc, last_line)
-

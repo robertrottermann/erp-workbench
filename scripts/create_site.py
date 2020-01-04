@@ -5,13 +5,18 @@
 # Do NOT !!!!! sort imports
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!
 import os, sys
+
 # robert: i usualy test in wingide
-if not os.environ.get('VIRTUAL_ENV') and not os.environ.get('WINGDB_ACTIVE') and not os.environ.get('UNIT_TESTING'):
-    print('not running in a virtualenv')
-    print('activate the worbench environment executing:')
-    print('workon workbench')
+if (
+    not os.environ.get("VIRTUAL_ENV")
+    and not os.environ.get("WINGDB_ACTIVE")
+    and not os.environ.get("UNIT_TESTING")
+):
+    print("not running in a virtualenv")
+    print("activate the worbench environment executing:")
+    print("workon workbench")
     sys.exit()
-from argparse import ArgumentParser 
+from argparse import ArgumentParser
 import argparse
 
 try:
@@ -24,17 +29,19 @@ from scripts.banner import BANNER_HEAD, BANNER_TEXT
 from scripts.messages import SITE_EXISTED, SITE_NEW
 from scripts.utilities import create_server_config, checkout_sa, list_sites
 
-#from config import sites_handler
+# from config import sites_handler
 from config import SITES
 
-#from config import BASE_INFO
+# from config import BASE_INFO
 
 from config.config_data.base_info import BASE_DEFAULTS
-#from config.config_data.project_info import PROJECT_DEFAULTS
+
+# from config.config_data.project_info import PROJECT_DEFAULTS
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler
-#from config.handlers import KuberHandlerHelm
+
+# from config.handlers import KuberHandlerHelm
 from kuber_handler.kuber_handler import KuberHandlerHelm
 from config.handlers import SupportHandler
 from config.handlers import RemoteHandler
@@ -50,12 +57,12 @@ from scripts.options_support import add_options_support
 from scripts.options_remote import add_options_remote
 from scripts.options_mail import add_options_mail
 
-banner = bcolors.red + BANNER_HEAD  + bcolors.normal + BANNER_TEXT
+banner = bcolors.red + BANNER_HEAD + bcolors.normal + BANNER_TEXT
 
-#ascii art by: Cara Pearson
+# ascii art by: Cara Pearson
 colors = bcolors
 
-#https://stackoverflow.com/questions/6365601/default-sub-command-or-handling-no-sub-command-with-argparse
+# https://stackoverflow.com/questions/6365601/default-sub-command-or-handling-no-sub-command-with-argparse
 def set_default_subparser(self, name, args=None):
     """default subparser selection. Call after setup, just before parse_args()
     name: is the name of the subparser to call by default
@@ -65,9 +72,9 @@ def set_default_subparser(self, name, args=None):
     it works with 2.6 assuming argparse is installed
     """
     subparser_found = False
-    name_to_return = ''
+    name_to_return = ""
     for arg in sys.argv[1:]:
-        if arg in ['-h', '--help']:  # global help if no subparser
+        if arg in ["-h", "--help"]:  # global help if no subparser
             break
     else:
         for x in self._subparsers._actions:
@@ -87,24 +94,25 @@ def set_default_subparser(self, name, args=None):
             name_to_return = name
     return name_to_return
 
-def main(opts, parsername, need_names_dic, return_handler = False):
+
+def main(opts, parsername, need_names_dic, return_handler=False):
     """
     return_handler is used while testing
     """
     # default_handler = SiteCreator
     # if the name ends with /, cut it off
-    if opts.name.endswith('/'):
+    if opts.name.endswith("/"):
         opts.name = opts.name[:-1]
     opts.subparser_name = parsername
-    if parsername == 'create':
+    if parsername == "create":
         handler = SiteCreator(opts, SITES)
-    elif parsername == 'support':
+    elif parsername == "support":
         handler = SupportHandler(opts, SITES)
-    elif parsername == 'remote':
+    elif parsername == "remote":
         handler = RemoteHandler(opts, SITES)
-    elif parsername == 'migrate':
+    elif parsername == "migrate":
         handler = MigrationHandler(opts, SITES)
-    elif parsername == 'docker':
+    elif parsername == "docker":
         if opts.docker_use_bitnami:
             handler = KuberHandlerHelm(opts, SITES)
         else:
@@ -125,13 +133,14 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     # if yes, flag it to the user. To do the actual update
     # the user has to use the support optin --fix-sites-list
     from config import sites_handler
+
     # ckeck wheter the the sites-list has to be autoloaded
     sites_handler.check_pull(opts=opts)
     did_run_a_command = False
     # ----------------------
     # create commands
     # ----------------------
-    if parsername == 'create':
+    if parsername == "create":
 
         # create
         # ------
@@ -158,23 +167,23 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # -------------
         if opts.create or opts.modules_update or opts.module_update:
             info_dic = {
-                'project_path' : handler.default_values['inner'],
-                'erp_version': handler.erp_version,
-                'site_name' : handler.site_name,
-                'erp_provider' : handler.erp_provider,
+                "project_path": handler.default_values["inner"],
+                "erp_version": handler.erp_version,
+                "site_name": handler.site_name,
+                "erp_provider": handler.erp_provider,
             }
             if opts.create:
                 existed = handler.create_or_update_site()
                 if existed:
                     if not opts.quiet:
                         print()
-                        print('%s site allredy existed' % handler.site_name)
+                        print("%s site allredy existed" % handler.site_name)
                         print(SITE_EXISTED % info_dic)
                 else:
                     if handler.site_name:
                         if not opts.quiet:
                             print()
-                            print('%s site created' % handler.site_name)
+                            print("%s site created" % handler.site_name)
                             print(SITE_NEW % info_dic)
             # create the folder structure within the datafoler defined in the config
             # this also creates the config file used by a docker server within the
@@ -322,10 +331,14 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # ----------------
         # when the option -L --local_docker is used, data is copied from a docker container
         # running on localhost
-        if opts.dataupdate  or opts.dataupdate_close_connections:
+        if opts.dataupdate or opts.dataupdate_close_connections:
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
             set_local = opts.startafterupdate
-            handler.doUpdate(db_update = not opts.noupdatedb, norefresh=opts.norefresh, set_local = set_local)
+            handler.doUpdate(
+                db_update=not opts.noupdatedb,
+                norefresh=opts.norefresh,
+                set_local=set_local,
+            )
             did_run_a_command = True
         if opts.dump_local:
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
@@ -356,7 +369,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     # ----------------------
     # docker commands
     # ----------------------
-    if parsername == 'docker':
+    if parsername == "docker":
         # docker_create_container
         # -----------------------
         # it creates and starts a docker container
@@ -384,12 +397,12 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         if opts.docker_delete_container:
             if opts.docker_use_bitnami:
                 handler.delete_bitnami_container()
-            else:            
+            else:
                 handler.check_and_create_container(delete_container=True)
             did_run_a_command = True
         if opts.docker_create_db_container:
             # "docker -dcdb", "--create_db_container",
-            handler.check_and_create_container(container_name='db')
+            handler.check_and_create_container(container_name="db")
             did_run_a_command = True
 
         # set_erp_settings
@@ -403,7 +416,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # ------------------
         # recreate a conainer
         if opts.docker_recreate_container:
-            handler.check_and_create_container(recreate_container = True)
+            handler.check_and_create_container(recreate_container=True)
             did_run_a_command = True
             return
 
@@ -411,7 +424,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # ----------------
         # recreate a conainer
         if opts.docker_rename_container:
-            handler.check_and_create_container(rename_container = True)
+            handler.check_and_create_container(rename_container=True)
             did_run_a_command = True
             return
 
@@ -439,7 +452,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # ----------
         # pull an actual docker image used by a site
         if opts.docker_pull_image:
-            handler.check_and_create_container(pull_image = True)
+            handler.check_and_create_container(pull_image=True)
             did_run_a_command = True
             return
 
@@ -459,7 +472,6 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
 
-
         # installown or updateown or removeown
         # ------------------------------------
         # installown install all modules declared in the selected site
@@ -468,8 +480,13 @@ def main(opts, parsername, need_names_dic, return_handler = False):
 
         # ----------> see create commands
 
-        if opts.dinstallown or opts.dupdateown or opts.dremoveown or opts.dinstall_erp_modules:
-            #handler = dockerHandler(opts, default_values, site_name)
+        if (
+            opts.dinstallown
+            or opts.dupdateown
+            or opts.dremoveown
+            or opts.dinstall_erp_modules
+        ):
+            # handler = dockerHandler(opts, default_values, site_name)
             handler.docker_install_own_modules()
             did_run_a_command = True
 
@@ -486,7 +503,11 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         if opts.dataupdate_docker:
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
             set_local = True
-            handler.doUpdate(db_update = not opts.noupdatedb, norefresh=opts.norefresh, set_local = set_local)
+            handler.doUpdate(
+                db_update=not opts.noupdatedb,
+                norefresh=opts.norefresh,
+                set_local=set_local,
+            )
             did_run_a_command = True
         if opts.dump_local_docker:
             # def __init__(self, opts, default_values, site_name, foldernames=FOLDERNAMES)
@@ -494,7 +515,11 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
 
         # start or restart docker
-        if opts.docker_restart_container or opts.docker_start_container or opts.docker_stop_container:
+        if (
+            opts.docker_restart_container
+            or opts.docker_start_container
+            or opts.docker_stop_container
+        ):
             if opts.docker_start_container:
                 handler.start_container()
             elif opts.docker_restart_container:
@@ -508,7 +533,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # show some info about a containe
         if opts.docker_show or opts.docker_show_all:
             if opts.docker_show_all:
-                handler.docker_show('all')
+                handler.docker_show("all")
             else:
                 handler.docker_show()
             did_run_a_command = True
@@ -522,15 +547,15 @@ def main(opts, parsername, need_names_dic, return_handler = False):
 
         if not did_run_a_command:
             print(bcolors.WARNING)
-            print('*' * 80)
-            print('The selected docker option is either invalid or not yet implemented')
+            print("*" * 80)
+            print("The selected docker option is either invalid or not yet implemented")
             print(bcolors.ENDC)
         return
 
     # ----------------------
     # migration commands
     # ----------------------
-    if parsername == 'migrate':
+    if parsername == "migrate":
         if opts.migrate_remove_apps:
             handler.migrate_remove_apps()
             did_run_a_command = True
@@ -544,7 +569,7 @@ def main(opts, parsername, need_names_dic, return_handler = False):
     # ----------------------
     # support commands
     # ----------------------
-    if parsername == 'support':
+    if parsername == "support":
         # add_site
         # --------
         # add_site adds a site description to the sites.py file
@@ -577,22 +602,22 @@ def main(opts, parsername, need_names_dic, return_handler = False):
         # editing yam files
         # -------------------------------------
         if opts.edit_config:
-            handler.edit_yaml_file('config.yaml')
+            handler.edit_yaml_file("config.yaml")
             did_run_a_command = True
             return
 
         if opts.edit_docker:
-            handler.edit_yaml_file('docker.yaml')
+            handler.edit_yaml_file("docker.yaml")
             did_run_a_command = True
             return
 
         if opts.edit_project:
-            handler.edit_yaml_file('project.yaml')
+            handler.edit_yaml_file("project.yaml")
             did_run_a_command = True
             return
 
         if opts.edit_servers:
-            handler.edit_yaml_file('servers.yaml')
+            handler.edit_yaml_file("servers.yaml")
             did_run_a_command = True
             return
 
@@ -615,18 +640,19 @@ def main(opts, parsername, need_names_dic, return_handler = False):
             did_run_a_command = True
             return
 
-
         if not did_run_a_command:
             print(bcolors.WARNING)
-            print('*' * 80)
-            print('The selected support option is either invalid or not yet implemented')
+            print("*" * 80)
+            print(
+                "The selected support option is either invalid or not yet implemented"
+            )
             print(bcolors.ENDC)
         return
 
     # ----------------------
     # remote commands
     # ----------------------
-    if parsername == 'remote':
+    if parsername == "remote":
         if opts.add_apache:
             handler.add_site_to_apache()
             did_run_a_command = True
@@ -639,33 +665,33 @@ def main(opts, parsername, need_names_dic, return_handler = False):
 
     if not did_run_a_command:
         print(bcolors.WARNING)
-        print('*' * 80)
-        print('The selected remote option is either invalid or not yet implemented')
+        print("*" * 80)
+        print("The selected remote option is either invalid or not yet implemented")
         print(bcolors.ENDC)
     return
 
+
 def parse_args():
     print_banner = True
-    print_banner = BASE_DEFAULTS.get('print_banner', True)
+    print_banner = BASE_DEFAULTS.get("print_banner", True)
     if print_banner:
         print(banner)
 
     argparse.ArgumentParser.set_default_subparser = set_default_subparser
     usage = ""
     need_names_dic = {
-        'need_name' : [], # we need a name
-        'name_valid': [], # given name must be valid  
+        "need_name": [],  # we need a name
+        "name_valid": [],  # given name must be valid
     }
     # -----------------------------------------------
-    # parent parser holds arguments, that are used for all subparsers 
+    # parent parser holds arguments, that are used for all subparsers
     parent_parser = ArgumentParser(usage=usage, add_help=False)
     # set options for parent_parser
     add_options_parent(parent_parser, need_names_dic)
     # parser_rpc is also used in several parsers to provide default values
-    #parser_rpc = ArgumentParser(add_help=False)
+    # parser_rpc = ArgumentParser(add_help=False)
     # set options for parser_rpc
     add_options_rpc(parent_parser, need_names_dic)
-
 
     # parser is the main parser
     parser = ArgumentParser()
@@ -679,94 +705,98 @@ def parse_args():
     # -----------------------------------------------
     # create commands
     parser_manage = subparsers.add_parser(
-        'create',
+        "create",
         help="""
         create is used to manage local and remote sites by reading 
         site descrition created using the sites command set
         """,
-        parents= [parent_parser], # [parser_rpc, parent_parser],
-        #prog='PROG',
-        usage='%(prog)s [options]')
+        parents=[parent_parser],  # [parser_rpc, parent_parser],
+        # prog='PROG',
+        usage="%(prog)s [options]",
+    )
     # -----------------------------------------------
     # support commands
     parser_support = subparsers.add_parser(
-        'support', 
+        "support",
         help="""
         support provides commands to handle site descriptions from which sites are constructed
         and other support commands.
-        """, 
-        parents=[parent_parser])
+        """,
+        parents=[parent_parser],
+    )
     add_options_support(parser_support, need_names_dic)
     # -----------------------------------------------
     # manage docker
     parser_docker = subparsers.add_parser(
-        'docker',
-        help='docker provides commands to handle docker containers',
-        parents=[parent_parser])
+        "docker",
+        help="docker provides commands to handle docker containers",
+        parents=[parent_parser],
+    )
     add_options_docker(parser_docker, need_names_dic)
     # -----------------------------------------------
     # manage migrate
     parser_migrate = subparsers.add_parser(
-        'migrate',
-        help='docker provides commands to handle docker containers',
-        parents=[parent_parser])
+        "migrate",
+        help="docker provides commands to handle docker containers",
+        parents=[parent_parser],
+    )
     add_options_migrate(parser_migrate, need_names_dic)
     # -----------------------------------------------
     # manage remote server (can be localhost)
     parser_remote = subparsers.add_parser(
-        'remote',
-        help='remote provides commands to manage elements of the remote server.',
-        parents=[parent_parser])
+        "remote",
+        help="remote provides commands to manage elements of the remote server.",
+        parents=[parent_parser],
+    )
     # -----------------------------------------------
     # manage mails
     parser_mail = subparsers.add_parser(
-        'mail',
-        help='mail provides commands to manage mail accounts.',
-        parents=[parent_parser])
+        "mail",
+        help="mail provides commands to manage mail accounts.",
+        parents=[parent_parser],
+    )
     add_options_mail(parser_mail, need_names_dic)
 
     # -----------------------------------------------
     # manage sites create and update sites
     # -----------------------------------------------
-    #http://stackoverflow.com/questions/10448200/how-to-parse-multiple-sub-commands-using-python-argparse
-    #parser_site_s = parser_site.add_subparsers(title='manage sites', dest="site_creation_commands")
+    # http://stackoverflow.com/questions/10448200/how-to-parse-multiple-sub-commands-using-python-argparse
+    # parser_site_s = parser_site.add_subparsers(title='manage sites', dest="site_creation_commands")
     add_options_create(parser_manage, need_names_dic)
     # -----------------------------------------------
     # manage remote server (can be localhost)
     # -----------------------------------------------
     add_options_remote(parser_remote, need_names_dic)
 
-    sub_parser = parser.set_default_subparser('create')
+    sub_parser = parser.set_default_subparser("create")
     args, unknownargs = parser.parse_known_args()
-    command_line = ' '.join(sys.argv)
+    command_line = " ".join(sys.argv)
     args.command_line = command_line
-    unknownargs = [a for a in unknownargs if a and a[0] != '-']
+    unknownargs = [a for a in unknownargs if a and a[0] != "-"]
     if not args.name:
-        cmds = ['create', 'support', 'docker', 'remote', 'mail', 'migrate']
+        cmds = ["create", "support", "docker", "remote", "mail", "migrate"]
         if unknownargs and unknownargs[0] not in cmds:
             args.name = unknownargs[0]
         else:
-            args.name = ''
+            args.name = ""
     return args, sub_parser, need_names_dic
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     args, sub_parser_name, need_names_dic = parse_args()
 
-
-    #(opts, args) = parser.parse_args()
+    # (opts, args) = parser.parse_args()
 
     # --------------------------------------------------------
     # set a marker, so we can check if any command was executed
     # --------------------------------------------------------
     did_run_a_command = False
-    main(args, sub_parser_name, need_names_dic) #opts.noinit, opts.initonly)
+    main(args, sub_parser_name, need_names_dic)  # opts.noinit, opts.initonly)
 
-    if 0: #not did_run_a_command:
+    if 0:  # not did_run_a_command:
         print(bcolors.FAIL)
-        print('*' * 80)
-        print('it looks as if no valid comand was executed')
-        print('*' * 80)
+        print("*" * 80)
+        print("it looks as if no valid comand was executed")
+        print("*" * 80)
         print(bcolors.ENDC)
-

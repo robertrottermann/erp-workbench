@@ -4,14 +4,15 @@
 # import warnings
 import sys
 import os
+
 # import logging
 import re
 import socket
 import subprocess
 from subprocess import PIPE
-from config import SITES, SITES_LOCAL, \
-    NO_NEED_SERVER_IP, ODOO_VERSIONS, DB_PASSWORD
-#from config.config_data.base_info import BASE_DEFAULTS
+from config import SITES, SITES_LOCAL, NO_NEED_SERVER_IP, ODOO_VERSIONS, DB_PASSWORD
+
+# from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
 from scripts.bcolors import bcolors
 from scripts.name_completer import SimpleCompleter
@@ -23,18 +24,48 @@ from pprint import pformat
 from scripts.update_local_db import DBUpdater
 from site_desc_handler.sdesc_utilities import _construct_sa
 from scripts.utilities import collect_options, find_addon_names
-from scripts.messages import SITE_HAS_NO_REMOTE_INFO, SITE_UNKNOW_IP, EXTRA_SCRIPT_NOT_EXISTING, \
-    MODULE_MISSING, SITE_DESCRIPTION_RELOADED, ERP_NOT_RUNNING, ERP_NOT_RUNNING, ERP_NOT_RUNNING, \
-    OWN_ADDONS_NO_DEVELOP, AMARKER, AMARKER, ABLOCK, AMARKER, AMARKER, ABLOCK, ALIAS_HEADER, \
-    ALIAS_LINE, ALIAS_LINE, ALIAS_LINE_PULL, ALIAS_LENGTH, ALIAS_LENGTH, ALIAS_LINE, ALIAS_LINE, \
-    ALIAS, WWB, WWLI, WWB, DOCKER_CLEAN, DOC_ET_ALL, ALIASC, ALIASOO, VIRTENV_D
+from scripts.messages import (
+    SITE_HAS_NO_REMOTE_INFO,
+    SITE_UNKNOW_IP,
+    EXTRA_SCRIPT_NOT_EXISTING,
+    MODULE_MISSING,
+    SITE_DESCRIPTION_RELOADED,
+    ERP_NOT_RUNNING,
+    ERP_NOT_RUNNING,
+    ERP_NOT_RUNNING,
+    OWN_ADDONS_NO_DEVELOP,
+    AMARKER,
+    AMARKER,
+    ABLOCK,
+    AMARKER,
+    AMARKER,
+    ABLOCK,
+    ALIAS_HEADER,
+    ALIAS_LINE,
+    ALIAS_LINE,
+    ALIAS_LINE_PULL,
+    ALIAS_LENGTH,
+    ALIAS_LENGTH,
+    ALIAS_LINE,
+    ALIAS_LINE,
+    ALIAS,
+    WWB,
+    WWLI,
+    WWB,
+    DOCKER_CLEAN,
+    DOC_ET_ALL,
+    ALIASC,
+    ALIASOO,
+    VIRTENV_D,
+)
 import shutil
 from docker_handler.docker_mixin import DockerHandlerMixin
 
-# refactoring 
+# refactoring
 from site_desc_handler.sdesc_utilities import flatten_sites
 from site_desc_handler.site_desc_handler_mixin import SiteDescHandlerMixin
-#from site_desc_handler.handle_remote_data import collect_remote_info
+
+# from site_desc_handler.handle_remote_data import collect_remote_info
 from scripts.properties_mixin import PropertiesMixin
 
 
@@ -50,6 +81,7 @@ set of configuration files and keep them in sync.
 It knows enough about the erp to be able to treat some special values correctly
 
 """
+
 
 class RPC_Mixin(object):
     _odoo = None
@@ -72,15 +104,18 @@ class RPC_Mixin(object):
 
         if dbpw:
             conn_string = "dbname='%s' user='%s' host='%s' password='%s'" % (
-                db_name, dbuser, dbhost, dbpw)
+                db_name,
+                dbuser,
+                dbhost,
+                dbpw,
+            )
         else:
-            conn_string = "dbname='%s' user=%s host='%s'" % (
-                db_name, dbuser, dbhost)
+            conn_string = "dbname='%s' user=%s host='%s'" % (db_name, dbuser, dbhost)
         try:
             conn = psycopg2.connect(conn_string)
         except psycopg2.OperationalError:
             if postgres_port:
-                conn_string += (' port=%s' % postgres_port)
+                conn_string += " port=%s" % postgres_port
                 conn = psycopg2.connect(conn_string)
 
         cursor_d = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -156,9 +191,10 @@ class RPC_Mixin(object):
             try:
                 import odoorpc
             except ImportError:
-                print(bcolors.WARNING + 'please install odoorpc')
+                print(bcolors.WARNING + "please install odoorpc")
                 print(
-                    'execute bin/pip install -r install/requirements.txt' + bcolors.ENDC)
+                    "execute bin/pip install -r install/requirements.txt" + bcolors.ENDC
+                )
                 return
             try:
                 # if we want to access a docker container, rpsuser and rpcpw has to be adjusted beforehand
@@ -169,45 +205,55 @@ class RPC_Mixin(object):
                 rpcpw = self.rpc_user_pw
                 # login
                 if verbose:
-                    print('*' * 80)
-                    print('about to open connection to:')
-                    print('host:%s, port:%s, timeout: %s' %
-                          (rpchost, rpcport, 1200))
+                    print("*" * 80)
+                    print("about to open connection to:")
+                    print("host:%s, port:%s, timeout: %s" % (rpchost, rpcport, 1200))
                 if not db_name:
                     print(bcolors.FAIL)
-                    print('*' * 80)
-                    print('hoppalla no database defined')
+                    print("*" * 80)
+                    print("hoppalla no database defined")
                     print(bcolors.ENDC)
                     return
-                #rpchost und rpcort sind nicht von docker!!!!!
+                # rpchost und rpcort sind nicht von docker!!!!!
                 odoo = odoorpc.ODOO(rpchost, port=rpcport, timeout=1200)
                 if not no_db:  # used when creating db
                     if verbose:
-                        print('about to login:')
-                        print('dbname:%s, rpcuser:%s, rpcpw: %s' %
-                              (db_name, rpcuser, rpcpw))
-                        print('*' * 80)
+                        print("about to login:")
+                        print(
+                            "dbname:%s, rpcuser:%s, rpcpw: %s"
+                            % (db_name, rpcuser, rpcpw)
+                        )
+                        print("*" * 80)
                     try:
                         odoo.login(db_name, rpcuser, rpcpw)
                     except:
                         if verbose:
-                            print('login failed, will retry with pw admin:')
-                            print('dbname:%s, rpcuser:%s, rpcpw: admin' %
-                                  (db_name, rpcuser))
-                            print('*' * 80)
-                        odoo.login(db_name, rpcuser, 'admin')
- 
+                            print("login failed, will retry with pw admin:")
+                            print(
+                                "dbname:%s, rpcuser:%s, rpcpw: admin"
+                                % (db_name, rpcuser)
+                            )
+                            print("*" * 80)
+                        odoo.login(db_name, rpcuser, "admin")
+
             except odoorpc.error.RPCError:
-                print(bcolors.FAIL + 'could not login to running odoo server host: %s:%s, db: %s, user: %s, pw: %s' %
-                      (rpchost, rpcport, db_name, rpcuser, rpcpw) + bcolors.ENDC)
+                print(
+                    bcolors.FAIL
+                    + "could not login to running odoo server host: %s:%s, db: %s, user: %s, pw: %s"
+                    % (rpchost, rpcport, db_name, rpcuser, rpcpw)
+                    + bcolors.ENDC
+                )
                 if verbose:
                     return odoo
                 return
             except urllib.error.URLError:
-                print(bcolors.FAIL + 'could not login to odoo server host: %s:%s, db: %s, user: %s, pw: %s' %
-                      (rpchost, rpcport, db_name, rpcuser, rpcpw))
-                print('connection was refused')
-                print('make sure odoo is running at the given address' + bcolors.ENDC)
+                print(
+                    bcolors.FAIL
+                    + "could not login to odoo server host: %s:%s, db: %s, user: %s, pw: %s"
+                    % (rpchost, rpcport, db_name, rpcuser, rpcpw)
+                )
+                print("connection was refused")
+                print("make sure odoo is running at the given address" + bcolors.ENDC)
                 return
             self._odoo = odoo
         return self._odoo
@@ -216,20 +262,21 @@ class RPC_Mixin(object):
         odoo = self.get_odoo()
         if not odoo:
             return
-        module_obj = odoo.env['ir.module.module']
+        module_obj = odoo.env["ir.module.module"]
         return module_obj
 
     def get_erp_modules(self):
         from odoorpc.error import RPCError
+
         modules = self.get_module_obj()
         if not modules:
             return
-        mlist = modules.search([('application', '=', True)])
+        mlist = modules.search([("application", "=", True)])
         result = {}
         for mid in mlist:
             m = modules.browse(mid)
             result[m.name] = m.shortdesc
-        mlist = modules.search([('application', '=', False)])
+        mlist = modules.search([("application", "=", False)])
         result2 = {}
         for mid in mlist:
             try:
@@ -252,12 +299,12 @@ class RPC_Mixin(object):
         # what fields do we want to handle?
         # we get the source and target model
         languages = set(languages)
-        langs = self.get_odoo().env['base.language.install']
+        langs = self.get_odoo().env["base.language.install"]
         result = {}
         for code in languages:
-            if not langs.search([('lang', '=', code)]):
-                langs.browse(langs.create({'lang': code})).lang_install()
-            result[code] = langs.search([('lang', '=', code)])[0]
+            if not langs.search([("lang", "=", code)]):
+                langs.browse(langs.create({"lang": code})).lang_install()
+            result[code] = langs.search([("lang", "=", code)])[0]
         return result
 
 
@@ -266,10 +313,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     # like --add-site that need no login
     need_login_info = True
 
-    def __init__(self, opts, sites, parsername=''):
+    def __init__(self, opts, sites, parsername=""):
         if opts.name:
             full_orig_name = opts.name
-            orig_name, orig_sites_list = (full_orig_name.split(':') + [''])[:2]
+            orig_name, orig_sites_list = (full_orig_name.split(":") + [""])[:2]
             opts.orig_name = orig_name
             opts.orig_sites_list = orig_sites_list
             self.site_names = [orig_name]
@@ -280,10 +327,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             self._sites = sites
         else:
             self._sites = SITES
-        
+
         if callable(self._check_parsed):
             self._check_parsed()
-        
+
         # #the following init stuff should be called from PropertiesMixin
         # #what about flatten site?
         # # set up values for proerties dealing with remote data
@@ -292,35 +339,34 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # self.setup_docker_env(self.site)
         # #self.check_name(no_completion=True, must_match=True)
         ## # resolve inheritance within sites
-        #flatten_sites(self._sites)
+        # flatten_sites(self._sites)
         # # collect info on what parser and what options are selected
         parsername, selected, options = collect_options(opts)
         self.selections = selected
         if not selected:
             # when testing we migth start without a name
-            if not opts.__dict__.get('skip_name'):
+            if not opts.__dict__.get("skip_name"):
                 self._complete_selection(
-                    parsername, options, prompt='%s-options ?' % parsername)
+                    parsername, options, prompt="%s-options ?" % parsername
+                )
             # check again if selected
             parsername, selected, options = collect_options(opts)
         self.parsername = parsername
 
         # now we can really check whether name is given and valid
-        # while converting to workbench: I think wemake all options check 
+        # while converting to workbench: I think wemake all options check
         # themselfs whether they need a name
         # self.check_name()
         # when we want to drop the site, nothing more needs to be done
-        if 'drop_site' in vars(opts):
+        if "drop_site" in vars(opts):
             if opts.drop_site:
                 return
-                    
 
-            
     def running_remote(self):
         # replace values that should be different when running remotely
         # this should be done in a mor systematic way.when I use massmailing, a click to the send button
-        remote_info = self.site.get('remote_server', {})
-        remote_url = remote_info.get('remote_url')
+        remote_info = self.site.get("remote_server", {})
+        remote_url = remote_info.get("remote_url")
 
         def get_ipv4_address():
             """
@@ -330,9 +376,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             p = subprocess.Popen(["ifconfig"], stdout=subprocess.PIPE)
             ifc_resp = p.communicate()
             if ifc_resp:
-                ifc_resp = ifc_resp[0].decode('utf8')
-            patt = re.compile(
-                r'inet\s*\w*\S*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+                ifc_resp = ifc_resp[0].decode("utf8")
+            patt = re.compile(r"inet\s*\w*\S*:\s*(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
             resp = patt.findall(ifc_resp)
             return resp
 
@@ -345,15 +390,18 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
         """
         import imp
+
         opts = self.opts
         extra_scripts_path = self.base_info.get(
-            'extra_scripts_path', '%s/extra_scripts/' % self.default_values.get('sites_home'))
+            "extra_scripts_path",
+            "%s/extra_scripts/" % self.default_values.get("sites_home"),
+        )
         script = opts.executescript
-        run_fun = 'run'
-        self.get_odoo() # set up connection
-        full_path = '%s/%s' % (extra_scripts_path, script)
-        if os.path.exists('%s.py' % full_path):
-            full_path = '%s.py' % full_path
+        run_fun = "run"
+        self.get_odoo()  # set up connection
+        full_path = "%s/%s" % (extra_scripts_path, script)
+        if os.path.exists("%s.py" % full_path):
+            full_path = "%s.py" % full_path
         if os.path.exists(full_path):
             print(full_path)
             mod_name = os.path.splitext(script)[0]
@@ -363,10 +411,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 params = self.opts.executescriptparameter
                 pdic = {}
                 if params:
-                    parts = params.split(',')
+                    parts = params.split(",")
                     for p in parts:
                         try:
-                            n, v = p.split('=')
+                            n, v = p.split("=")
                             pdic[n] = v
                         except:
                             pass
@@ -381,19 +429,17 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         try:
             from reimport import reimport, modified
         except ImportError:
-            print(MODULE_MISSING % 'reimport')
+            print(MODULE_MISSING % "reimport")
         s = list(self.sites.keys())
         mlist = [m for m in modified() if m in s]
         if mlist:
-            print(SITE_DESCRIPTION_RELOADED %
-                  (' '.join(mlist), self.opts.command_line))
+            print(SITE_DESCRIPTION_RELOADED % (" ".join(mlist), self.opts.command_line))
             sys.exit()
 
     def show_config(self):
         for k, v in list(self.base_info.items()):
             print(bcolors.WARNING + k + bcolors.ENDC, v)
 
- 
     # the user can start using different paths
     # - without selecting anything:
     #   the create parser will be preselected
@@ -401,7 +447,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     #   a site name will be asked for. if an invalid or partial name
     #   has bee provided, it will be used as default
     # - with a set of valid options
-    def _complete_selection(self, parsername, options, results_only=False, prompt=''):
+    def _complete_selection(self, parsername, options, results_only=False, prompt=""):
         cmpl = SimpleCompleter(parsername, options, prompt=prompt)
         _o = cmpl.input_loop()
         if _o in options:
@@ -409,14 +455,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 return _o
             if isinstance(self.opts._o.__dict__[_o], bool):
                 self.opts._o.__dict__[_o] = True
-            elif _o in ['updateown', 'removeown']:
-                l = self.install_own_modules(quiet='listownmodules')
+            elif _o in ["updateown", "removeown"]:
+                l = self.install_own_modules(quiet="listownmodules")
                 cmpl = SimpleCompleter(l, options)
                 _r = cmpl.input_loop()
                 if _o:
                     self.opts._o.__dict__[_o] = _r
             else:
-                self.opts._o.__dict__[_o] = input('value for %s:' % _o)
+                self.opts._o.__dict__[_o] = input("value for %s:" % _o)
 
     # -------------------------------------------------------------------
     # check_name
@@ -443,7 +489,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         opts = self.opts
         name = self.site_name
         if name:
-            name = self.site_name.split(':')[0]
+            name = self.site_name.split(":")[0]
             # if name == 'all':
             #     site_names = list(self.sites.keys())
             # else:
@@ -458,11 +504,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             if SITES.get(name):
                 self.site_names = [name]
                 return name
-            if opts.subparser_name == 'support':
+            if opts.subparser_name == "support":
                 if opts.add_site or opts.add_site_local:
                     self.site_names = [name]
                     return name
-            if opts.subparser_name == 'migrate':
+            if opts.subparser_name == "migrate":
                 if opts.migrate_remove_apps:
                     self.site_names = [name]
                     return name
@@ -471,8 +517,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                     return name
         # no name
         if not name:
-            name = ''  # make sure it is a string
-        
+            name = ""  # make sure it is a string
+
         # if no_completion:
         #     # probably called at startup
         #     if must_match:
@@ -492,19 +538,23 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         if not self.name_needed(need_names_dic=need_names_dic):
             return
         done = False
-        cmpl = SimpleCompleter('', 
-            options=list(SITES.keys()), default=name or '', prompt='please provide a valid site name:')
+        cmpl = SimpleCompleter(
+            "",
+            options=list(SITES.keys()),
+            default=name or "",
+            prompt="please provide a valid site name:",
+        )
         while not done:
             _name = cmpl.input_loop()
             if _name is None:
                 print(bcolors.FAIL)
-                print('no name provided')
-                print(bcolors.ENDC)               
+                print("no name provided")
+                print(bcolors.ENDC)
                 sys.exit()
-                #done = True
-                #self.site_names = []
-                #return ''
-            if opts.subparser_name == 'support':
+                # done = True
+                # self.site_names = []
+                # return ''
+            if opts.subparser_name == "support":
                 if _name and (opts.add_site or opts.add_site_local):
                     if SITES.get(_name):
                         print("the site %s allready exists in sites.py" % _name)
@@ -514,13 +564,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 done = True
             else:
                 print(
-                    '%s is not defined in sites.py. You can add it with option --add-site' % _name)
+                    "%s is not defined in sites.py. You can add it with option --add-site"
+                    % _name
+                )
             if done:
                 opts.name = _name
                 self.site_names = [_name]
                 return _name
 
-        
     # -------------------------------------------------------------------
     # name_needed
     # check if name needed
@@ -538,13 +589,12 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                  if not provided check what option user has selected
         """
         opts = self.opts
-        need_name = need_names_dic.get('need_name', [])
-        name_valid = need_names_dic.get('name_valid', [])
-        collected_opts = [item[0]
-                          for item in list(opts.__dict__.items()) if item[1]]
+        need_name = need_names_dic.get("need_name", [])
+        name_valid = need_names_dic.get("name_valid", [])
+        collected_opts = [item[0] for item in list(opts.__dict__.items()) if item[1]]
         if not [opt for opt in collected_opts if opt in need_name]:
             return
-        if opts.name == 'db' and opts.docker_show:
+        if opts.name == "db" and opts.docker_show:
             return False
         # do not accept names with forbidden chars in it
         if not option:
@@ -566,7 +616,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         return True
 
     # ----------------------------------
-    # delete_site_local 
+    # delete_site_local
     # remove all local project files
     # but leave the site description as it is
     # ----------------------------------
@@ -577,36 +627,36 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         site_name = self.site_name
         if not site_name:
             print(bcolors.FAIL)
-            print('no name provided')
+            print("no name provided")
             print(bcolors.ENDC)
             return
         cur_path = os.getcwd()
         # remove project data
-        project_path = self.default_values['project_path']
+        project_path = self.default_values["project_path"]
         os.chdir(project_path)
         # ----------------------------------------
-        rpath ='%s/%s' % (project_path, site_name)
+        rpath = "%s/%s" % (project_path, site_name)
         if os.path.exists(rpath):
             print(bcolors.WARNING)
-            print('removing %s' % rpath)
+            print("removing %s" % rpath)
             shutil.rmtree(rpath, True)
         addons_path = self.data_path
         # ----------------------------------------
         os.chdir(addons_path)
         if os.path.exists(site_name):
-            print('removing %s' % site_name)
+            print("removing %s" % site_name)
             shutil.rmtree(site_name)
         # ----------------------------------------
-        print('dropping database %s' % site_name)
+        print("dropping database %s" % site_name)
         db_updater = DBUpdater()
         try:
             db_updater.close_db_connections_and_delete_db(site_name)
         except:
-            pass # already deleted?
-        print('removing virtualenv %s' % site_name)
+            pass  # already deleted?
+        print("removing virtualenv %s" % site_name)
         self.remove_virtual_env(site_name)
         print(bcolors.OKGREEN)
-        print('tuti palletti')
+        print("tuti palletti")
         print(bcolors.ENDC)
         os.chdir(cur_path)
 
@@ -620,14 +670,15 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
         # first check whether the source is valid
         if source not in self.sites:
-            print(bcolors.FAIL + '*' * 80)
-            print('%s is not a valid source' % source)
-            print('*' * 80 + bcolors.ENDC)
+            print(bcolors.FAIL + "*" * 80)
+            print("%s is not a valid source" % source)
+            print("*" * 80 + bcolors.ENDC)
             return
         # create two connections
         target_cursor, t_connection = self.get_cursor(return_connection=True)
         source_cursor, s_connection = self.get_cursor(
-            db_name=source, return_connection=True)
+            db_name=source, return_connection=True
+        )
         s_sql = "SELECT password_crypt from res_users where login = 'admin'"
         t_sql = "UPDATE res_users set password_crypt = '%s'  where login = 'admin'"
         source_cursor.execute(s_sql)
@@ -636,9 +687,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         t_connection.commit()
         t_connection.close()
         s_connection.close()
-        print(bcolors.OKGREEN + '*' * 80)
-        print('copied admin pw from %s to %s' % (source, site_name))
-        print('*' * 80 + bcolors.ENDC)
+        print(bcolors.OKGREEN + "*" * 80)
+        print("copied admin pw from %s to %s" % (source, site_name))
+        print("*" * 80 + bcolors.ENDC)
 
     def set_admin_pw(self):
         """
@@ -652,11 +703,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         target_cursor.execute(t_sql % pw)
         t_connection.commit()
         t_connection.close()
-        print(bcolors.OKGREEN + '*' * 80)
-        print('set admin pw for %s to %s' % (site_name, pw))
-        print('*' * 80 + bcolors.ENDC)
+        print(bcolors.OKGREEN + "*" * 80)
+        print("set admin pw for %s to %s" % (site_name, pw))
+        print("*" * 80 + bcolors.ENDC)
 
-    def create_folders(self, path_name='', quiet=None):
+    def create_folders(self, path_name="", quiet=None):
         """
         create all folders needed
         path_name = path to parent folder. create if it does not exist
@@ -669,45 +720,55 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             quiet = not self.opts.verbose
         if not path_name:
             path_name = self.site_name
-        p = os.path.normpath('%s/%s' % (self.data_path, path_name))
-        foldernames = self.default_values['foldernames']
+        p = os.path.normpath("%s/%s" % (self.data_path, path_name))
+        foldernames = self.default_values["foldernames"]
         if not os.path.exists(self.data_path):
             os.mkdir(self.data_path)
         elif not os.path.isdir(self.data_path):
-            print(bcolors.FAIL + '%s exists but is not a folder. Plese eiter remove it, or set'
-                  'new folder using option -set erp_server_data_path:/NEWPATH' + bcolors.ENDC)
-        for pn in [''] + foldernames:
+            print(
+                bcolors.FAIL
+                + "%s exists but is not a folder. Plese eiter remove it, or set"
+                "new folder using option -set erp_server_data_path:/NEWPATH"
+                + bcolors.ENDC
+            )
+        for pn in [""] + foldernames:
             try:
-                pp = '%s/%s' % (p, pn)
+                pp = "%s/%s" % (p, pn)
                 os.mkdir(pp)
             except:
                 errors = True
                 if not quiet:
-                    print(bcolors.FAIL + 'could not create %s' %
-                          pp + bcolors.ENDC)
+                    print(bcolors.FAIL + "could not create %s" % pp + bcolors.ENDC)
         if not quiet:
             if errors:
-                print(bcolors.WARNING +
-                      'not all directories could be created' + bcolors.ENDC)
+                print(
+                    bcolors.WARNING
+                    + "not all directories could be created"
+                    + bcolors.ENDC
+                )
             else:
-                print('directories for %s created' % self.check_name(self.opts))
-        
+                print("directories for %s created" % self.check_name(self.opts))
+
         # now add folder content
         # handle_file_copy_move(self, source, target, filedata):
-        skeleton_path = self.default_values['skeleton']
+        skeleton_path = self.default_values["skeleton"]
         from skeleton.files_to_copy import FILES_TO_COPY_FOLDER as files_to_copy
+
         for foldername in foldernames:
-            file_path = '%s/%s' % (p, foldername)
+            file_path = "%s/%s" % (p, foldername)
             if files_to_copy.get(foldername):
                 self.handle_file_copy_move(
-                    '%s/%s' % (skeleton_path, foldername), file_path, files_to_copy[foldername])
+                    "%s/%s" % (skeleton_path, foldername),
+                    file_path,
+                    files_to_copy[foldername],
+                )
 
     # ----------------------------------
     # update_install_serversetting
     # set the web.base.url and the google captcha keys
     def update_install_serversetting(self):
         site = self.site
-        site_params = site.get('site_settings', {})
+        site_params = site.get("site_settings", {})
 
         odoo = self.get_odoo()
         if odoo:
@@ -718,28 +779,28 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             # get the config blocks
             # we start with setting the site
             # proto = site_params.get('proto', 'http://')
-            configs = site_params.get('configs', {})
+            configs = site_params.get("configs", {})
 
             # -----------------------------------
             # languages
             # -----------------------------------
             # 'languages' : ['de_CH', 'fr_CH', 'en_US'],
             lang_dic = {}
-            languages = configs.pop('languages', [])
+            languages = configs.pop("languages", [])
             if languages:
                 lang_dic = self.install_languages(languages)
 
             # next we set the key web.base.url.freeze
             # this prevenst that the key is reset when login in as addmin
-            if 'ir.config_parameter' in configs:
+            if "ir.config_parameter" in configs:
                 # old structure like afbs
                 for key, data in list(configs.items()):
                     try:
                         model = odoo.env[key]
-                        records = data.get('records', [])
+                        records = data.get("records", [])
                         for s_info, values in records:
                             # [('key', 'support_branding.company_name'),  {'value'  : 'redO2oo GmbH'}],
-                            s = model.search([(s_info[0], '=', s_info[1])])
+                            s = model.search([(s_info[0], "=", s_info[1])])
                             if s:
                                 model.browse(s).write(values)
                     except:
@@ -782,19 +843,22 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
 
                 },
                 """
+
                 def repl_default_lang_code(data):
                     if isinstance(data, dict):
-                        code = data.pop('default_lang_code', None)
+                        code = data.pop("default_lang_code", None)
                         if code:
-                            data['default_lang_id'] = self.install_languages([code])[
-                                code]
+                            data["default_lang_id"] = self.install_languages([code])[
+                                code
+                            ]
+
                 for setting, values in list(configs.items()):
-                    m = values['model']
+                    m = values["model"]
                     model = odoo.env[m]
-                    records = values['records']
+                    records = values["records"]
                     for s_info, values in records:
                         # [('key', 'support_branding.company_name'),  {'value'  : 'redO2oo GmbH'}],
-                        s = model.search([(s_info[0], '=', s_info[1])])
+                        s = model.search([(s_info[0], "=", s_info[1])])
                         if s:
                             repl_default_lang_code(values)
                             model.browse(s).write(values)
@@ -840,43 +904,44 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             },  # companies
 
             """
-            companies = site_params.get('companies', {})
-            main_company = companies.get('main_company')
+            companies = site_params.get("companies", {})
+            main_company = companies.get("main_company")
             if main_company:
                 # the main company always has id 1
-                companies_o = odoo.env['res.company']
+                companies_o = odoo.env["res.company"]
                 mc = companies_o.browse([1])
                 # do we have data for the main company
-                mc_data = main_company.get('company_data')
+                mc_data = main_company.get("company_data")
                 if mc_data:
                     mc.write(mc_data)
                 # create related users
-                users = main_company.get('users')
+                users = main_company.get("users")
                 if users:
-                    users_o = odoo.env['res.users']
+                    users_o = odoo.env["res.users"]
                     for login, user_data in list(users.items()):
-                        firstname = user_data.get('firstname')
-                        lastname = user_data.get('lastname')
-                        language = user_data.get('name')
+                        firstname = user_data.get("firstname")
+                        lastname = user_data.get("lastname")
+                        language = user_data.get("name")
                         if language:
                             self.install_languages([language])
                         if firstname or lastname:
-                            user_data['name'] = ('%s %s' %
-                                                 (lastname, firstname)).strip()
+                            user_data["name"] = (
+                                "%s %s" % (lastname, firstname)
+                            ).strip()
                         else:
-                            user_data['name'] = login
-                        if not user_data.get('email'):
-                            user_data['email'] = login
-                        if not user_data.get('login'):
-                            user_data['login'] = login
-                        if not user_data.get('tz'):
-                            user_data['tz'] = 'Europe/Zurich'
+                            user_data["name"] = login
+                        if not user_data.get("email"):
+                            user_data["email"] = login
+                        if not user_data.get("login"):
+                            user_data["login"] = login
+                        if not user_data.get("tz"):
+                            user_data["tz"] = "Europe/Zurich"
                         # check if user exists
-                        user = users_o.search([('login', '=', login)])
+                        user = users_o.search([("login", "=", login)])
                         if user:
                             users_o.browse(user).write(user_data)
                         else:
-                            #user = odoo.env['res.users'].sudo().with_context().create(user_data)
+                            # user = odoo.env['res.users'].sudo().with_context().create(user_data)
                             users_o.create(user_data)
         else:
             print(ERP_NOT_RUNNING % self.site_name, {})
@@ -888,75 +953,81 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     def set_local_data(self, use_remote_setting=False):
         odoo = self.get_odoo()
         if not odoo:
-            print(bcolors.FAIL, ERP_NOT_RUNNING %
-                  self.site_name, bcolors.ENDC)
+            print(bcolors.FAIL, ERP_NOT_RUNNING % self.site_name, bcolors.ENDC)
             return
         # run set server data
         # this sets
         self.update_install_serversetting()
         site = self.site
-        site_settings = site.get('site_settings', {})
-        local_settings = site_settings.get('local_settings', {})
+        site_settings = site.get("site_settings", {})
+        local_settings = site_settings.get("local_settings", {})
         if use_remote_setting:
-            proto = site_settings.get('proto', 'https://')
-            base_url = '%s%s' % (proto, site.get('apache', {}).get(
-                'vservername', local_settings.get('base_url', '')))
+            proto = site_settings.get("proto", "https://")
+            base_url = "%s%s" % (
+                proto,
+                site.get("apache", {}).get(
+                    "vservername", local_settings.get("base_url", "")
+                ),
+            )
         else:
-            base_url = local_settings.get('base_url', '')
-        admin_mail = local_settings.get('admin_mail', '')
-        if admin_mail.find('%(local_user_mail)s') > -1:
-            admin_mail = self.base_info.get('local_user_mail', 'robert@redO2oo.ch')
+            base_url = local_settings.get("base_url", "")
+        admin_mail = local_settings.get("admin_mail", "")
+        if admin_mail.find("%(local_user_mail)s") > -1:
+            admin_mail = self.base_info.get("local_user_mail", "robert@redO2oo.ch")
         # if admin_mail:
-            #users = odoo.env['res.users']
-            #u = users.search([('id', '=', 1)])
-            #admin = users.browse(u)
-            #admin.write({'email' : admin_mail})
-            #print(bcolors.OKGREEN, 'setting admin email to:%s' % admin_mail, bcolors.ENDC)
+        # users = odoo.env['res.users']
+        # u = users.search([('id', '=', 1)])
+        # admin = users.browse(u)
+        # admin.write({'email' : admin_mail})
+        # print(bcolors.OKGREEN, 'setting admin email to:%s' % admin_mail, bcolors.ENDC)
 
         # do we have to install / uninstall anything
-        addons = local_settings.get('addons', {})
-        to_install = addons.get('install', [])
+        addons = local_settings.get("addons", {})
+        to_install = addons.get("install", [])
         # there are modules, like mailblocker, we want to have installed only locally
         if to_install:
-            self.install_own_modules(info_dic={'local_install': to_install})
+            self.install_own_modules(info_dic={"local_install": to_install})
         # set the site configuration, that allways needs to be set
         # set the base url
         if odoo:
-            config = odoo.env['ir.config_parameter']
+            config = odoo.env["ir.config_parameter"]
         if base_url:
-            base_url_obj = config.browse(
-                config.search([('key', '=', 'web.base.url')]))
-            base_url_obj.write({'value': base_url})
-            print(bcolors.OKGREEN, 'setting base_url to:%s' %
-                  base_url, bcolors.ENDC)
+            base_url_obj = config.browse(config.search([("key", "=", "web.base.url")]))
+            base_url_obj.write({"value": base_url})
+            print(bcolors.OKGREEN, "setting base_url to:%s" % base_url, bcolors.ENDC)
         # set other config stuff
         # if there is additional site configuration, set them now
-        more_params = local_settings.get('site_settings')
+        more_params = local_settings.get("site_settings")
         if more_params:
-            config_params = more_params.get('configs', {}).get(
-                'ir.config_parameter', {}).get('records', [])
+            config_params = (
+                more_params.get("configs", {})
+                .get("ir.config_parameter", {})
+                .get("records", [])
+            )
             if self.running_remote():
                 # we to replace values that should be different when running remotely
                 # this should be done in a mor systematic way.when I use massmailing, a click to the send button
-                remote_info = self.site.get('remote_server', {})
-                if remote_info.get('redirect_emil_to'):
-                    self._default_values['local_user_mail'] = remote_info.get(
-                        'redirect_emil_to')
+                remote_info = self.site.get("remote_server", {})
+                if remote_info.get("redirect_emil_to"):
+                    self._default_values["local_user_mail"] = remote_info.get(
+                        "redirect_emil_to"
+                    )
             for c_param in config_params:
                 # list of (search-key-name, value), {'field' : value, 'field' : value ..}
                 # [('key', 'red_override_email_recipients.override_to'),
-                    # {'value'  : '%(local_user_mail)s'}],
+                # {'value'  : '%(local_user_mail)s'}],
                 c_key = c_param[0][0]
                 c_k_val = c_param[0][1]
                 vals = c_param[1]
-                c_obj = config.browse(config.search([(c_key, '=', c_k_val)]))
+                c_obj = config.browse(config.search([(c_key, "=", c_k_val)]))
                 if c_obj:
                     for k, v in list(vals.items()):
                         if isinstance(v, str):
                             vals[k] = v % self.default_values
                     c_obj.write(vals)
-                print(bcolors.OKGREEN, 'setting %s to:%s' %
-                      (c_k_val, vals), bcolors.ENDC)
+                print(
+                    bcolors.OKGREEN, "setting %s to:%s" % (c_k_val, vals), bcolors.ENDC
+                )
 
     # ----------------------------------
     # set null server
@@ -965,38 +1036,40 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         replace outgoing mail server with a local null smtp server
         that intercepts all outgoing mail
         """
-        data = {'active': True,
-                'name': 'localost',
-                'sequence': 10,
-                'smtp_debug': False,
-                'smtp_encryption': 'none',
-                'smtp_host': 'localhost',
-                'smtp_pass': '',
-                'smtp_port': 2525,
-                'smtp_user': ''}
+        data = {
+            "active": True,
+            "name": "localost",
+            "sequence": 10,
+            "smtp_debug": False,
+            "smtp_encryption": "none",
+            "smtp_host": "localhost",
+            "smtp_pass": "",
+            "smtp_port": 2525,
+            "smtp_user": "",
+        }
         data_in = {
-            'active': True,
-            'attach': True,
-            'is_ssl': True,
-            'name': 'mailhandler@o2oo.ch',
-            'object_id': False,
-            'original': False,
-            'password': '',
-            'port': 993,
-            'priority': 5,
-            'server': 'mail.redcor.ch',
-            'state': 'draft',
-            'type': 'imap',
-            'user': 'mailhandler@o2oo.ch.ch'}
+            "active": True,
+            "attach": True,
+            "is_ssl": True,
+            "name": "mailhandler@o2oo.ch",
+            "object_id": False,
+            "original": False,
+            "password": "",
+            "port": 993,
+            "priority": 5,
+            "server": "mail.redcor.ch",
+            "state": "draft",
+            "type": "imap",
+            "user": "mailhandler@o2oo.ch.ch",
+        }
 
         s_data = {
-            'erp_settings' : {
-                'mail_outgoing' : data,
+            "erp_settings": {
+                "mail_outgoing": data,
                 #'mail_incomming' : data_in,
-            },
+            }
         }
         return self.set_erp_settings(s_data=s_data)
-
 
     # ----------------------------------
     # set_erp_settings
@@ -1009,16 +1082,19 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         import socket
         import fcntl
         import struct
+
         SITES_PW = {}
 
         def get_ip_address(ifname):
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             try:
-                return socket.inet_ntoa(fcntl.ioctl(
-                    s.fileno(),
-                    0x8915,  # SIOCGIFADDR
-                    struct.pack('256s', ifname[:15])
-                )[20:24])
+                return socket.inet_ntoa(
+                    fcntl.ioctl(
+                        s.fileno(),
+                        0x8915,  # SIOCGIFADDR
+                        struct.pack("256s", ifname[:15]),
+                    )[20:24]
+                )
             except:
                 # we have no etho
                 # https://stackoverflow.com/questions/24196932/how-can-i-get-the-ip-address-of-eth0-in-python
@@ -1027,71 +1103,87 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 ipl = s.getsockname()
                 if ipl:
                     return ipl[0]
+
         odoo = self.get_odoo()
         if not odoo:
             print(ERP_NOT_RUNNING % self.site_name)
             return
         site = self.site
-        remote_servers = site.get('remote_servers', {})
+        remote_servers = site.get("remote_servers", {})
         # if the site runs on a virtual server behind a NAT we do
         # not know its real address
         if self.opts.use_ip:
             my_ip = self.opts.use_ip
         elif local:
-            my_ip = '127.0.0.1'
+            my_ip = "127.0.0.1"
         else:
-            my_ip = get_ip_address('eth0')
+            my_ip = get_ip_address("eth0")
         # if we do not have s_data passed to us
         do_incoming = True
         if not s_data:
             s_data = remote_servers.get(my_ip)
         else:
-            if not s_data.get('erp_settings', {}).get('mail_incomming'):
+            if not s_data.get("erp_settings", {}).get("mail_incomming"):
                 do_incoming = False
         # use proxy on development server
         proxy = my_ip
         if not s_data:
-            s_data = remote_servers.get(remote_servers.get('proxy'))
-            proxy = remote_servers.get('proxy')
-            print(bcolors.FAIL + 'no erp_settings for (local) id:%s found' %
-                  my_ip + bcolors.ENDC)
-            print(bcolors.WARNING + 'using proxy (%s) to calculate site settings' %
-                  my_ip + bcolors.ENDC)
+            s_data = remote_servers.get(remote_servers.get("proxy"))
+            proxy = remote_servers.get("proxy")
+            print(
+                bcolors.FAIL
+                + "no erp_settings for (local) id:%s found" % my_ip
+                + bcolors.ENDC
+            )
+            print(
+                bcolors.WARNING
+                + "using proxy (%s) to calculate site settings" % my_ip
+                + bcolors.ENDC
+            )
         if not s_data:
-            print(bcolors.WARNING + 'no erp_settings for id:%s found' %
-                  my_ip + bcolors.ENDC)
+            print(
+                bcolors.WARNING
+                + "no erp_settings for id:%s found" % my_ip
+                + bcolors.ENDC
+            )
             return
         # get passwords
         try:
             from sites_pw import SITES_PW
+
             email_pws = SITES_PW.get(self.site_name, {}).get(
-                'email', SITES_PW.get(self.site_name, {}).get('email_settings', {}))
+                "email", SITES_PW.get(self.site_name, {}).get("email_settings", {})
+            )
             if email_pws:
-                email_pws = email_pws.get(proxy, email_pws.get('127.0.0.1', {}))
-            
+                email_pws = email_pws.get(proxy, email_pws.get("127.0.0.1", {}))
+
         except ImportError:
             email_pws = {}
             pass
 
-        print(bcolors.OKGREEN, '*' * 80)
-        mail_user = ''
+        print(bcolors.OKGREEN, "*" * 80)
+        mail_user = ""
         if do_incoming:
             # write the incomming email server
-            i_server = odoo.env['fetchmail.server']
+            i_server = odoo.env["fetchmail.server"]
             # get the first server
-            print('incomming email')
+            print("incomming email")
             i_ids = i_server.search([])
             i_id = 0
-            i_data = s_data.get('erp_settings', s_data.get('odoo_settings', {})).get('mail_incomming')
-            if not i_data and s_data.get('odoo_settings', {}).get('mail_incomming'): # bb
-                i_data = s_data.get('odoo_settings', {}).get('mail_incomming')
+            i_data = s_data.get("erp_settings", s_data.get("odoo_settings", {})).get(
+                "mail_incomming"
+            )
+            if not i_data and s_data.get("odoo_settings", {}).get(
+                "mail_incomming"
+            ):  # bb
+                i_data = s_data.get("odoo_settings", {}).get("mail_incomming")
             # set user
-            mail_user = email_pws.get('mail_user')
+            mail_user = email_pws.get("mail_user")
             if mail_user:
-                i_data['password'] = mail_user
+                i_data["password"] = mail_user
             # do we have a password
             if not local:
-                i_data['password'] = email_pws.get('email_pw_incomming', '')
+                i_data["password"] = email_pws.get("email_pw_incomming", "")
             if i_ids:
                 i_id = i_ids[0]
             if i_id:
@@ -1100,17 +1192,17 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             else:
                 incomming = i_server.create(i_data)
             print(i_data)
-        print('-' * 80)
-        print('outgoing email')
+        print("-" * 80)
+        print("outgoing email")
         # now do the same for the outgoing server
-        o_data = s_data.get('erp_settings', {}).get('mail_outgoing')
-        if not o_data and s_data.get('odoo_settings', {}).get('mail_outgoing'):
-            o_data = s_data.get('odoo_settings', {}).get('mail_outgoing')
+        o_data = s_data.get("erp_settings", {}).get("mail_outgoing")
+        if not o_data and s_data.get("odoo_settings", {}).get("mail_outgoing"):
+            o_data = s_data.get("odoo_settings", {}).get("mail_outgoing")
         if mail_user:
-            o_data['smtp_user'] = mail_user
+            o_data["smtp_user"] = mail_user
         if not local:
-            o_data['smtp_pass'] = email_pws.get('email_pw_outgoing', '')
-        o_server = odoo.env['ir.mail_server']
+            o_data["smtp_pass"] = email_pws.get("email_pw_outgoing", "")
+        o_server = odoo.env["ir.mail_server"]
         # get the first server
         o_ids = o_server.search([])
         o_id = 0
@@ -1122,7 +1214,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         else:
             o_server.create(o_data)
         print(o_data)
-        print('*' * 80, bcolors.ENDC)
+        print("*" * 80, bcolors.ENDC)
 
     # ----------------------------------
     # run_tests
@@ -1147,7 +1239,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         or listownapps to list the erp_apps from the site description
         """
         opts = self.opts
-        is_create = opts.subparser_name == 'create'
+        is_create = opts.subparser_name == "create"
         is_docker = not is_create
         default_values = self.default_values
 
@@ -1156,48 +1248,56 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         site_addons = self.site_addons
         # addons declared in the erp_addons stanza are the ones we can get from odoo
         erp_addons = self.erp_addons
-        local_install = info_dic.get('local_install', [])
+        local_install = info_dic.get("local_install", [])
         req = []
         module_obj = None
-        if not (is_create and opts.install_erp_modules) and not (is_docker and opts.dinstall_erp_modules):
+        if not (is_create and opts.install_erp_modules) and not (
+            is_docker and opts.dinstall_erp_modules
+        ):
             # opts.installown or opts.updateown or opts.removeown or opts.listownmodules or quiet: # what else ??
             # collect the names of the modules declared in the addons stanza
             # idealy their names are set, if not, try to find them out
-            for a in (site_addons or []):
+            for a in site_addons or []:
                 names = find_addon_names(a)
                 for name in names:
                     if local_install and name not in local_install:
                         continue
                     if name:
-                        if (is_create and opts.listownmodules):
-                            req.append((name, a.get('url')))
+                        if is_create and opts.listownmodules:
+                            req.append((name, a.get("url")))
                         else:
                             req.append(name)
                     else:
                         if a and not quiet:
-                            print('could not detect name for %s' %
-                                  a.get('url', ''))
+                            print("could not detect name for %s" % a.get("url", ""))
 
         # if we only want the list to install, no need to be wordy
-        if (is_create and opts.listownmodules) or quiet == 'listownmodules':
+        if (is_create and opts.listownmodules) or quiet == "listownmodules":
             if quiet:
                 return req
             sn = self.site_name
-            print('\nthe following modules will be installed for %s:' % sn)
-            print('---------------------------------------------------')
+            print("\nthe following modules will be installed for %s:" % sn)
+            print("---------------------------------------------------")
             for n, url in req:
                 temp_target = os.path.normpath(
-                    '%s/%s/%s/%s_addons/%s' % (self.base_info['project_path'], sn, sn, sn, n))
+                    "%s/%s/%s/%s_addons/%s"
+                    % (self.base_info["project_path"], sn, sn, sn, n)
+                )
                 if os.path.exists(temp_target):
-                    print(bcolors.OKBLUE, '    %s %s (devel mode)' %
-                          (n, temp_target), bcolors.ENDC)
+                    print(
+                        bcolors.OKBLUE,
+                        "    %s %s (devel mode)" % (n, temp_target),
+                        bcolors.ENDC,
+                    )
                 else:
-                    print('    ', n, url)
-            print('---------------------------------------------------')
+                    print("    ", n, url)
+            print("---------------------------------------------------")
             return
 
         # do we want to install odoo modules
-        if (is_docker and opts.dinstall_erp_modules) or (is_create and opts.install_erp_modules):
+        if (is_docker and opts.dinstall_erp_modules) or (
+            is_create and opts.install_erp_modules
+        ):
             erp_apps_info, erp_modules_info = self.get_erp_modules()
 
             erp_apps = list(erp_apps_info.keys())
@@ -1211,7 +1311,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             erp_module_map = {}
             for k, v in list(erp_modules_info.items()):
                 erp_module_map[v] = k
-            for o in (erp_addons or []):
+            for o in erp_addons or []:
                 o = str(o)
                 if o in erp_apps_names:
                     name = erp_module_map[o]
@@ -1245,12 +1345,13 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             module_obj.update_list()
 
             cursor = self.get_cursor()
-            skiplist = self.site.get('skip', {}).get('addons', [])[
-                :]  # we do not want to change the original
-            skip_upd_list = self.site.get('skip', {}).get('updates', [])
-            skip2 = opts.__dict__.get('skipown', [])
+            skiplist = self.site.get("skip", {}).get("addons", [])[
+                :
+            ]  # we do not want to change the original
+            skip_upd_list = self.site.get("skip", {}).get("updates", [])
+            skip2 = opts.__dict__.get("skipown", [])
             if skip2:
-                skip2 = skip2.split(',')
+                skip2 = skip2.split(",")
             # remove elements in the local_install from the skip lists
             skiplist = [e for e in skiplist if e not in local_install]
             skip2 = [e for e in skip2 if e not in local_install]
@@ -1258,21 +1359,25 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             for a in (skiplist) + skip2:
                 if a in req:
                     req.pop(req.index(a))
-            self.collect_info(cursor, req, installed,
-                              uninstalled, to_upgrade, skiplist, req[:])
+            self.collect_info(
+                cursor, req, installed, uninstalled, to_upgrade, skiplist, req[:]
+            )
             if req:
-                print('*' * 80)
-                print('the following modules where not found:', req)
-                print('you probably have to download them')
-                print('*' * 80)
+                print("*" * 80)
+                print("the following modules where not found:", req)
+                print("you probably have to download them")
+                print("*" * 80)
             if uninstalled:
-                print('the following modules need to be installed:',
-                      [u[1] for u in uninstalled])
+                print(
+                    "the following modules need to be installed:",
+                    [u[1] for u in uninstalled],
+                )
                 i_list = [il[0] for il in uninstalled]
                 n_list = [il[1] for il in uninstalled]
-                print('*' * 80)
-                print(bcolors.OKGREEN + 'installing: ' +
-                      bcolors.ENDC + ','.join(n_list))
+                print("*" * 80)
+                print(
+                    bcolors.OKGREEN + "installing: " + bcolors.ENDC + ",".join(n_list)
+                )
                 load_demo = False
                 modules = module_obj.browse(i_list)
                 if load_demo:
@@ -1280,25 +1385,35 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         m.demo = True
                 if opts.single_step:
                     for module in modules:
-                        print('installing:%s%s%s' % (bcolors.OKGREEN, module.name, bcolors.ENDC))
+                        print(
+                            "installing:%s%s%s"
+                            % (bcolors.OKGREEN, module.name, bcolors.ENDC)
+                        )
                         module.button_immediate_install()
                 else:
                     modules.button_immediate_install()
-                print(bcolors.OKGREEN + 'finished installing: ' +
-                      bcolors.ENDC + ','.join(n_list))
-                print('*' * 80)
+                print(
+                    bcolors.OKGREEN
+                    + "finished installing: "
+                    + bcolors.ENDC
+                    + ",".join(n_list)
+                )
+                print("*" * 80)
             if installed and (
-                (is_create and (opts.updateown or opts.removeown)) 
-                    or (is_docker and (opts.dupdateown or opts.dremoveown))):
+                (is_create and (opts.updateown or opts.removeown))
+                or (is_docker and (opts.dupdateown or opts.dremoveown))
+            ):
                 if (is_create and opts.updateown) or (is_docker and opts.dupdateown):
-                    i_list = [il[0]
-                              for il in installed if (il[1] not in skip_upd_list)]
-                    n_list = [il[1]
-                              for il in installed if (il[1] not in skip_upd_list)]
-                    print('*' * 80)
-                    print(bcolors.OKGREEN + 'upgrading: ' +
-                          bcolors.ENDC + ','.join(n_list))
-                    print('-' * 80)
+                    i_list = [il[0] for il in installed if (il[1] not in skip_upd_list)]
+                    n_list = [il[1] for il in installed if (il[1] not in skip_upd_list)]
+                    print("*" * 80)
+                    print(
+                        bcolors.OKGREEN
+                        + "upgrading: "
+                        + bcolors.ENDC
+                        + ",".join(n_list)
+                    )
+                    print("-" * 80)
                     modules = module_obj.browse(i_list)
                     load_demo = False
                     if load_demo:
@@ -1308,22 +1423,28 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         for module in modules:
                             # todo do not install every single feature that are in the same module
                             # but do it module wise
-                            print('upgrading: %s' % module.name)
+                            print("upgrading: %s" % module.name)
                             module.button_immediate_upgrade()
                     else:
                         modules.button_immediate_upgrade()
-                    print(bcolors.OKGREEN + 'finished upgrading: ' +
-                          bcolors.ENDC + ','.join(n_list))
-                    print('*' * 80)
+                    print(
+                        bcolors.OKGREEN
+                        + "finished upgrading: "
+                        + bcolors.ENDC
+                        + ",".join(n_list)
+                    )
+                    print("*" * 80)
                 else:  # uninstall ..
-                    print('the following modules will be uninstalled:',
-                          [u[1] for u in installed])
+                    print(
+                        "the following modules will be uninstalled:",
+                        [u[1] for u in installed],
+                    )
                     for i, n in installed:
-                        print('*' * 80)
-                        print('unistalling: ' + n)
+                        print("*" * 80)
+                        print("unistalling: " + n)
                         module_obj.browse(i).button_immediate_uninstall()
-                        print('finished unistalling: ' + n)
-                        print('*' * 80)
+                        print("finished unistalling: " + n)
+                        print("*" * 80)
 
     # # ----------------------------------
     # # set_erp_settings
@@ -1438,32 +1559,32 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     # remove erp_moduls
     def remove_apps(self):
         opts = self.opts
-        to_remove = opts.removeapps.split(',')
+        to_remove = opts.removeapps.split(",")
         apps = self.listapps(return_apps=True)
         module_obj = self.get_module_obj()
         app_dic = {key: value for (value, key) in apps}
         if module_obj:
             print(bcolors.green)
-            print('*' * 80)
-            print('The following app(s) will be uninstalled')
+            print("*" * 80)
+            print("The following app(s) will be uninstalled")
             for app_name in to_remove:
                 if app_dic.get(app_name):
-                    print(app_name)                    
-                    module_obj.browse(app_dic.get(
-                        app_name)).button_immediate_uninstall()
+                    print(app_name)
+                    module_obj.browse(
+                        app_dic.get(app_name)
+                    ).button_immediate_uninstall()
             print(bcolors.ENDC)
         else:
             print(bcolors.WARNING)
-            print('*' * 80)
-            print('odoo seems not to be running')
+            print("*" * 80)
+            print("odoo seems not to be running")
             print(bcolors.ENDC)
-
 
     # listapps
     # --------
     # list what apps are installed in a running odoo site
     # mark the ones listed in the site description
-    def listapps(self, return_apps = False):
+    def listapps(self, return_apps=False):
         installed = []
         uninstalled = []
         to_upgrade = []
@@ -1476,12 +1597,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # addons declared in the erp_addons stanza are the ones we can get from odoo
         erp_addons = self.erp_addons
 
-        self.collect_info(cursor, req, installed, uninstalled, to_upgrade, skip_list=[], apps=apps)
+        self.collect_info(
+            cursor, req, installed, uninstalled, to_upgrade, skip_list=[], apps=apps
+        )
         if return_apps:
             return apps
         app_names = [a[1] for a in apps]
         for name in erp_addons:
-            print(name, name in app_names and '+' or '')
+            print(name, name in app_names and "+" or "")
 
     # ----------------------------------
     #  collects info on what modules are installed
@@ -1490,56 +1613,66 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     #         use any module
     # @uninstalled  : collect unistalled modules into this list
     # @to_upgrade   :collect modules that expect upgrade into this list
-    def collect_info(self, cursor, req, installed, uninstalled, to_upgrade, skip_list, all_list=[], apps=[]):
+    def collect_info(
+        self,
+        cursor,
+        req,
+        installed,
+        uninstalled,
+        to_upgrade,
+        skip_list,
+        all_list=[],
+        apps=[],
+    ):
         opts = self.opts
-        s = 'select * from ir_module_module'
+        s = "select * from ir_module_module"
         cursor.execute(s)
         rows = cursor.fetchall()
         all = not req
         updlist = []
-        if opts.subparser_name == 'create':
+        if opts.subparser_name == "create":
             if opts.updateown:
-                updlist = opts.updateown.split(',')
+                updlist = opts.updateown.split(",")
             elif opts.removeown:
-                updlist = opts.removeown.split(',')
+                updlist = opts.removeown.split(",")
             elif opts.removeapps:
                 updlist = opts.removeapps
-        if opts.subparser_name == 'docker':
+        if opts.subparser_name == "docker":
             if opts.dupdateown:
-                updlist = opts.dupdateown.split(',')
+                updlist = opts.dupdateown.split(",")
             elif opts.dremoveown:
-                updlist = opts.dremoveown.split(',')
+                updlist = opts.dremoveown.split(",")
             elif opts.dremoveapps:
                 updlist = opts.dremoveapps
-        if 'all' in updlist:
+        if "all" in updlist:
             updlist = all_list
-        if 'dev' in updlist or 'develop' in updlist:
-            dev_list = self.site.get('develop')
+        if "dev" in updlist or "develop" in updlist:
+            dev_list = self.site.get("develop")
             if dev_list:
-                dev_list = dev_list.get('addons')
+                dev_list = dev_list.get("addons")
             if not dev_list:
                 print(OWN_ADDONS_NO_DEVELOP % self.site_name)
                 return
             updlist = dev_list
         for r in rows:
-            n = r.get('name')
-            s = r.get('state')
-            i = r.get('id')
+            n = r.get("name")
+            s = r.get("state")
+            i = r.get("id")
             if n in req or all:
                 if n in req:
                     req.pop(req.index(n))
-                if s == 'installed':
-                    if r.get('application'):
+                if s == "installed":
+                    if r.get("application"):
                         apps.append([i, n])
-                    if all or updlist == 'all' or n in updlist:
+                    if all or updlist == "all" or n in updlist:
                         installed.append((i, n))
                     continue
-                elif s in ['uninstalled', 'to install']:
+                elif s in ["uninstalled", "to install"]:
                     uninstalled.append((i, n))
-                elif s == 'to upgrade':
+                elif s == "to upgrade":
                     to_upgrade.append(n)
                 else:
-                    if not s == 'uninstallable':
+                    if not s == "uninstallable":
                         print(n, s, i)
         # now clean all list from any modules we want to skip
         # x.pop(x.index(2))
@@ -1559,8 +1692,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     # =============================================================
     # handle docker stuff
     # =============================================================
- 
-    def run_commands(self, cmd_lines, user='', pw='', shell=True):
+
+    def run_commands(self, cmd_lines, user="", pw="", shell=True):
         """
         """
         opts = self.opts
@@ -1573,42 +1706,41 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         for cmd_line in cmd_lines:
             counter += 1
             if isinstance(cmd_line, dict):
-                is_builtin = cmd_line['is_builtin']
-                cmd_line = cmd_line['cmd_line']
+                is_builtin = cmd_line["is_builtin"]
+                cmd_line = cmd_line["cmd_line"]
             if opts.verbose:
-                print('counter:', counter)
+                print("counter:", counter)
             if not cmd_line:
                 continue
             if opts.verbose:
-                print('-' * 80)
+                print("-" * 80)
                 print(cmd_line)
             if is_builtin:
-                p = subprocess.Popen(
-                    cmd_line,
-                    stdout=PIPE)
+                p = subprocess.Popen(cmd_line, stdout=PIPE)
             else:
                 p = subprocess.Popen(
                     cmd_line,
                     stdout=PIPE,
                     stderr=PIPE,
-                    env=dict(os.environ, PGPASSWORD=pw, PATH='/usr/bin:/bin'),
-                    shell=shell)
+                    env=dict(os.environ, PGPASSWORD=pw, PATH="/usr/bin:/bin"),
+                    shell=shell,
+                )
             if opts.verbose:
                 output, errors = p.communicate()
                 if output:
-                    print(output.decode('utf8'))              
+                    print(output.decode("utf8"))
             else:
                 output, errors = p.communicate()
             if p.returncode:
                 print(bcolors.FAIL)
-                print('*' * 80)
+                print("*" * 80)
                 print(cmd_line)
-                print('resulted in an error or warning')
-                print(errors.decode('utf8'))
-                print('*' * 80)
-                print(bcolors.ENDC)          
+                print("resulted in an error or warning")
+                print(errors.decode("utf8"))
+                print("*" * 80)
+                print(bcolors.ENDC)
 
-    def run_commands_run(self, cmd_lines, user='', pw='', shell=True):
+    def run_commands_run(self, cmd_lines, user="", pw="", shell=True):
         """
         similar like run_commands, but use run instead of popen
         """
@@ -1622,30 +1754,30 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         for cmd_line in cmd_lines:
             counter += 1
             if opts.verbose:
-                print('counter:', counter)
+                print("counter:", counter)
             if not cmd_line:
                 continue
             if opts.verbose:
-                print('-' * 80)
+                print("-" * 80)
                 print(cmd_line)
             p = subprocess.run(cmd_line)
-                #cmd_line,
-                #stdout=PIPE,
-                #stderr=PIPE,
-                #shell=shell)
+            # cmd_line,
+            # stdout=PIPE,
+            # stderr=PIPE,
+            # shell=shell)
             output = p.stdout
             errors = p.stderr
             if opts.verbose:
                 if output:
-                    print(output.decode('utf8'))
+                    print(output.decode("utf8"))
             if p.returncode:
                 print(bcolors.FAIL)
-                print('*' * 80)
+                print("*" * 80)
                 print(cmd_line)
-                print('resulted in an error or warning')
+                print("resulted in an error or warning")
                 if errors:
-                    print(errors.decode('utf8'))
-                print('*' * 80)
+                    print(errors.decode("utf8"))
+                print("*" * 80)
                 print(bcolors.ENDC)
 
     def add_aliases_to_git_exclude(self):
@@ -1655,16 +1787,16 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         """
         names = list(SITES.keys())
         names.sort()
-        marker_start = AMARKER % 'start'
-        marker_end = AMARKER % 'end'
-        exclude_f_path = '%s/.git/info/exclude' % self.sites_home
+        marker_start = AMARKER % "start"
+        marker_end = AMARKER % "end"
+        exclude_f_path = "%s/.git/info/exclude" % self.sites_home
         if not os.path.exists(exclude_f_path):
             # we are propably in a test
             return
-        with open(exclude_f_path, 'r') as f:
+        with open(exclude_f_path, "r") as f:
             data = f.read()
-        data = data.split('\n')
-        alias_str = ''
+        data = data.split("\n")
+        alias_str = ""
         # loop over data and add lines to the result until we see the marker
         # then we loop untill we get the endmarker or the end of the file
         start_found = False
@@ -1673,7 +1805,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if line.strip() == marker_start:
                     start_found = True
                     continue
-                alias_str += '%s\n' % line
+                alias_str += "%s\n" % line
             else:
                 if line.strip() == marker_end:
                     end_found = True
@@ -1681,12 +1813,12 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # we no have all lines without the constucted alias in alias_str
         # we add a new block of lines to it
         alias_str += ABLOCK % {
-            'aliasmarker_start': marker_start,
-            'aliasmarker_end': marker_end,
-            'alias_list': '\n'.join(names),
-            'alias_header': '',
+            "aliasmarker_start": marker_start,
+            "aliasmarker_end": marker_end,
+            "alias_list": "\n".join(names),
+            "alias_header": "",
         }
-        with open(exclude_f_path, 'w') as f:
+        with open(exclude_f_path, "w") as f:
             f.write(alias_str)
 
     def add_aliases(self):
@@ -1696,13 +1828,13 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         if not self.site_name:
             # we need a sitename to do anything sensible
             return
-        pp = self.base_info['erp_server_data_path']
+        pp = self.base_info["erp_server_data_path"]
         oop = self.sites_home
-        marker_start = AMARKER % 'start'
-        marker_end = AMARKER % 'end'
+        marker_start = AMARKER % "start"
+        marker_end = AMARKER % "end"
         # where do we want to add our aliases?
         alias_script = "bash_aliases"
-        if sys.platform == 'darwin':
+        if sys.platform == "darwin":
             alias_script = "bash_profile"
         else:
             try:
@@ -1714,16 +1846,16 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 elif dist[1].strip("\n") == "Ubuntu":
                     alias_script = "bash_aliases"
             except:
-                print('could not determine linux distribution')
+                print("could not determine linux distribution")
                 pass
         home = os.path.expanduser("~")
-        alias_path = '%s/.%s' % (home, alias_script)
+        alias_path = "%s/.%s" % (home, alias_script)
         try:
-            data = open(alias_path, 'r').read()
+            data = open(alias_path, "r").read()
         except:
-            data = ''
-        data = data.split('\n')
-        alias_str = ''
+            data = ""
+        data = data.split("\n")
+        alias_str = ""
         # loop over data and add lines to the result untill we see the marker
         # then we loop untill we get the endmarker or the end of the file
         start_found = False
@@ -1733,7 +1865,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if line.strip() == marker_start:
                     start_found = True
                     continue
-                alias_str += '%s\n' % line
+                alias_str += "%s\n" % line
             else:
                 if line.strip() == marker_end:
                     end_found = True
@@ -1741,13 +1873,13 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         # we no have all lines without the constucted alias in alias_str
         # we add a new block of aliases to it
         alias_str += ABLOCK % {
-            'aliasmarker_start': marker_start,
-            'aliasmarker_end': marker_end,
-            'alias_list': self.create_aliases(),
-            'alias_header': ALIAS_HEADER % {'pp': pp},
-            'ppath': pp,
+            "aliasmarker_start": marker_start,
+            "aliasmarker_end": marker_end,
+            "alias_list": self.create_aliases(),
+            "alias_header": ALIAS_HEADER % {"pp": pp},
+            "ppath": pp,
         }
-        with open(alias_path, 'w') as f:
+        with open(alias_path, "w") as f:
             f.write(alias_str)
 
         # now write stings to git excluse file
@@ -1770,27 +1902,29 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 min_len += 1
         return name[:min_len]
 
-
     def create_siteslist_aliases(self):
         """create one alias per siteslist, to easily cd into it
         """
         sitelist_names = []
-        sites_list_path = self.base_info.get('sitesinfo_path')
+        sites_list_path = self.base_info.get("sitesinfo_path")
         siteinfos = self.siteinfos
         alias_line = ALIAS_LINE
         sitelist_names = list(siteinfos.keys())
-        result = ''
+        result = ""
         for sitelist_name, sites_list_url in list(siteinfos.items()):
-            running_path = os.path.normpath('%s/%s' % (sites_list_path, sitelist_name))
+            running_path = os.path.normpath("%s/%s" % (sites_list_path, sitelist_name))
             s = self._get_shortest(sitelist_name, sitelist_names)
-            result += ALIAS_LINE % { 'sname' : "wwli%s" % s, 'path' : running_path}
-            result += ALIAS_LINE_PULL % { 'sname' : "wwli%spull" % s, 'path' : running_path}
+            result += ALIAS_LINE % {"sname": "wwli%s" % s, "path": running_path}
+            result += ALIAS_LINE_PULL % {
+                "sname": "wwli%spull" % s,
+                "path": running_path,
+            }
         return result
 
     def create_aliases(self):
         """
         """
-        pp = self.base_info['project_path']
+        pp = self.base_info["project_path"]
         dp = self.data_path
         oop = self.sites_home
         # shortnamesconstruct
@@ -1807,22 +1941,22 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 # we will for sure find a key ..
             alias_names.append(n[:try_length])
             long_names.append(n)
-        result = ALIAS_LINE % {'sname': 'pro', 'path': pp}
-        result += ALIAS_LINE % {'sname': 'wwb', 'path': oop}
+        result = ALIAS_LINE % {"sname": "pro", "path": pp}
+        result += ALIAS_LINE % {"sname": "wwb", "path": oop}
         for i in range(len(alias_names)):
-            if os.path.exists('%s/%s' % (pp, long_names[i])):
+            if os.path.exists("%s/%s" % (pp, long_names[i])):
                 result += ALIAS % {
-                    'sname': alias_names[i],
-                    'lname': long_names[i],
-                    'ppath': pp,
-                    'dpath': dp,
+                    "sname": alias_names[i],
+                    "lname": long_names[i],
+                    "ppath": pp,
+                    "dpath": dp,
                 }
         # wwb cd to erp_workbench
         result += WWB % self.sites_home
-        result += WWLI % self.base_info['sitesinfo_path']
-        result += WWB % self.base_info['erp_server_data_path']
+        result += WWLI % self.base_info["sitesinfo_path"]
+        result += WWB % self.base_info["erp_server_data_path"]
         result += DOCKER_CLEAN
-        result += DOC_ET_ALL % {'user_home': os.path.expanduser("~/")}
+        result += DOC_ET_ALL % {"user_home": os.path.expanduser("~/")}
         result += ALIASC
         result += ALIASOO
         result += VIRTENV_D
@@ -1839,10 +1973,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         for t in self.sites_home, self.sitesinfo_path:
             os.chdir(t)
             # pull erp_workbench
-            cmd_line = ['git', 'pull']
+            cmd_line = ["git", "pull"]
             p = subprocess.Popen(cmd_line, stdout=PIPE, stderr=PIPE)
             if self.opts.verbose:
-                print(t, ':',)
+                print(t, ":")
                 result = p.communicate()
                 print(result[0])
                 if result[1]:
@@ -1854,14 +1988,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     def do_rebuild(self):
         # we want to call bin/dosetup.py -f;bin/buildout in the buildout directory
         adir = os.getcwd()
-        pp = self.base_info['project_path']
-        f = '%s/%s/%s' % (pp, self.site_name, self.site_name)
+        pp = self.base_info["project_path"]
+        f = "%s/%s/%s" % (pp, self.site_name, self.site_name)
         if os.path.exists(f):
             os.chdir(f)
-            cmd_lines = (['bin/dosetup.py', '-f'], ['bin/buildout'])
+            cmd_lines = (["bin/dosetup.py", "-f"], ["bin/buildout"])
             for cmd_line in cmd_lines:
                 print(bcolors.WARNING)
-                print('processing:', f, cmd_line)
+                print("processing:", f, cmd_line)
                 print(bcolors.ENDC)
                 p = subprocess.Popen(cmd_line, stdout=PIPE, stderr=PIPE)
                 result = p.communicate()
@@ -1893,15 +2027,15 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             # '$FILE$' link to the source
             overwrite = o_overwrite
             try:
-                cmd = ''
+                cmd = ""
                 spath = fname
                 if source:
-                    spath = '%s/%s' % (source, fname)
-                tpath = '%s/%s' % (target, fname)
+                    spath = "%s/%s" % (source, fname)
+                tpath = "%s/%s" % (target, fname)
                 if isinstance(tp, tuple):
                     tp, cmd = tp
                     if cmd:
-                        if cmd == '$FILE$':
+                        if cmd == "$FILE$":
                             if make_links:
                                 if os.path.exists(tpath):
                                     os.remove(tpath)
@@ -1913,9 +2047,13 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                                 if os.path.exists(tpath):
                                     os.remove(tpath)
                                 shutil.copyfile(spath, tpath)
-                    if tp == 'L':
+                    if tp == "L":
                         # does the target exist and do we want to overwrite it?
-                        if os.path.exists(tpath) and not os.path.islink(tpath) and make_links:
+                        if (
+                            os.path.exists(tpath)
+                            and not os.path.islink(tpath)
+                            and make_links
+                        ):
                             # we want to make links, but target is not a link
                             # so we remove it
                             os.remove(tpath)
@@ -1931,63 +2069,64 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                             try:
                                 os.symlink(cmd, tpath)
                             except OSError as e:
-                                print('*' * 80)
+                                print("*" * 80)
                                 print(str(e))
-                                print('cmd:', cmd)
-                                print('tpath:', tpath)
-                                print('*' * 80)
+                                print("cmd:", cmd)
+                                print("tpath:", tpath)
+                                print("*" * 80)
                             os.chdir(adir)
-                    if tp == 'R':
+                    if tp == "R":
                         # copy and rename
                         # cmd is the name of the new file
-                        tpath = '%s/%s' % (target, cmd)
+                        tpath = "%s/%s" % (target, cmd)
                         # only overwrite if overwrite is set
                         if overwrite and os.path.exists(tpath):
                             os.remove(tpath)
                         if overwrite or (not os.path.exists(tpath)):
                             shutil.copyfile(spath, tpath)
-                    if tp == 'U':
+                    if tp == "U":
                         # update the content of the file by replacing variables
                         if os.path.exists(tpath):
                             os.remove(tpath)
                         if overwrite or (not os.path.exists(tpath)):
-                            open(tpath, 'w').write(
-                                open(spath, 'r').read() % self.default_values)
-                        if cmd == 'X':
+                            open(tpath, "w").write(
+                                open(spath, "r").read() % self.default_values
+                            )
+                        if cmd == "X":
                             # set executable
                             st = os.stat(tpath)
                             os.chmod(tpath, st.st_mode | stat.S_IEXEC)
                 elif isinstance(tp, dict):
                     # new directory
-                    newsource = '%s/%s' % (source, fname)
-                    newtarget = '%s/%s' % (target, fname)
+                    newsource = "%s/%s" % (source, fname)
+                    newtarget = "%s/%s" % (target, fname)
                     if not os.path.exists(newtarget):
                         os.mkdir(newtarget)
                     self.handle_file_copy_move(newsource, newtarget, tp)
                 else:
                     # this is just a simple command ..
-                    if tp in ['F', 'O', 'U']:
-                        if tp in ('O', 'U'):
+                    if tp in ["F", "O", "U"]:
+                        if tp in ("O", "U"):
                             overwrite = True
                         # a normal file
                         # only overwrite if overwrite is set
                         if overwrite and os.path.exists(tpath):
                             os.remove(tpath)
                         if overwrite or (not os.path.exists(tpath)):
-                            if tp == 'O':
+                            if tp == "O":
                                 try:
                                     # make sure all placeholders are replaced
-                                    data = open(spath, 'r').read(
-                                    ) % self.default_values
-                                    open(tpath, 'w').write(data)
+                                    data = open(spath, "r").read() % self.default_values
+                                    open(tpath, "w").write(data)
                                 except TypeError:
                                     shutil.copyfile(spath, tpath)
-                            elif tp == 'U':
-                                open(tpath, 'w').write(
-                                    open(spath, 'r').read() % self.default_values)
+                            elif tp == "U":
+                                open(tpath, "w").write(
+                                    open(spath, "r").read() % self.default_values
+                                )
                             else:
                                 shutil.copyfile(spath, tpath)
-                    elif tp == 'X':
+                    elif tp == "X":
                         # a normal file, but set execution flag
                         # only overwrite if overwrite is set
                         overwrite = True  # X always overwrites
@@ -1998,24 +2137,23 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         # set executable
                         st = os.stat(tpath)
                         os.chmod(tpath, st.st_mode | stat.S_IEXEC)
-                    elif tp == 'L':
+                    elif tp == "L":
                         if overwrite and os.path.exists(tpath):
                             os.remove(tpath)
                         # a link
                         if not os.path.exists(tpath):
                             shutil.copyfile(spath, tpath)
-                    elif tp == 'D':
+                    elif tp == "D":
                         # a folder to create
                         # f overwrite and os.path.exists(tpath):
-                            # hutil.rmtree(tpath, True)
+                        # hutil.rmtree(tpath, True)
                         if not os.path.exists(tpath):
                             os.mkdir(tpath)
-                    elif tp == 'T':
+                    elif tp == "T":
                         # just touch to create
-                        open(tpath, 'a').close()
+                        open(tpath, "a").close()
             except IOError as e:
                 print(str(e))
             except Exception as e:
                 if self.opts.verbose:
                     print(str(e))
-                    

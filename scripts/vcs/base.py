@@ -5,8 +5,7 @@ import logging
 from . import utils
 
 SUBPROCESS_ENV = os.environ.copy()
-SUBPROCESS_ENV['PYTHONPATH'] = SUBPROCESS_ENV.pop(
-    'BUILDOUT_ORIGINAL_PYTHONPATH', '')
+SUBPROCESS_ENV["PYTHONPATH"] = SUBPROCESS_ENV.pop("BUILDOUT_ORIGINAL_PYTHONPATH", "")
 
 logger = logging.getLogger(__name__)
 
@@ -22,19 +21,19 @@ class CloneError(subprocess.CalledProcessError):
 
 
 def wrap_check_call(exc_cls, call_fn):
-
     def wrapped_check_call(*args, **kwargs):
         """Variant on subprocess.check_* that raises %s.""" % exc_cls
         try:
             return call_fn(*args, **kwargs)
         except subprocess.CalledProcessError as e:
             up_exc = exc_cls(e.returncode, e.cmd)
-            output = getattr(e, 'output', None)
+            output = getattr(e, "output", None)
             if output is not None:
                 up_exc.output = output
             raise up_exc
 
     return wrapped_check_call
+
 
 update_check_call = wrap_check_call(UpdateError, subprocess.check_call)
 clone_check_call = wrap_check_call(CloneError, subprocess.check_call)
@@ -70,8 +69,15 @@ class BaseRepo(object):
     concrete class, but it is passed as a :class:`str`.
     """
 
-    def __init__(self, target_dir, url, clear_retry=False,
-                 offline=False, clear_locks=False, **options):
+    def __init__(
+        self,
+        target_dir,
+        url,
+        clear_retry=False,
+        offline=False,
+        clear_locks=False,
+        **options
+    ):
 
         self.target_dir = target_dir
         self.url = isinstance(url, str) and url.strip() or url
@@ -104,7 +110,7 @@ class BaseRepo(object):
     def __call__(self, revision):
         """Create if needed from remote source, and put it at wanted revision.
         """
-        if self.options.get('clean'):
+        if self.options.get("clean"):
             self.clean()
 
         try:
@@ -112,8 +118,11 @@ class BaseRepo(object):
         except UpdateError:
             if self.offline or not self.clear_retry:
                 raise
-            logger.warn("Update of %s failed, removing and re-cloning "
-                        "according to the clear-retry option. ", self)
+            logger.warn(
+                "Update of %s failed, removing and re-cloning "
+                "according to the clear-retry option. ",
+                self,
+            )
             self.clear_target()
             self.get_update(revision)
         return self  # nicer in particular for tests
@@ -138,7 +147,10 @@ class BaseRepo(object):
 
     def __str__(self):
         return "%s at %r (remote=%r)" % (
-            self.__class__.__name__, self.target_dir, self.url)
+            self.__class__.__name__,
+            self.target_dir,
+            self.url,
+        )
 
     @classmethod
     def is_versioned(cls, path):
