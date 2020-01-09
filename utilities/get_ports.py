@@ -9,14 +9,15 @@ sys.path.insert(0, os.path.split(os.path.split(os.path.realpath(__file__))[0])[0
 from scripts.bcolors import bcolors
 from sites_list import SITES_G
 server_map = {
-    None : 'undefined',
-    'xx.xx.xx.xx'   : 'undefined',
-    'localhost'     : 'localhost',
-    '127.0.0.1'     : 'localhost',
-    '144.76.184.20' : 'frieda',
-    '176.9.142.21'  : 'alice2',
-    '195.48.80.84'  : 'kinesys',
-    '88.198.51.174' : 'lisa',
+    None: "undefined",
+    "xx.xx.xx.xx": "undefined",
+    "localhost": "localhost",
+    "127.0.0.1": "localhost",
+    "144.76.184.20": "frieda",
+    "176.9.142.21": "alice2",
+    "195.48.80.84": "kinesys",
+    "88.198.51.174": "lisa",
+    "0.0.0.0" : "localhost",
 }
 result = {}
 for k, v in list(SITES_G.items()):
