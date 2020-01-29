@@ -175,9 +175,13 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 if self.docker_client.containers.list(
                     {"name": docker_db_container_name}
                 ):
-                    docker_db_container = self.docker_containers.get(
-                        docker_db_container_name
-                    )
+                    try:
+                        # why we need this try except, I do not understand
+                        docker_db_container = self.docker_containers.get(
+                            docker_db_container_name
+                        )
+                    except:
+                        pass
                 if not docker_db_container:
                     try:
                         # as this is a docker handler instance, try to create it
