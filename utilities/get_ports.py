@@ -12,6 +12,7 @@ server_map = {
     None : 'undefined',
     'xx.xx.xx.xx'   : 'undefined',
     'localhost'     : 'localhost',
+    '0.0.0.0'       : 'undefined',
     '127.0.0.1'     : 'localhost',
     '144.76.184.20' : 'frieda',
     '176.9.142.21'  : 'alice2',
@@ -35,5 +36,4 @@ for k, v in list(SITES_G.items()):
         pass
     result[remote_url] = result_list
 pprint(result)
-    
-    
+

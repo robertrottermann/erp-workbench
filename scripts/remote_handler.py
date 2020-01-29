@@ -83,6 +83,7 @@ class RemoteHandler(InitHandler):
         for alias in site_info.get("vserveraliases", []):
             aliases_string += HL % alias
         df["serveralias"] = aliases_string.rstrip()
+        df['odoo_port'] = df['erp_port']
         df.update(site_info)
         template = (
             open("%s/templates/apache.conf" % default_values["sites_home"], "r").read()

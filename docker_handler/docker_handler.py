@@ -825,9 +825,8 @@ class DockerHandler(InitHandler, DBUpdater):
                 quiet=False
             )
             if result:
-                image = result[0]
                 # https://techoverflow.net/2019/04/01/fixing-gcloud-warning-docker-credential-gcloud-not-in-system-path/
-                is_ok = self._print_docker_result(result[1], docker_file, docker_target_path, return_info)
+                is_ok = self._print_docker_result(result, docker_file, docker_target_path, return_info)
                 if not is_ok:
                     return
         except docker.errors.NotFound:
