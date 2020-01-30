@@ -61,11 +61,11 @@ class RemoteHandler(InitHandler):
         apache_path = self.http_server_fs_path
         if not apache_path:
             print(bcolors.FAIL)
-            print('*' * 80)
-            print('no path to the apache configuration defined')
-            print('please do so in the server description of this host')
-            print('like: http_server_fs_path: /etc/apache2')
-            print('the ip is: %s' % self.remote_server_ip)
+            print("*" * 80)
+            print("no path to the apache configuration defined")
+            print("please do so in the server description of this host")
+            print("like: http_server_fs_path: /etc/apache2")
+            print("the ip is: %s" % self.remote_server_ip)
             print(bcolors.ENDC)
             return
 
@@ -83,7 +83,6 @@ class RemoteHandler(InitHandler):
         for alias in site_info.get("vserveraliases", []):
             aliases_string += HL % alias
         df["serveralias"] = aliases_string.rstrip()
-        df['odoo_port'] = df['erp_port']
         df.update(site_info)
         template = (
             open("%s/templates/apache.conf" % default_values["sites_home"], "r").read()

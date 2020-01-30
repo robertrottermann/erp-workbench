@@ -10,8 +10,9 @@ SUPPORTED = {}
 
 # SUPPORTED['hg'] = HgRepo
 # SUPPORTED['bzr'] = BzrBranch
-SUPPORTED['git'] = GitRepo
-SUPPORTED['svn'] = SvnCheckout
+SUPPORTED["git"] = GitRepo
+SUPPORTED["svn"] = SvnCheckout
+
 
 def repo(vcs_type, target_dir, url, **options):
     cls = SUPPORTED.get(vcs_type)

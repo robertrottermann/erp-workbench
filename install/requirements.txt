@@ -59,3 +59,4 @@ supermutes
 protobuf
 grpcio-tools
 virtualenv
+pylint_odoo

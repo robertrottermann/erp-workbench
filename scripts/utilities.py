@@ -113,17 +113,7 @@ CONFIG_NAME = {
             "logfile": "/var/log/odoo/odoo_log",
             "data_dir": "/var/lib/odoo",
         },
-    },
-    "flectra": {
-        "config": "flectra.conf",
-        "val_dic": {
-            "server_wide_modules": "",
-            "xmlrpc_port": 7073,
-            "longpolling_port": 7072,
-            "logfile": "/var/log/flectra/flectra_log",
-            "data_dir": "/var/lib/flectra",
-        },
-    },
+    }
 }
 
 

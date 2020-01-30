@@ -24,7 +24,7 @@ DROP DATABASE
 postgres=# create database redproducts;
 CREATE DATABASE
 """
-PROCESS_NAMES_DIC = {'odoo': 'odoo_bin', 'start_openerp': ''}
+PROCESS_NAMES_DIC = {"odoo": "odoo_bin", "start_openerp": ""}
 PROCESS_NAMES = list(PROCESS_NAMES_DIC.keys())
 # sys.path.insert(0, SITES_HOME)
 from site_desc_handler.handle_remote_data import get_remote_server_info
@@ -180,7 +180,7 @@ class DBUpdater(object):
                     print(("*" * 80))
                     print(
                         (
-                            "site %s is running, not %s, I can not determin what to do. Therefore I am leaving!"
+                            "site %s is running, not %s, I can not determin what to so. leaving!"
                             % (runnig_db, dbname)
                         )
                     )
@@ -228,9 +228,7 @@ class DBUpdater(object):
                 target_site_name,
                 target_site_name,
             )
-            ipt = server_dic['remote_url']
-            if opts.use_ip_target:
-                ipt = opts.use_ip_target
+            ipt = opts.use_ip_target
             if ipt in ["localhost", "127.0.0.1"]:
                 rfst_path = "%s/%s/filestore/%s" % (
                     BASE_INFO["erp_server_data_path"],
@@ -545,19 +543,26 @@ class DBUpdater(object):
             """
             if remote_user != "root":
                 remote_user_data_path = remote_data_path
-                #remote_data_path = self.remote_user_data_path
+                # remote_data_path = self.remote_user_data_path
             # if the target site is != source site
             # we must make sure, that target filestore folder exists
-            os.makedirs('%s/%s/filestore/%s' % (self.erp_server_data_path, use_site_name, use_site_name), exist_ok=True)
-            os.system('%s/scripts/rsync_remote_local.sh %s %s %s %s %s %s' % (
-                self.sites_home,
-                site_name,
-                remote_url,
-                remote_data_path,
-                remote_user,
-                self.erp_server_data_path,
-                use_site_name,
-            ))
+            os.makedirs(
+                "%s/%s/filestore/%s"
+                % (self.erp_server_data_path, use_site_name, use_site_name),
+                exist_ok=True,
+            )
+            os.system(
+                "%s/scripts/rsync_remote_local.sh %s %s %s %s %s %s"
+                % (
+                    self.sites_home,
+                    site_name,
+                    remote_url,
+                    remote_data_path,
+                    remote_user,
+                    self.erp_server_data_path,
+                    use_site_name,
+                )
+            )
             if not os.path.exists(dpath):
                 print("-------------------------------------------------------")
                 print("%s not found" % dpath)
@@ -643,8 +648,17 @@ class DBUpdater(object):
                 ],
                 # do the actual reading of the database
                 # the database will have thae same name as on the remote server
-                ['%s/pg_restore' % where, '-O', '--if-exists', '--clean', '-U',
-                    user, '-d', use_site_name, dpath],
+                [
+                    "%s/pg_restore" % where,
+                    "-O",
+                    "--if-exists",
+                    "--clean",
+                    "-U",
+                    user,
+                    "-d",
+                    use_site_name,
+                    dpath,
+                ],
                 # set standard password
                 [
                     "%s/psql" % where,
@@ -702,8 +716,8 @@ class DBUpdater(object):
         os.chdir(self.inner_path)
         # create a new config file with nothing changed but db stuff
         found = False
-        for f_name in ['openerp.cfg', 'odoo.cfg', 'odoo.conf']:
-            if os.path.isfile('etc/%s' % f_name):
+        for f_name in ["openerp.cfg", "odoo.cfg", "odoo.conf"]:
+            if os.path.isfile("etc/%s" % f_name):
                 found = True
                 break
         if not found:
@@ -717,8 +731,8 @@ class DBUpdater(object):
         d = open("etc/no_db_%s" % f_name, "w").write(d)
         # what process should we start
         found = False
-        for p_name in ['start_openerp', 'start_odoo', 'odoo']:
-            if os.path.isfile('bin/%s' % p_name):
+        for p_name in ["start_openerp", "start_odoo", "odoo"]:
+            if os.path.isfile("bin/%s" % p_name):
                 found = True
                 break
         if not found:
@@ -838,7 +852,7 @@ class DBUpdater(object):
             if set_local:
                 # kill the process
                 if not process_info:
-                    print('odoo not running')
+                    print("odoo not running")
                 else:
                     if not norefresh:
                         p = psutil.Process(process_info[0][0])

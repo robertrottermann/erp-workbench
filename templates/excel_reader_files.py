@@ -1,4 +1,4 @@
-HEAD ="""[files]
+HEAD = """[files]
 %(file_list)s
 
 [fields]

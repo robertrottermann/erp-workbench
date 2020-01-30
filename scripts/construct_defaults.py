@@ -87,9 +87,12 @@ def check_and_update_base_defaults(yaml_files, vals, results={}):
     for yaml_data in yaml_files:
         if len(yaml_data) == 4:
             # we have to construct a yaml file with its variables replaced
-            yaml_name, yaml_file_path, data_file_path, yaml_file_path_defaults = (
-                yaml_data
-            )
+            (
+                yaml_name,
+                yaml_file_path,
+                data_file_path,
+                yaml_file_path_defaults,
+            ) = yaml_data
         elif len(yaml_data) == 2:
             raise ValueError("robert thinks this should never happen")
             yaml_name = ""

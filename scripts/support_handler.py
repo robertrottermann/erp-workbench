@@ -201,7 +201,7 @@ class SupportHandler(InitHandler):
         # else:
         #     self.default_values['remote_server'] = self.remote_data_path # bad naming!!
 
-        if opts.add_site and not self.opts.orig_sites_list == 'localhost':
+        if opts.add_site and not self.opts.orig_sites_list == "localhost":
             # before we can construct a site description we need a a file with site values
             pvals = {}  # dict to get link to the preset-vals-file
             # preset_values = self.get_preset_values(pvals)
@@ -209,9 +209,11 @@ class SupportHandler(InitHandler):
                 if not sites_handler.site_name and self.opts.name:
                     # this can happen while testing ..
                     sites_handler.site_name = self.opts.orig_name
-                sites_handler.reset_values() # force to reread the values, they were read when no site_name was yet known
+                sites_handler.reset_values()  # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
-                result = sites_handler.add_site_global(handler = sites_handler, template_name=template, sublist=sublist_name)#, preset_values=preset_values)
+                result = sites_handler.add_site_global(
+                    handler=sites_handler, template_name=template, sublist=sublist_name
+                )  # , preset_values=preset_values)
                 if result:
                     if not opts.quiet:
                         print("%s added to sites.py" % self.site_name)
@@ -267,12 +269,8 @@ class SupportHandler(InitHandler):
                 # preset_values=preset_values)
             if result:
                 print("%s added to sites.py" % self.site_name)
-            return {
-                'added' : self.site_name,
-                'result' : result,
-                'type' : 'G'
-            }
-        elif opts.add_site_local or self.opts.orig_sites_list == 'localhost':
+            return {"added": self.site_name, "result": result, "type": "G"}
+        elif opts.add_site_local or self.opts.orig_sites_list == "localhost":
             # we add to sites local
             # we read untill we find an empty }
             # before we can construct a site description we need a a file with site values
@@ -471,8 +469,8 @@ class SupportHandler(InitHandler):
     # using openupgrade
     def upgrade(self, target_site):
         site = self.site
-        #check whether target_site exists
-        target_site, target_site_list = (target_site.split(':') + [''])[:2]
+        # check whether target_site exists
+        target_site, target_site_list = (target_site.split(":") + [""])[:2]
         if not self.sites.get(target_site):
             print(bcolors.FAIL)
             print("*" * 80)
@@ -492,28 +490,32 @@ class SupportHandler(InitHandler):
         # for the time beeing we only do one step upgrade
         # construct the command line like:
         # -C /home/robert/projects/breitschtraeff10/breitschtraeff10/etc/odoo.cfg -D breitschtraeff10 -B migrations -R "11.0"
-        config_path = '%s/etc/odoo.cfg' % self.default_values['inner']
-        target_version = self.sites[target_site].get('erp_version', self.sites[target_site].get('odoo_version'))
+        config_path = "%s/etc/odoo.cfg" % self.default_values["inner"]
+        target_version = self.sites[target_site].get(
+            "erp_version", self.sites[target_site].get("odoo_version")
+        )
         if not os.path.exists(config_path):
             print(bcolors.FAIL)
             print("*" * 80)
             print("the base project does not yet exist please create it")
             print(bcolors.ENDC)
             return
-        migrate_py = os.path.normpath('%s/migrate.py' % MIGRATE_FOLDER)
+        migrate_py = os.path.normpath("%s/migrate.py" % MIGRATE_FOLDER)
         cmd_line = 'bin/python %s -C %s -D %s -N %s -B %s -R "%s"' % (
             migrate_py,
             config_path,
             self.site_name,
             target_site,
             MIGRATE_FOLDER,
-            target_version)
-        print(cmd_line,flush=True)
+            target_version,
+        )
+        print(cmd_line, flush=True)
         print(bcolors.WARNING)
-        print('*' * 80)
-        print('about to execute the following command:')
+        print("*" * 80)
+        print("about to execute the following command:")
         print(cmd_line)
-        print("""
+        print(
+            """
         The following values are used:
         mygration.py:
             This is the command executed with the following parameters:
@@ -528,13 +530,15 @@ class SupportHandler(InitHandler):
                 -R %s
                     comma separated list of migrations to run
 
-        """  % (
-            migrate_py,
-            config_path,
-            self.site_name,
-            target_site,
-            MIGRATE_FOLDER,
-            target_version )
+        """
+            % (
+                migrate_py,
+                config_path,
+                self.site_name,
+                target_site,
+                MIGRATE_FOLDER,
+                target_version,
+            )
         )
         print(bcolors.ENDC)
 

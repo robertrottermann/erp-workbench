@@ -10,13 +10,7 @@ import re
 import socket
 import subprocess
 from subprocess import PIPE
-from config import (
-    SITES,
-    SITES_LOCAL,
-    NO_NEED_SERVER_IP,
-    ODOO_VERSIONS,
-    DB_PASSWORD,
-)
+from config import SITES, SITES_LOCAL, NO_NEED_SERVER_IP, ODOO_VERSIONS, DB_PASSWORD
 
 # from config.config_data.base_info import BASE_DEFAULTS
 from config.config_data.servers_info import REMOTE_SERVERS
@@ -322,7 +316,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
     def __init__(self, opts, sites, parsername=""):
         if opts.name:
             full_orig_name = opts.name
-            orig_name, orig_sites_list = (full_orig_name.split(':') + [''])[:2]
+            orig_name, orig_sites_list = (full_orig_name.split(":") + [""])[:2]
             opts.orig_name = orig_name
             opts.orig_sites_list = orig_sites_list
             self.site_names = [orig_name]
@@ -1158,15 +1152,17 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             from sites_pw import SITES_PW
 
             email_pws = SITES_PW.get(self.site_name, {}).get(
-                'email', SITES_PW.get(self.site_name, {}).get('email_settings', {}))
+                "email", SITES_PW.get(self.site_name, {}).get("email_settings", {})
+            )
             if email_pws:
-                email_pws = email_pws.get(proxy, email_pws.get('127.0.0.1', {}))
+                email_pws = email_pws.get(proxy, email_pws.get("127.0.0.1", {}))
 
         except ImportError:
             email_pws = {}
             pass
 
         print(bcolors.OKGREEN, "*" * 80)
+        mail_user = ""
         if do_incoming:
             # write the incomming email server
             i_server = odoo.env["fetchmail.server"]
@@ -1174,13 +1170,17 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             print("incomming email")
             i_ids = i_server.search([])
             i_id = 0
-            i_data = s_data.get('erp_settings', s_data.get('odoo_settings', {})).get('mail_incomming')
-            if not i_data and s_data.get('odoo_settings', {}).get('mail_incomming'): # bb
-                i_data = s_data.get('odoo_settings', {}).get('mail_incomming')
+            i_data = s_data.get("erp_settings", s_data.get("odoo_settings", {})).get(
+                "mail_incomming"
+            )
+            if not i_data and s_data.get("odoo_settings", {}).get(
+                "mail_incomming"
+            ):  # bb
+                i_data = s_data.get("odoo_settings", {}).get("mail_incomming")
             # set user
-            mail_user = email_pws.get('mail_user')
+            mail_user = email_pws.get("mail_user")
             if mail_user:
-                i_data['password'] = mail_user
+                i_data["password"] = mail_user
             # do we have a password
             if not local:
                 i_data["password"] = email_pws.get("email_pw_incomming", "")
@@ -1195,11 +1195,11 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         print("-" * 80)
         print("outgoing email")
         # now do the same for the outgoing server
-        o_data = s_data.get('erp_settings', {}).get('mail_outgoing')
-        if not o_data and s_data.get('odoo_settings', {}).get('mail_outgoing'):
-            o_data = s_data.get('odoo_settings', {}).get('mail_outgoing')
+        o_data = s_data.get("erp_settings", {}).get("mail_outgoing")
+        if not o_data and s_data.get("odoo_settings", {}).get("mail_outgoing"):
+            o_data = s_data.get("odoo_settings", {}).get("mail_outgoing")
         if mail_user:
-            o_data['smtp_user'] = mail_user
+            o_data["smtp_user"] = mail_user
         if not local:
             o_data["smtp_pass"] = email_pws.get("email_pw_outgoing", "")
         o_server = odoo.env["ir.mail_server"]
