@@ -173,11 +173,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
                 docker_db_container_name = self.docker_db_container_name
                 docker_db_container = None
                 if self.docker_client.containers.list(
-                    {"name": docker_db_container_name}
-                ):
-                    docker_db_container = self.docker_containers.get(
-                        docker_db_container_name
-                    )
+                    {"name": docker_db_container_name}):
+                    container_names = [x.name for x in self.docker_containers.list('all')]
+                    if self.docker_db_container_name in container_names:
+                        docker_db_container = self.docker_containers.get(
+                            docker_db_container_name
+                        )
                 if not docker_db_container:
                     try:
                         # as this is a docker handler instance, try to create it
