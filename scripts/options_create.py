@@ -198,13 +198,8 @@ def add_options_create(parser, result_dic):
         "--use-branch",
         action="store",
         dest="use_branch",
-<<<<<<< HEAD
         help="""use branch for addon. pass a comma separated list of addon:branch,addon:branch ..
                  use all:.. if you want to use the branch for all modules.
-=======
-        help="""use branch for addon. pass a comma separated list of addon:branch,addon:branch .. 
-                 use all:.. if you want to use the branch for all modules. 
->>>>>>> docker_2
                  It will only be applied if the branch exists for the module""",
     )
     # options -ip and -ipt moved to parent_parser

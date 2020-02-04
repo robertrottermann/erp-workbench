@@ -15,6 +15,9 @@ help/source/_build/
 dumper/Dockerfile
 bin/pip
 bin/python
+robert_priv/**
+Downloads/**
+helpers/**
 
 
 
