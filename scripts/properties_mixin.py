@@ -309,6 +309,10 @@ class PropertiesMixin(object):
         self._cp
         return "%s/%s" % (self.erp_server_data_path, self.site_name)
 
+    @property
+    def base_url(self):
+        return self._base_url
+
     # -------------------------------------------------------------
     # database
     # -------------------------------------------------------------

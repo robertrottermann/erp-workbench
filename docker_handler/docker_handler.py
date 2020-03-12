@@ -192,6 +192,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'erp_server_data_path' : info_dic['erp_server_data_path'],
             'docker_common' : info_dic['docker_common'], # values for the docker config
             'docker_command' : shutil.which('docker'),
+            'base_url' : info_dic['base_url'],
         }
         docker_template = docker_template % docker_info
         mp = self.docker_path_map
@@ -403,7 +404,7 @@ class DockerHandler(InitHandler, DBUpdater):
         Returns:
             dict -- dictionary with needed values
         """
-
+        # we must make sure, that base_url is set to a valid value
         composer_dict = {
             # 'addons_path' : '%s%s' % (self.docker_defaults.get('docker_addons_base_path'), self.docker_site_addons_path),
             'erp_server_data_path' : self.erp_server_data_path,
@@ -422,6 +423,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'list_db' : self.docker_list_db,
             # in the following line, the $ needs to be escaped with a second $
             'dbfilter': '^%s$$' % self.site_name,
+            'base_url': '%s' % self.base_url,
             'admin_passwd' : shlex.quote(self.docker_rpc_user_pw),
             'db_maxconn' : self.docker_db_maxcon,
             'limit_memory_soft' : self.docker_limit_memory_soft,

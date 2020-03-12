@@ -11,26 +11,17 @@ from scripts.bcolors import bcolors
 from sites_list import SITES_G
 
 server_map = {
-<<<<<<< HEAD
     '0.0.0.0'       : 'undefined',
     '127.0.0.1'     : 'localhost',
-    '144.76.184.20' : 'frieda',
-    '176.9.142.21'  : 'alice2',
-    '195.48.80.84'  : 'kinesys',
-    '88.198.51.174' : 'lisa',
-    'localhost'     : 'localhost',
-    'xx.xx.xx.xx'   : 'undefined',
-    None: "undefined",
-=======
     None: "undefined",
     "xx.xx.xx.xx": "undefined",
     "localhost": "localhost",
-    "127.0.0.1": "localhost",
     "144.76.184.20": "frieda",
     "176.9.142.21": "alice2",
     "195.48.80.84": "kinesys",
     "88.198.51.174": "lisa",
->>>>>>> docker_2
+    "159.69.39.125": "ursula",
+    "159.69.211.196": "elsbeth",
 }
 result = {}
 for k, v in list(SITES_G.items()):
@@ -43,7 +34,7 @@ for k, v in list(SITES_G.items()):
         continue
     result_list = result.get(remote_url, [])
     result_list.append(
-        [docker.get("odoo_port", -1), docker.get("container_name"), origin]
+        [docker.get("erp_port", docker.get("odoo_port", -1)), docker.get("container_name"), origin]
     )
     try:
         result_list.sort()
@@ -51,7 +42,3 @@ for k, v in list(SITES_G.items()):
         pass
     result[remote_url] = result_list
 pprint(result)
-<<<<<<< HEAD
-
-=======
->>>>>>> docker_2

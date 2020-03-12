@@ -3,6 +3,21 @@ from scripts.bcolors import bcolors
 
 MARKER = "# ---------------- marker ----------------"
 
+NO_BASE_PATH = """%s------------------------------------------------
+no base_path defined in the apache block of the site description
+add somethin like
+        'apache' : {
+            'vservername'   : 'www.afbs.ch',
+            'base_url': 'https://www.afbs.ch',
+            'vserveraliases': ['afbs.ch','afbs.redcor.ch',],
+        },
+to the site description if you want to create a docker container
+------------------------------------------------%s
+""" % (
+    bcolors.WARNING,
+    bcolors.ENDC,
+)
+
 SITE_EXISTED = """------------------------------------------------
 To use the new settings (if any) execute
 cd %(project_path)s
@@ -96,7 +111,7 @@ SITE_HAS_NO_REMOTE_INFO = """%s
 --------------------------------------------------------
 please edit the site description of %%s
 in %%s
-and add a remote block like 
+and add a remote block like
         'remote_server' : {
             'remote_url'    : 'localhost', #, please adapt
             'remote_data_path'   : '/root/erp_workbench',
@@ -546,7 +561,7 @@ DOCKER_IMAGE_CREATE_MISING_HUB_INFO = """
 %s--------------------------------------------
 a new image for container %%s could not be created
 since there is no docker hub info provided!
-You can set it either in the site description or 
+You can set it either in the site description or
 in the config/docker.yaml file.
 ---------------------------------------------%s
 """ % (
@@ -588,7 +603,7 @@ This process will take up to some minutes.
 
 DOCKER_IMAGE_CREATE_DONE = """
 %s--------------------------------------------
-Finished to create docker image for site 
+Finished to create docker image for site
 
     %%s
 
@@ -616,7 +631,7 @@ execute:
 )
 DOCKER_BITNAMI_IMAGE_CREATE_DONE = """
 %s--------------------------------------------
-Finished to create docker image for site 
+Finished to create docker image for site
 
     %%s
 

@@ -17,6 +17,8 @@ docker_template = """
     -v %(erp_server_data_path)s/%(site_name)s/filestore:/var/lib/odoo/filestore \\
     -v %(erp_server_data_path)s/%(site_name)s/:/var/lib/odoo/ \\
     -v %(erp_server_data_path)s/%(site_name)s/log:/var/log/odoo \\
+    -e ODOO_BASE_URL='%(base_url)s' \\
+    -e ODOO_REPORT_URL='%(base_url)s' \\
     %(docker_common)s \\
     --name %(container_name)s -d --link db:db -t %(erp_image_version)s
 """
@@ -104,7 +106,7 @@ RUN cd /odoo && pip install --cache-dir=.pip -r requirements.txt
 %(run_extra_run_block)s
 
 # ENV ADDONS_PATH=/odoo/local-src,/odoo/src/addons
-# ENV DB_NAME=xxxxxx 
+# ENV DB_NAME=xxxxxx
 ENV MIGRATE=False
 # Set the default config file
 ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
@@ -165,7 +167,7 @@ docker run -p 127.0.0.1:%(erp_port)s:7073 -p 127.0.0.1:%(erp_longpoll)s:7072 --r
 """
 
 dumper_docker_template = """
-# dbdumper Dockerfile 
+# dbdumper Dockerfile
 FROM debian:stretch
 
 RUN apt update; apt install -y wget gnupg; \

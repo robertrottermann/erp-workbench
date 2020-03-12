@@ -15,16 +15,16 @@ create dbdumper image:
         docker build  -t dbdumper . # this creates the image
 
         afterwards you have to tag the image with:
-        docker tag dbdumper(or image id) robertredcor/dbdumper
+        docker tag dbdumper robertredcor/dumper
 
         maybe it is
 
         test it:
             dbdumper assumes a directory layout as described under "use dbdumper image:"
             you can run the following command:
-                docker run -v $HOME/erp-workbench/:/mnt/sites --rm=true --link db:db -it dbdumper -h 
+                docker run -v $HOME/erp-workbench/:/mnt/sites --rm=true --link db:db -it dbdumper -h
 
-            
+
 use dbdumper image:
 -------------------
     dbdumper expects the following directory layout

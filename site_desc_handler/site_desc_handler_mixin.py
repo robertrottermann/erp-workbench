@@ -298,6 +298,14 @@ class SiteDescHandlerMixin(PropertiesMixin):
             self._remote_http_url = apache.get("vservername", "no vserver")
 
             # ------------------------------------
+            # base_url
+            # ------------------------------------
+            base_url = apache.get('base_url', '')
+            if not base_url:
+                print(NO_BASE_PATH)
+            self._base_url = base_url
+
+            # ------------------------------------
             # db
             # ------------------------------------
             if self.subparser_name == "docker":
