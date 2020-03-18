@@ -3,12 +3,12 @@ from scripts.bcolors import bcolors
 
 MARKER = "# ---------------- marker ----------------"
 
-NO_BASE_PATH = """%s------------------------------------------------
-no base_path defined in the apache block of the site description
-add somethin like
+NO_BASE_URL = """%s------------------------------------------------
+no base_url defined in the apache block of the site description
+add something like
         'apache' : {
             'vservername'   : 'www.afbs.ch',
-            'base_url': 'https://www.afbs.ch',
+            'base_url': 'https://www.afbs.ch', # <-------- a line similar to this
             'vserveraliases': ['afbs.ch','afbs.redcor.ch',],
         },
 to the site description if you want to create a docker container

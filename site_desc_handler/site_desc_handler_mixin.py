@@ -8,7 +8,7 @@ import subprocess
 from scripts.properties_mixin import PropertiesMixin
 from scripts.bcolors import bcolors
 from argparse import Namespace
-from scripts.messages import SITE_NOT_EXISTING, SITE_HAS_NO_REMOTE_INFO, SITE_UNKNOW_IP
+from scripts.messages import SITE_NOT_EXISTING, SITE_HAS_NO_REMOTE_INFO, SITE_UNKNOW_IP, NO_BASE_URL
 from site_desc_handler.sdesc_utilities import flatten_sites
 from templates.openerp_cfg_defaults import CONFIG_DEFAULTS
 
@@ -302,7 +302,7 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # ------------------------------------
             base_url = apache.get('base_url', '')
             if not base_url:
-                print(NO_BASE_PATH)
+                print(NO_BASE_URL)
             self._base_url = base_url
 
             # ------------------------------------
