@@ -108,6 +108,7 @@ class RemoteHandler(InitHandler):
             print("restart apache to activate")
         except:
             print("could not write %s" % apa)
+            print()
 
     # ----------------------------------
     # add_site_to_nginx
@@ -127,6 +128,18 @@ class RemoteHandler(InitHandler):
         @opts             : option instance
         @default_values   : dictionary with default values
         """
+        # is the path to the nginx executable set?
+        nginx_path = self.http_server_fs_path
+        if not nginx_path:
+            print(bcolors.FAIL)
+            print("*" * 80)
+            print("no path to the nginx configuration defined")
+            print("please do so in the server description of this host")
+            print("like: http_server_fs_path: /etc/nginx")
+            print("the ip is: %s" % self.remote_server_ip)
+            print(bcolors.ENDC)
+            return
+
         opts = self.opts
         default_values = self.default_values
         default_values["marker"] = MARKER
