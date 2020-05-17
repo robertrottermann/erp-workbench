@@ -1352,6 +1352,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             skip2 = opts.__dict__.get("skipown", [])
             if skip2:
                 skip2 = skip2.split(",")
+            else:
+                skip2 = [] # make sure it is not none
             # remove elements in the local_install from the skip lists
             skiplist = [e for e in skiplist if e not in local_install]
             skip2 = [e for e in skip2 if e not in local_install]

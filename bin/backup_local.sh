@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [ -z "$1" ]
+then
+      echo "No parameter given. Please indicate which database to copy"
+      exit
+fi
 DBNAME=$(basename $1)
 DBNAME_BAK=${DBNAME}-BAK
 DBUSER='robert'

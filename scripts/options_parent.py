@@ -76,11 +76,11 @@ def add_options_parent(parser, result_dic={}):
         default=False,
         help="do not update local database, only update local data from remote site, this is the reverse of -N",
     )
-    # parent_parser.add_argument(
-    #     "-skip", "--skipown",
-    #     action="store", dest="skipown",
-    #     help='provide a comma separated (no space) list of add ons to skip. used in conjuction with all.'
-    # )
+    parent_parser.add_argument(
+        "-skip", "--skipown",
+        action="store", dest="skipown",
+        help='provide a comma separated (no space) list of add ons to skip. used in conjuction with all.'
+    )
     parent_parser.add_argument(
         "-ip",
         "--use-ip",
