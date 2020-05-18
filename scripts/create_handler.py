@@ -921,7 +921,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                     for login, user_data in list(users.items()):
                         firstname = user_data.get("firstname")
                         lastname = user_data.get("lastname")
-                        language = user_data.get("name")
+                        language = user_data.get("lang")
                         if language:
                             self.install_languages([language])
                         if firstname or lastname:
@@ -943,6 +943,17 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         else:
                             # user = odoo.env['res.users'].sudo().with_context().create(user_data)
                             users_o.create(user_data)
+                partners = main_company.get("partners")
+                if partners:
+                    partner_o = odoo.env["res.partner"]
+                    for p_name, partner_data in list(partners.items()):
+                        partner = partner_o.search([("name", "=", p_name)])
+                        if partner:
+                            partner_o.browse(partner).write(partner_data)
+                        else:
+                            partner_data['name'] = p_name
+                            partner_o.create(partner_data)
+                    
         else:
             print(ERP_NOT_RUNNING % self.site_name, {})
 
