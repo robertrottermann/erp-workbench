@@ -175,6 +175,7 @@ def dump_instance(opts):
     data = get_instance_list(opts, quiet = True)
     instances = []
     names = list(data.keys())
+    use_ascii = opts.useascii
     if dbname == 'all':
         instances = names
     else:
@@ -187,7 +188,20 @@ def dump_instance(opts):
         #   /mnt/sites/SITE_NAME/dump exists
         dpath = '%s/%s/dump' % (HOME, instance)
         if os.path.exists(dpath):
-            cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD, "/usr/bin/pg_dump", "-h", POSTGRES_HOST, "-U", POSTGRES_USER, '-Fc', dbname, "> %s/%s.dmp" % (dpath, dbname)]
+            if use_ascii:
+                cmds = [
+                    "PGPASSWORD=%s " % POSTGRES_PASSWORD,
+                    "/usr/bin/pg_dump",
+                    "-h", POSTGRES_HOST,
+                    "-U", POSTGRES_USER,
+                    '-Fp', dbname, "> %s/%s.dmp" % (dpath, dbname)]
+            else:
+                cmds = [
+                    "PGPASSWORD=%s " % POSTGRES_PASSWORD,
+                    "/usr/bin/pg_dump",
+                    "-h", POSTGRES_HOST,
+                    "-U", POSTGRES_USER,
+                    '-Fc', dbname, "> %s/%s.dmp" % (dpath, dbname)]
             cmdline = ' '.join(cmds)
             print('*' * 80)
             print(cmdline)
@@ -234,6 +248,9 @@ def main():
                     action="store_true", dest="verbose", default=True,
                     help="be verbose")
 
+    parser.add_argument("-a", "--use-ascii",
+                    action="store_true", dest="useascii", default=True,
+                    help="dump to uncompressed ascii sql file")
     # parser.add_argument("-vv", "--veryverbose",
     #                 action="store_true", dest="veryverbose", default=False,
     #                 help="be very verbose")

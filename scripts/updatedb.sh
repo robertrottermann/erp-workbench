@@ -10,10 +10,11 @@
 # $5 : local path to odoo server data
 # $6 : erp_workbench base folder
 # $7 : vebose flag
+# $8 : ascii flag
 # send dodump.sh to be executed on remote server
 echo '----------- running updatedb, calling dodump ----------------'
-echo ssh $4@$2 'bash -s' \< $6/scripts/dodump.sh $1 $3 $7
-ssh $4@$2 'bash -s' < $6/scripts/dodump.sh $1 $3 $7
+echo ssh $4@$2 'bash -s' \< $6/scripts/dodump.sh $1 $3 $7 $8
+ssh $4@$2 'bash -s' < $6/scripts/dodump.sh $1 $3 $7 $8
 
 # c1="ssh $4@$2 'bash -s' < $6/scripts/dodump.sh $1 $3 $7"
 # echo "-1-" $c1

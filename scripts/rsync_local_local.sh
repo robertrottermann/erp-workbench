@@ -7,8 +7,9 @@
 # $2 : server url
 # $3 : remote_data_path like /root/erp_workbench
 # $4 : login name on remote server
-echo ssh $4@$2 'bash -s' < scripts/dodump.sh $1
-ssh $4@$2 'bash -s' < scripts/dodump.sh $1
+# $5 : ascii flag
+echo ssh $4@$2 'bash -s' < scripts/dodump.sh $1 $5
+ssh $4@$2 'bash -s' < scripts/dodump.sh $1 $5
 echo rsync -avzC --delete $4@$2:/$3/$1/filestore/ $1/filestore/
 rsync -avzC --delete $4@$2:/$3/$1/filestore/ $1/filestore/
 echo rsync -avzC --delete $4@$2:/$3/$1/dump/ $1/dump/

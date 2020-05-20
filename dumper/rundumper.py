@@ -12,6 +12,7 @@ else:
     print('no database name provided')
     sys.exit()
 verbose = True #len(sys.argv) > 3
+use_ascii = '-a' in sys.argv
 dumper_cmd = len(sys.argv) > 2 and sys.argv[2] or '-d'
 SITES_HOME = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 try:
@@ -36,14 +37,15 @@ dd = {
     'sites_home': SITES_HOME,
     'cmd'       : dumper_cmd,
     'dbname'    : dbname,
-    'runsudo'   : ''
+    'runsudo'   : '',
+    'useascii'  : '-a %s' % use_ascii,
 }
 if not os.geteuid() == 0:
     dd['runsudo'] = 'sudo'
 if dumper_cmd in ['-h', '-s']:
-    cmd_line = '%(runsudo)s docker run -v %(data_home)s:/mnt/sites  -v %(sites_home)s/dumper/:/mnt/sites/dumper --rm=true --link db:db  dbdumper %(cmd)s' % dd
+    cmd_line = '%(runsudo)s docker run -v %(data_home)s:/mnt/sites  -v %(sites_home)s/dumper/:/mnt/sites/dumper --rm=true --link db:db  dbdumper %(cmd)s %(useascii)s' % dd
 else:
-    cmd_line = '%(runsudo)s docker run -v %(data_home)s:/mnt/sites  -v %(sites_home)s/dumper/:/mnt/sites/dumper --rm=true --link db:db  dbdumper %(cmd)s %(dbname)s' % dd
+    cmd_line = '%(runsudo)s docker run -v %(data_home)s:/mnt/sites  -v %(sites_home)s/dumper/:/mnt/sites/dumper --rm=true --link db:db  dbdumper %(cmd)s %(dbname)s %(useascii)s' % dd
 
 (DATA_HOME, SITES_HOME, dumper_cmd, dbname)
 if verbose:

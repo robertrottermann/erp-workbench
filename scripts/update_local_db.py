@@ -145,6 +145,9 @@ class DBUpdater(object):
         dpath = "%s/%s/dump" % (BASE_INFO["erp_server_data_path"], dbname)
         print(bcolors.WARNING)
         print("*" * 80)
+        first_cmd_line = "PGPASSWORD=%s /usr/bin/pg_dump -h %s -U %s -Fc %s > %s/%s.dmp"
+        if opts.dump_as_ascii:
+            first_cmd_line = "PGPASSWORD=%s /usr/bin/pg_dump -h %s -U %s -Fp %s > %s/%s.dmp"
         # step one, create local dump
         if os.path.exists(dpath):
             odoo = self.get_odoo(verbose=True)
