@@ -7,14 +7,15 @@
 # $2 : path to the location of odo_instances  updatedb.$3
 #      on the remote server
 # $3 : verbose flag                           updatedb.$7
+# $4 : ascii flag                             updatedb.$8
 echo '----------- running dodump ----------------'
 FILE=$2/dumper/rundumper.py
 echo "FILE:$FILE"
 echo $HOSTNAME
 if [ -f "$FILE" ]
  then {
-    echo 'calling python' $FILE $1 $3
-    python $FILE $1 -d $3
+    echo 'calling python' $FILE $1 $3 $4
+    python $FILE $1 -d $3 -a $4
 }
 else {
     echo 'kein rundumper'

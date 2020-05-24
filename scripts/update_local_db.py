@@ -161,7 +161,8 @@ class DBUpdater(object):
 
                 # ["PGPASSWORD=%s " % POSTGRES_PASSWORD, "/usr/bin/pg_dump", "-h", POSTGRES_HOST, "-U", POSTGRES_USER, '-Fc', dbname, "> %s/%s.dmp" % (dpath, dbname)]
                 cmdline = (
-                    "PGPASSWORD=%s /usr/bin/pg_dump -h %s -U %s -Fc %s > %s/%s.dmp"
+                    #"PGPASSWORD=%s /usr/bin/pg_dump -h %s -U %s -Fc %s > %s/%s.dmp"
+                    first_cmd_line
                     % (
                         self.db_password,
                         self.db_host,
@@ -362,6 +363,7 @@ class DBUpdater(object):
         """
         """
         opts = self.opts
+        dump_as_ascii = opts.dump_as_ascii
         try:
             # we want to make sure the local directories exist
             self.create_folders(site_name, quiet=True)
@@ -420,7 +422,8 @@ class DBUpdater(object):
             # $5 : local path to odo server data
             # $6 : local path to odo_instances
             # $7 : vebose flag
-            c1="ssh $4@$2 'bash -s' < $6/scripts/dodump.sh $1 $3 $7"
+            # $8 : use ascii
+            c1="ssh $4@$2 'bash -s' < $6/scripts/dodump.sh $1 $3 $7 $8"
             echo "-1-" $c1
             $c1
             c2="rsync -avzC --delete $4@$2:$3/$1/filestore/ $5/$1/filestore/"
@@ -458,8 +461,24 @@ class DBUpdater(object):
             }
             fi
             """
+            # cmd_line = "%s/scripts/updatedb.sh %s %s %s %s %s %s %s %s"  % (
+            #         self.sites_home,  # no param
+            #         site_name,  # param 1
+            #         remote_url,  # param 2
+            #         remote_data_path,  # param 3
+            #         remote_user,  # param 4
+            #         self.erp_server_data_path,  # param 5
+            #         self.sites_home,  # param 6
+            #         verbose,  # param 7
+            #         dump_as_ascii, # param 8
+            #     )
+            # with open(os.devnull) as dn:
+            #     rc = subprocess.call(args2, stdout=dn, stderr=subprocess.STDOUT)
+            #     if rc:
+            #         raise Exception('Postgres subprocess %s error %s' % (args2, rc))
+
             os.system(
-                "%s/scripts/updatedb.sh %s %s %s %s %s %s %s"
+                "%s/scripts/updatedb.sh %s %s %s %s %s %s %s %s"
                 % (
                     self.sites_home,  # no param
                     site_name,  # param 1
@@ -469,6 +488,7 @@ class DBUpdater(object):
                     self.erp_server_data_path,  # param 5
                     self.sites_home,  # param 6
                     verbose,  # param 7
+                    dump_as_ascii, # param 8
                 )
             )
             # if remote user is not root we first have to copy things where we can access it
@@ -628,6 +648,31 @@ class DBUpdater(object):
             # adminpw = self.sites[self.site_name].get('erp_admin_pw')
             # if adminpw:
             # cmd_lines_docker += [['%s/psql' % where, '-U', user, '-d', site_name,  '-c', "update res_users set password='%s' where login='admin';" % adminpw]]
+            if dump_as_ascii:
+                # pg_restore_line = [
+                #     "%s/psql" % where,
+                #     "-U",
+                #     user,
+                #     "-d",
+                #     use_site_name,
+                #     " < ",
+                #     dpath,
+                # ]
+                #['/usr/bin/psql', '-U', 'robert', '-d', 'afbs13', ' < ', '/home/robert/erp-workbench/afbs13/dump/afbs13.dmp']
+                pg_restore_line = ('/usr/bin/psql', '--dbname=%s' % use_site_name , '-q', '-f', dpath)
+            else:
+                pg_restore_line = [
+                    "%s/pg_restore" % where,
+                    "-O",
+                    "--if-exists",
+                    "--clean",
+                    "-U",
+                    user,
+                    "-d",
+                    use_site_name,
+                    dpath,
+                ],
+
             cmd_lines_no_docker = [
                 # delete the local database(s)
                 [
@@ -651,17 +696,7 @@ class DBUpdater(object):
                 ],
                 # do the actual reading of the database
                 # the database will have thae same name as on the remote server
-                [
-                    "%s/pg_restore" % where,
-                    "-O",
-                    "--if-exists",
-                    "--clean",
-                    "-U",
-                    user,
-                    "-d",
-                    use_site_name,
-                    dpath,
-                ],
+                pg_restore_line,
                 # set standard password
                 [
                     "%s/psql" % where,

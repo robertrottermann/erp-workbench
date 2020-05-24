@@ -953,7 +953,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                         else:
                             partner_data['name'] = p_name
                             partner_o.create(partner_data)
-                    
+
         else:
             print(ERP_NOT_RUNNING % self.site_name, {})
 
@@ -1731,13 +1731,19 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
             if is_builtin:
                 p = subprocess.Popen(cmd_line, stdout=PIPE)
             else:
-                p = subprocess.Popen(
-                    cmd_line,
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    env=dict(os.environ, PGPASSWORD=pw, PATH="/usr/bin:/bin"),
-                    shell=shell,
-                )
+                # with open(os.devnull) as dn:
+                #     rc = subprocess.call(args2, stdout=dn, stderr=subprocess.STDOUT)
+                #     if rc:
+                #         raise Exception('Postgres subprocess %s error %s' % (args2, rc))
+                # with open('/home/robert/xx%s.log' % counter, 'wb') as dn:
+                with open(os.devnull) as dn:
+                    p = subprocess.Popen(
+                        cmd_line,
+                        stdout=dn, #PIPE,
+                        stderr=subprocess.STDOUT, #PIPE,
+                        env=dict(os.environ, PGPASSWORD=pw, PATH="/usr/bin:/bin"),
+                        shell=shell,
+                    )
             if opts.verbose:
                 output, errors = p.communicate()
                 if output:
@@ -1749,7 +1755,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 print("*" * 80)
                 print(cmd_line)
                 print("resulted in an error or warning")
-                print(errors.decode("utf8"))
+                if errors:
+                    print(errors.decode("utf8"))
+                else:
+                    print('returncode was:%s', p.returncode)
                 print("*" * 80)
                 print(bcolors.ENDC)
 

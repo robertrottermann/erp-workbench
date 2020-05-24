@@ -177,7 +177,7 @@ def add_options_create(parser, result_dic):
         need_name=True,
     )
     parser_manage.add_argument(
-        "-A",
+        "-a",
         "--dump-as-ascii",
         action="store_true",
         dest="dump_as_ascii",

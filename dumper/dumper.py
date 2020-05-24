@@ -189,12 +189,16 @@ def dump_instance(opts):
         dpath = '%s/%s/dump' % (HOME, instance)
         if os.path.exists(dpath):
             if use_ascii:
+                #['pg_dump', '--no-owner', '--file=/tmp/tmpmuhvw4h3/dump.sql', 'afbs13_2']
                 cmds = [
                     "PGPASSWORD=%s " % POSTGRES_PASSWORD,
                     "/usr/bin/pg_dump",
                     "-h", POSTGRES_HOST,
                     "-U", POSTGRES_USER,
-                    '-Fp', dbname, "> %s/%s.dmp" % (dpath, dbname)]
+                    "--no-owner",
+                    "--file=%s/%s.dmp" % (dpath, dbname),
+                    dbname]
+                    #'-Fp', dbname, "> %s/%s.dmp" % (dpath, dbname)]
             else:
                 cmds = [
                     "PGPASSWORD=%s " % POSTGRES_PASSWORD,
