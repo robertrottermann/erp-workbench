@@ -38,8 +38,10 @@ dd = {
     'cmd'       : dumper_cmd,
     'dbname'    : dbname,
     'runsudo'   : '',
-    'useascii'  : '-a %s' % use_ascii,
+    'useascii'  : '',
 }
+if use_ascii:
+    dd['useascii'] = '-a'
 if not os.geteuid() == 0:
     dd['runsudo'] = 'sudo'
 if dumper_cmd in ['-h', '-s']:
