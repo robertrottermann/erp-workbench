@@ -177,14 +177,6 @@ def add_options_create(parser, result_dic):
         need_name=True,
     )
     parser_manage.add_argument(
-        "-a",
-        "--dump-as-ascii",
-        action="store_true",
-        dest="dump_as_ascii",
-        default=False,
-        help="dump and restore db as ascii files, not compresse postgres specials",
-    )
-    parser_manage.add_argument(
         "-M",
         "--module-update",
         action="store",

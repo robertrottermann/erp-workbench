@@ -981,7 +981,7 @@ class DockerHandler(InitHandler, DBUpdater):
 
     # shell
     # -----
-    # shell runs and eneters a shell
+    # shell runs and enters a shell
     # in a docker container
     def run_shell(self):
         container_name = self.opts.shell

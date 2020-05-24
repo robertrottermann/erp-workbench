@@ -79,7 +79,6 @@ def add_options_support(parser, result_dic):
     # editing yaml files
     # -------------------------------------
     parser_support.add_argument(
-        "-a",
         "--add-server",
         action="store",
         dest="add_server",

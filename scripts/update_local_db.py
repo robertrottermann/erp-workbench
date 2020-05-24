@@ -91,14 +91,6 @@ def which(file):
     return None
 
 
-# #1676  rsync -z --delete -av root@144.76.184.20:/opt/odoo/.local/share/Odoo/filestore/redproducts/ /home/robert/projects/redproducts/redproducts/parts/filestore/redproducts/
-#     "breitschtraeff" : {
-#         'servename' : '144.76.184.20',
-#         'remote_data_path' : '/root/erp_workbench',
-#         'remote_user' : 'root'
-#     },
-
-
 class DBUpdater(object):
     """
     class to do update the loacal database
@@ -649,16 +641,6 @@ class DBUpdater(object):
             # if adminpw:
             # cmd_lines_docker += [['%s/psql' % where, '-U', user, '-d', site_name,  '-c', "update res_users set password='%s' where login='admin';" % adminpw]]
             if dump_as_ascii:
-                # pg_restore_line = [
-                #     "%s/psql" % where,
-                #     "-U",
-                #     user,
-                #     "-d",
-                #     use_site_name,
-                #     " < ",
-                #     dpath,
-                # ]
-                #['/usr/bin/psql', '-U', 'robert', '-d', 'afbs13', ' < ', '/home/robert/erp-workbench/afbs13/dump/afbs13.dmp']
                 pg_restore_line = ('/usr/bin/psql', '--dbname=%s' % use_site_name , '-q', '-f', dpath)
             else:
                 pg_restore_line = [
@@ -671,7 +653,7 @@ class DBUpdater(object):
                     "-d",
                     use_site_name,
                     dpath,
-                ],
+                ]
 
             cmd_lines_no_docker = [
                 # delete the local database(s)

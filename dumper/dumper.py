@@ -99,7 +99,7 @@ def reload_instance(opts):
         instances = names
     else:
         instances = [n for n in dbname.split(',') if n in names]
-    #print(data)
+
     for instance in instances:
         # drop database
         dbname = data[instance]
@@ -128,16 +128,16 @@ def reload_instance(opts):
         else:
             p.communicate()
         # do the actual reading of the database
-        # the database will have thae same name as on the remote server
+        # the database will have the same name as on the remote server
         dpath = '%s/%s/dump' % (HOME, instance)
         cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD,
-            '/usr/bin/pg_restore', "-h", POSTGRES_HOST,
-            '-O', '-U', POSTGRES_USER, '-d', dbname,
+            '/usr/bin/psql', "-h", POSTGRES_HOST,
+            '-U', POSTGRES_USER, '-d', dbname,
+            '-f'
             "%s/%s.dmp" % (dpath, dbname)]
         cmdline = ' '.join(cmds)
         if verbose:
             print(cmdline)
-        #print cmds
         p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True)
         if verbose:
             print(p.communicate())
@@ -172,6 +172,7 @@ def drop_instance(opts):
 
 def dump_instance(opts):
     dbname = opts.dump
+    verbose = opts.verbose
     data = get_instance_list(opts, quiet = True)
     instances = []
     names = list(data.keys())
@@ -207,12 +208,13 @@ def dump_instance(opts):
                     "-U", POSTGRES_USER,
                     '-Fc', dbname, "> %s/%s.dmp" % (dpath, dbname)]
             cmdline = ' '.join(cmds)
-            print('*' * 80)
-            print(cmdline)
-            #print cmds
+            if verbose:
+                print('*' * 80)
+                print(cmdline)
             p = subprocess.Popen(cmdline, stdout=subprocess.PIPE, shell=True)
             p.communicate()
-            print('dumped:', dpath)
+            if verbose:
+                print('dumped:', dpath)
         else:
             print('not existing:', dpath)
 
@@ -255,9 +257,6 @@ def main():
     parser.add_argument("-a", "--use-ascii",
                     action="store_true", dest="useascii", default=True,
                     help="dump to uncompressed ascii sql file")
-    # parser.add_argument("-vv", "--veryverbose",
-    #                 action="store_true", dest="veryverbose", default=False,
-    #                 help="be very verbose")
 
     opts = parser.parse_args()
 

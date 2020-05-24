@@ -15,6 +15,15 @@ def add_options_parent(parser, result_dic={}):
     parent_parser = ParserHandler(parser, result_dic)
 
     parent_parser.add_argument(
+        "-a",
+        "--dump-as-ascii",
+        action="store_true",
+        dest="dump_as_ascii",
+        default=False,
+        help="dump and restore db as ascii files, not compresse postgres specials",
+    )
+
+    parent_parser.add_argument(
         "-n",
         "--name",
         action="store",
@@ -49,6 +58,15 @@ def add_options_parent(parser, result_dic={}):
         dest="verbose",
         default=False,
         help="be verbose",
+    )
+
+    parent_parser.add_argument(
+        "-vv",
+        "--verbose-logs",
+        action="store_true",
+        dest="verbose_logs",
+        default=False,
+        help="write logfiles of the executed commands",
     )
 
     parent_parser.add_argument(

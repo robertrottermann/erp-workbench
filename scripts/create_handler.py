@@ -1736,7 +1736,14 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 #     if rc:
                 #         raise Exception('Postgres subprocess %s error %s' % (args2, rc))
                 # with open('/home/robert/xx%s.log' % counter, 'wb') as dn:
-                with open(os.devnull) as dn:
+                log_file = os.devnull
+                log_mode = 'wb'
+                if opts.verbose_logs:
+                    from pathlib import Path
+                    home = str(Path.home())
+                    log_file = "%s/wb_logs_%s.log" % (home, counter)
+                    log_mode = 'wb'
+                with open(log_file, log_mode) as dn:
                     p = subprocess.Popen(
                         cmd_line,
                         stdout=dn, #PIPE,
