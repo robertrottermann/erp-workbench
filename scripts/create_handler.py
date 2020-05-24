@@ -1765,7 +1765,15 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if errors:
                     print(errors.decode("utf8"))
                 else:
-                    print('returncode was:%s', p.returncode)
+                    print('returncode was:%s' % p.returncode)
+                if opts.verbose_logs:
+                    with open(log_file, 'rb') as dn:
+                        error_data = dn.readlines()
+                        if error_data:
+                            print('errors reported:')
+                            #error_data.split('\n')
+                            for line in error_data:
+                                print(line.decode("utf8"))
                 print("*" * 80)
                 print(bcolors.ENDC)
 
