@@ -15,7 +15,7 @@ echo $HOSTNAME
 if [ -f "$FILE" ]
  then {
     echo 'calling python' $FILE $1 $3 $4
-    python $FILE $1 -d $3 -a $4
+    python $FILE $1 -d $3 $4
 }
 else {
     echo 'kein rundumper'

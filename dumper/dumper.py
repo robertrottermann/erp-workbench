@@ -255,7 +255,7 @@ def main():
                     help="be verbose")
 
     parser.add_argument("-a", "--use-ascii",
-                    action="store_true", dest="useascii", default=True,
+                    action="store_true", dest="useascii", default=False,
                     help="dump to uncompressed ascii sql file")
 
     opts = parser.parse_args()

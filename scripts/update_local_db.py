@@ -356,6 +356,10 @@ class DBUpdater(object):
         """
         opts = self.opts
         dump_as_ascii = opts.dump_as_ascii
+        if not dump_as_ascii:
+            dump_as_ascii = ''
+        else:
+            dump_as_ascii = '-a'
         try:
             # we want to make sure the local directories exist
             self.create_folders(site_name, quiet=True)
