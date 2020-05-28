@@ -1727,7 +1727,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 continue
             if opts.verbose:
                 print("-" * 80)
-                print(cmd_line)
+                print(' '.join(cmd_line))
             if is_builtin:
                 p = subprocess.Popen(cmd_line, stdout=PIPE)
             else:
@@ -1741,7 +1741,7 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 if opts.verbose_logs:
                     from pathlib import Path
                     home = str(Path.home())
-                    log_file = "%s/wb_logs_%s.log" % (home, counter)
+                    log_file = "%s/%s/log/wb_logs_%s.log" % (self.data_path, self.site_name, counter)
                     log_mode = 'wb'
                 with open(log_file, log_mode) as dn:
                     p = subprocess.Popen(
