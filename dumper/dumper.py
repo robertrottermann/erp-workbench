@@ -86,6 +86,7 @@ def list_databases(opts):
 def reload_instance(opts):
     dbname = opts.reload
     verbose = opts.verbose
+    use_ascii = opts.useascii
     if verbose:
         print('*' * 80)
         print('make sure container is stopped !!!')
@@ -130,11 +131,19 @@ def reload_instance(opts):
         # do the actual reading of the database
         # the database will have the same name as on the remote server
         dpath = '%s/%s/dump' % (HOME, instance)
-        cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD,
-            '/usr/bin/psql', "-h", POSTGRES_HOST,
-            '-U', POSTGRES_USER, '-d', dbname,
-            '-f'
-            "%s/%s.dmp" % (dpath, dbname)]
+        if use_ascii:
+            cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD,
+                '/usr/bin/psql', "-h", POSTGRES_HOST,
+                '-U', POSTGRES_USER, '-d', dbname,
+                '-f'
+                "%s/%s.dmp" % (dpath, dbname)]
+        else:
+            cmds = ["PGPASSWORD=%s " % POSTGRES_PASSWORD,
+                        '/usr/bin/pg_restore', "-h", POSTGRES_HOST,
+                    '-O', '-U', POSTGRES_USER, '-d', dbname,
+                    "%s/%s.dmp" % (dpath, dbname)]
+            cmdline = ' '.join(cmds)
+
         cmdline = ' '.join(cmds)
         if verbose:
             print(cmdline)
@@ -143,7 +152,6 @@ def reload_instance(opts):
             print(p.communicate())
         else:
             p.communicate()
-
 
 def drop_instance(opts):
     dbname = opts.drop
