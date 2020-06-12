@@ -401,7 +401,7 @@ class DBUpdater(object):
         except:
             pass
         dpath = "%s/%s/dump/%s.dmp" % (self.data_path, use_site_name, use_site_name)
-        if os.path.exists(dpath):            
+        if os.path.exists(dpath):
             os.chmod(dpath, 0o777)
             with open(dpath, 'rb') as f:
                 first_two = f.read(2)
@@ -626,25 +626,27 @@ class DBUpdater(object):
             if whered:
                 cmd_lines_docker = [
                     [
-                        "%s/docker run -v %s:/mnt/sites  -v %s/dumper/:/mnt/sites/dumper --rm=true --link db:db  -it %s -r %s"
+                        "%s/docker run -v %s:/mnt/sites  -v %s/dumper/:/mnt/sites/dumper --rm=true --link db:db  -it %s -r %s %s"
                         % (
                             whered,
                             BASE_INFO["erp_server_data_path"],
                             BASE_PATH,
                             dumper_image_name,
                             use_site_name,
+                            dump_as_ascii,
                         )
                     ]
                 ]
             else:
                 cmd_lines_docker = [
                     [
-                        "docker run -v %s:/mnt/sites  -v %s/dumper/:/mnt/sites/dumper --rm=true --link db:db  -it %s -r %s"
+                        "docker run -v %s:/mnt/sites  -v %s/dumper/:/mnt/sites/dumper --rm=true --link db:db  -it %s -r %s %s"
                         % (
                             BASE_INFO["erp_server_data_path"],
                             BASE_PATH,
                             dumper_image_name,
                             use_site_name,
+                            dump_as_ascii,
                         )
                     ]
                 ]
