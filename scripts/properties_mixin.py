@@ -332,6 +332,8 @@ class PropertiesMixin(object):
 
     @property
     def db_name(self):
+        if self.opts.database:
+            return self.opts.database
         return self.site.get("db_name", self.site_name)
 
     @property

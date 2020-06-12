@@ -33,6 +33,16 @@ def add_options_parent(parser, result_dic={}):
     )
 
     parent_parser.add_argument(
+        "-DB",
+        "--data-base",
+        action="store",
+        dest="database",
+        default=False,
+        help="""Database to use when accessing odoo.
+            Overwrites the db_name value in the site description when accessing a running odoo""",
+    )
+
+    parent_parser.add_argument(
         "-F",
         "--force",
         action="store_true",
