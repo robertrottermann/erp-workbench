@@ -55,7 +55,7 @@
             'ODOO_BASE_URL': 'https://www.%(site_name)s.ch'
         },
         # docker_build_cmds are run after all build commands in the docker file
-        'docker_build_cmds' : [],      
+        'docker_build_cmds' : [],
         # docker_hub is used to store images we build ourself
         # by default we use dockers own docker_hub, but could
         # provide our own
@@ -71,7 +71,7 @@
         },
         # erp_addons allow to install base tools
         'erp_addons': [
-            # 'website builder',
+            # 'website',
             # 'crm',
         ],
         'addons': [
@@ -111,7 +111,7 @@
                 'pip_list' : [], # what extra python libraries to load
                 'apt_list' : [], # what extra apt modules to install into a docker
 
-                # 'addon_name' : '' # this value needs only be set, 
+                # 'addon_name' : '' # this value needs only be set,
                                     # when the name of the modul is not part of the git url
             },
             {

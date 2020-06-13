@@ -2,8 +2,11 @@
 # they can also be defined withing the sites_list structure
 
 # Variables that can be used in the values
-# %(BASE_PATH)s will be replaced with the actual folder where erp-worbnch is installed
+# %(BASE_PATH)s will be replaced with the actual folder where erp-worbench is installed
 # %(USER_HOME)s the home folder of the logged in user
+
+# to add a new server to this list execute something like
+# bin/s --add-server 12.12.12.12@the_user
 
 REMOTE_SERVERS:
     127.0.0.1:
@@ -11,7 +14,7 @@ REMOTE_SERVERS:
         server_ip: '127.0.0.1'
         remote_user: '%(DB_USER)s'
         remote_data_path: '%(BASE_PATH)s'
-        # remote_pw is used as credential for the remote user. normaly unset
+        # remote_pw is used as credential for the remote user. normally unset
         # to use public keys.
         remote_pw: ''
         local_user_email: 'user_to_use@please set in local data'

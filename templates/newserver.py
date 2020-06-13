@@ -11,7 +11,7 @@
         # odooprojects ALL = NOPASSWD: /root/erp_workbench/scripts/site_syncer.py
         'remote_user' : '%(remote_user)s',
         'remote_data_path' : '%(remote_data_path)s',
-        # remote_pw is used as credential for the remote user. normaly unset
+        # remote_pw is used as credential for the remote user. normally unset
         # to use public keys.
         'remote_pw' : '',
     },

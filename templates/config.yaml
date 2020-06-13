@@ -1,4 +1,4 @@
-# BASE_DEFAULTS are the values erp-workbench needs 
+# BASE_DEFAULTS are the values erp-workbench needs
 # to find its data
 
 # Variables that can be used in the values
@@ -12,7 +12,7 @@ BASE_DEFAULTS:
   # define what erp version should be used for a new site
   # this only affects the generation of new site descriptions
   # and can be easily changed in these new site description
-  erp_version: '11'
+  erp_version: '13'
 
   # erp_minor:
   # define what erp minor version should be used for a new site
@@ -25,9 +25,9 @@ BASE_DEFAULTS:
   # sitesinfo_path:
   # Sites are defined in a sites description file
   # There exist local sites, which are not managed using a source
-  # controll system (git), and global sites which are managed with 
-  # git and normaly describe sites that run on remote servers.
-  # the sitesinfo_path points to a folder, where these site descriptions 
+  # control system (git), and global sites which are managed with
+  # git and normally describe sites that run on remote servers.
+  # the sitesinfo_path points to a folder, where these site descriptions
   # are kept
   # by default it is kept within the erp-workbench folder
   # %s(BASE_PATH)
@@ -40,11 +40,12 @@ BASE_DEFAULTS:
   #     'type' : 'git',
   #     'url' : '%(gitlab.redcor.ch)s/afbs/afbs_cms.git',
   # }
+  # DO NOT USE IT!!, its more pain than remedy
   # repo_mapper: 'gitlab.redcor.ch=ssh://git@gitlab.redcor.ch:10022/'
 
   # sitesinfos:
-  # sitesinfos provide an name and an associated the url where git repositories 
-  # can be found in which the sites are maintained 
+  # sitesinfos provide an name and an associated the url where git repositories
+  # can be found in which the sites are maintained
   siteinfos:
     localhost:
       'localhost'
@@ -65,7 +66,7 @@ BASE_DEFAULTS:
   # that will contain the servers config, filestore, log- and dump-files.
   # these folders created are
   # addons:     here the addons of the sites are to be found
-  # etc:        here the config files for the site is writen to
+  # etc:        here the config files for the site is written to
   # file_store: here the external files of the file are stored
   # log:        here the logfile of the site is stored
   # dump:       here the a running site can dump its data
@@ -84,12 +85,12 @@ BASE_DEFAULTS:
 
   # db_user:
   # this is the default data base user, its value can be overruled in the
-  # server description file in the servers.yaml file
+  # server description file or in the servers.yaml file
   db_user: '%(DB_USER)s'
 
   # db_user_pw:
   # this is the default password, if it is not defined in the
-  # server description file in the servers.yaml file
+  # server description file or in the servers.yaml file
   db_user_pw: 'admin'
 
   # sites_autopull:
@@ -109,7 +110,7 @@ BASE_DEFAULTS:
   # %%(ODOO_INSTALL_HOME)s is only expanded by bin/dosetup_odoo.py
   # in the site's project folder
   local_base_addons:
-  
+
   # docker_base_addons:
   # path to the odoo addons in a docker installation
   docker_base_addons:
@@ -124,4 +125,3 @@ BASE_DEFAULTS:
   # prefix added to each addon element in a docker installation
   docker_addon_path_prefix:
     /mnt/extra-addons/
- 
