@@ -26,3 +26,18 @@ PROJECT_DEFAULTS:
     # again this is for odoo.
     # if the version is released, its value is identical to erp_version
     erp_nightly: ''
+
+SITES_DEFAULTS:
+    # here we can define default values
+    # per site
+    # by default we have only local site, which is a site name never used
+    local_site:
+        # db_user:
+        # this is the default data base user, its value can be overruled in the
+        # server description file or in the servers.yaml file
+        db_user: '%(DB_USER)s'
+
+        # db_user_pw:
+        # this is the default password, if it is not defined in the
+        # server description file or in the servers.yaml file
+        db_user_pw: 'admin'

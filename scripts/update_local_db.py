@@ -304,7 +304,7 @@ class DBUpdater(object):
         Force close of all connection to db and delete it
         :site_name  : site name for which we will delete the db
         """
-        from config import ACT_USER
+        from config import ACT_USER # actually logged in user
         import psycopg2
 
         SQL = """SELECT pg_terminate_backend(pg_stat_activity.pid) \
@@ -390,7 +390,7 @@ class DBUpdater(object):
         actual_pwd = os.getcwd()
         os.chdir(self.sites_home)
 
-        # self.remote_user #server_info.get('user', 'remote_user') # da is ein wischi waschi ..
+        # self.remote_user #server_info.get('user', 'remote_user') # this is a mess
         user = remote_user
         pw = remote_pw  # self.db_password
         # check if we have to copy things to a new target
@@ -401,6 +401,8 @@ class DBUpdater(object):
         except:
             pass
         dpath = "%s/%s/dump/%s.dmp" % (self.data_path, use_site_name, use_site_name)
+        # FIX!!
+        # we should test AFTER having downloaded!!!!!
         if os.path.exists(dpath):
             os.chmod(dpath, 0o777)
             with open(dpath, 'rb') as f:
@@ -461,7 +463,7 @@ class DBUpdater(object):
                 python $FILE $1 -d $3
             }
             else {
-                echo 'kein rundumper'
+                echo 'rundumper not found'
                 sudo docker run -v $2:/mnt/sites  --rm=true --link db:db  dbdumper -d $1
             }
             fi

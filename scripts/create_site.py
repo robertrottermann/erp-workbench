@@ -36,7 +36,11 @@ from config import SITES
 
 from config.config_data.base_info import BASE_DEFAULTS
 
-# from config.config_data.project_info import PROJECT_DEFAULTS
+from config.config_data.project_info import PROJECT_DEFAULTS
+try:
+    from config.config_data.project_info import SITES_DEFAULTS
+except ImportError:
+    SITES_DEFAULTS = {}
 
 from config.handlers import SiteCreator
 from config.handlers import DockerHandler

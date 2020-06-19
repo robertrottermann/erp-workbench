@@ -119,8 +119,8 @@
                 # type local allows loading
                 # a module while developing.
                 # the module will not be touched so it
-                # should be in anly of the addon folders
-                # pointed to by othe site.
+                # should be in only of the addon folders
+                # pointed to by other site.
                 # a good place would be the
                 # SITENAME_addons folder created  in
                 # every buildout folder created by
@@ -133,9 +133,9 @@
         ],
         'tags': {
             # ***********************************
-            # a dictonary pointing to tags to be
+            # a dictionary pointing to tags to be
             # used for addons.
-            # tags found here have lower precendence
+            # tags found here have lower precedence
             # the the ones found in the addon section
             # ***********************************
             # 'module_x' : 'vXXX',

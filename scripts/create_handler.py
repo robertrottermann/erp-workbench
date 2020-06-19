@@ -1380,7 +1380,8 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 print("the following modules where not found:", req)
                 print("you probably have to download them")
                 print("*" * 80)
-            if uninstalled:
+            # do not install new modules if we want to uninstall an other one
+            if uninstalled and not opts.removeown:
                 print(
                     "the following modules need to be installed:",
                     [u[1] for u in uninstalled],
