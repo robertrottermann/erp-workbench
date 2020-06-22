@@ -1381,7 +1381,16 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 print("you probably have to download them")
                 print("*" * 80)
             # do not install new modules if we want to uninstall an other one
-            if uninstalled and not opts.removeown:
+            if uninstalled and (
+                not
+                    (
+                        (not is_docker) and opts.removeown
+                    )
+                or
+                    (
+                        is_docker and opts.dremoveown
+                    )
+                ):
                 print(
                     "the following modules need to be installed:",
                     [u[1] for u in uninstalled],
