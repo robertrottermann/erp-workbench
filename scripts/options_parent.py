@@ -53,6 +53,14 @@ def add_options_parent(parser, result_dic={}):
     )
 
     parent_parser.add_argument(
+        "-FRU",
+        "--force-remote-user",
+        action="store",
+        dest="force_remote_user",
+        help="""force remote user, this will overwrite all settings""",
+    )
+
+    parent_parser.add_argument(
         "-q",
         "--quiet",
         action="store_true",

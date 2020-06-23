@@ -365,10 +365,13 @@ class DBUpdater(object):
             self.create_folders(site_name, quiet=True)
         except AttributeError:
             pass
-        if "remote_user" in extra_data:
-            remote_user = extra_data["remote_user"]
+        if not opts.force_remote_user:
+            if "remote_user" in extra_data:
+                remote_user = extra_data["remote_user"]
+            else:
+                remote_user = self.remote_user
         else:
-            remote_user = self.remote_user
+            remote_user = opts.force_remote_user
         # remote_data_path = self.remote_data_path
         if "remote_url" in extra_data:  # self.opts.use_ip:
             remote_url = extra_data["remote_url"]
