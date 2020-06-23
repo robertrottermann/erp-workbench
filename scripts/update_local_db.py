@@ -605,6 +605,17 @@ class DBUpdater(object):
             except AttributeError:
                 pass
         if db_update:
+            # make sure the that the file in deed is ascii or not
+            # test if the db we got is ascii
+            if os.path.exists(dpath):
+                os.chmod(dpath, 0o777)
+                with open(dpath, 'rb') as f:
+                    first_two = f.read(2)
+                dump_as_ascii = first_two == b'--' # -- is plain ascii, PG is created by pgdump
+                if not dump_as_ascii: # copied from above
+                    dump_as_ascii = ''
+                else:
+                    dump_as_ascii = '-a'
             # make sure the needed directories exist
             fp = "%s/%s/filestore" % (self.data_path, use_site_name)
             if not os.path.exists(fp) and os.path.isdir(fp):
@@ -658,17 +669,6 @@ class DBUpdater(object):
             # if adminpw:
             # cmd_lines_docker += [['%s/psql' % where, '-U', user, '-d', site_name,  '-c', "update res_users set password='%s' where login='admin';" % adminpw]]
 
-            # make sure the that the file in deed is ascii or not
-            # test if the db we got is ascii
-            if os.path.exists(dpath):
-                os.chmod(dpath, 0o777)
-                with open(dpath, 'rb') as f:
-                    first_two = f.read(2)
-                dump_as_ascii = first_two == b'--' # -- is plain ascii, PG is created by pgdump
-                if not dump_as_ascii: # copied from above
-                    dump_as_ascii = ''
-                else:
-                    dump_as_ascii = '-a'
             if dump_as_ascii:
                 pg_restore_line = ('/usr/bin/psql', '--dbname=%s' % use_site_name , '-q', '-f', dpath)
             else:
