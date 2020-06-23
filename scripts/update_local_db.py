@@ -306,6 +306,8 @@ class DBUpdater(object):
         """
         from config import ACT_USER # actually logged in user
         import psycopg2
+        opts = self.opts
+        db_user = ACT_USER
 
         SQL = """SELECT pg_terminate_backend(pg_stat_activity.pid) \
           FROM pg_stat_activity \
@@ -314,9 +316,15 @@ class DBUpdater(object):
         SQL2 = "DROP DATABASE %s"
         dbpw = "admin"
 
+        if opts.db_user:
+            db_user = opts.db_user
+        if opts.db_password:
+            dbpw = opts.db_password
+        
+
         conn_string = "dbname='%s' user=%s host='%s' password='%s'" % (
             "postgres",
-            ACT_USER,
+            db_user,
             "localhost",
             dbpw,
         )
@@ -404,17 +412,6 @@ class DBUpdater(object):
         except:
             pass
         dpath = "%s/%s/dump/%s.dmp" % (self.data_path, use_site_name, use_site_name)
-        # FIX!!
-        # we should test AFTER having downloaded!!!!!
-        if os.path.exists(dpath):
-            os.chmod(dpath, 0o777)
-            with open(dpath, 'rb') as f:
-                first_two = f.read(2)
-            dump_as_ascii = first_two == b'--' # -- is plain ascii, PG is created by pgdump
-            if not dump_as_ascii: # copied from above
-                dump_as_ascii = ''
-            else:
-                dump_as_ascii = '-a'
         if not norefresh:
             # ---------------------------
             # updatedb.sh
@@ -662,6 +659,16 @@ class DBUpdater(object):
             # cmd_lines_docker += [['%s/psql' % where, '-U', user, '-d', site_name,  '-c', "update res_users set password='%s' where login='admin';" % adminpw]]
 
             # make sure the that the file in deed is ascii or not
+            # test if the db we got is ascii
+            if os.path.exists(dpath):
+                os.chmod(dpath, 0o777)
+                with open(dpath, 'rb') as f:
+                    first_two = f.read(2)
+                dump_as_ascii = first_two == b'--' # -- is plain ascii, PG is created by pgdump
+                if not dump_as_ascii: # copied from above
+                    dump_as_ascii = ''
+                else:
+                    dump_as_ascii = '-a'
             if dump_as_ascii:
                 pg_restore_line = ('/usr/bin/psql', '--dbname=%s' % use_site_name , '-q', '-f', dpath)
             else:
