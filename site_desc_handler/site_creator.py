@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 from scripts.update_local_db import DBUpdater
 from scripts.bcolors import bcolors
 from scripts.create_handler import InitHandler
@@ -94,6 +95,14 @@ class SiteCreator(InitHandler, DBUpdater, SiteDescHandlerMixin):
         existed = True
         # we only create a site, if we have a site_name
         if self.site_name:
+            virtualenvwrapper = shutil.which("virtualenvwrapper.sh")
+            if not virtualenvwrapper:
+                print(bcolors.FAIL)
+                print("*" * 80)
+                print("Can not construct virtualenv for %s" % self.site_name)
+                print("Please make sure, that virtualenvwrapper.sh is found in your execution path")
+                print("Test by executing: which virtualenvwrapper.sh")
+                sys.exit()
             # check if project exists
             skeleton_path = self.skeleton_path
             outer_path = self.outer_path

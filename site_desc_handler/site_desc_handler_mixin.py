@@ -673,40 +673,49 @@ class SiteDescHandlerMixin(PropertiesMixin):
         adir = os.getcwd()
         os.chdir(target)
         # here we have to decide whether we run flectra or odoo
-        if 1:  # erp_provider == 'flectra' or use_workon:
-            # need to find virtualenvwrapper.sh
-            virtualenvwrapper = shutil.which("virtualenvwrapper.sh")
-            os.chdir(self.inner_path)
-            cmd_list = [
-                "export WORKON_HOME=%s/.virtualenvs" % os.path.expanduser("~"),
-                "export PROJECT_HOME=/home/robert/Devel",
-                "source %s" % virtualenvwrapper,
-                "mkvirtualenv -a %s -p %s %s"
-                % (self.inner_path, python_version, self.site_name),
-            ]
-            commands = b"$$".join([e.encode() for e in cmd_list])
-            commands = commands.replace(b"$$", b"\n")
-            # p = subprocess.call(commands, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-            p = subprocess.Popen(
-                "/bin/bash",
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                env=os.environ.copy(),
-            )
-            out, err = p.communicate(input=commands)
-            if not self.opts.quiet:
-                print(out)
-                print(err)
-        else:
-            # create virtual env
-            cmd_line = ["virtualenv", "-p", python_version, "python"]
-            p = subprocess.Popen(
-                cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-            )
-            if self.opts.verbose:
-                print(os.getcwd())
-                print(cmd_line)
-                print(p.communicate())
-            else:
-                p.communicate()
+        # need to find virtualenvwrapper.sh
+        virtualenvwrapper = shutil.which("virtualenvwrapper.sh")
+        if not virtualenvwrapper:
+            print(bcolors.FAIL)
+            print("*" * 80)
+            print("Can not construct virtualenv for %s" % self.site_name)
+            print("Please make sure, that virtualenvwrapper.sh is found in your execution path")
+            print("Test by executing: which virtualenvwrapper.sh")
+            sys.exit()
+
+        os.chdir(self.inner_path)
+        cmd_list = [
+            "export WORKON_HOME=%s/.virtualenvs" % os.path.expanduser("~"),
+            "export PROJECT_HOME=%s/Devel" % os.path.expanduser("~") ,
+            "source %s" % virtualenvwrapper,
+            "mkvirtualenv -a %s -p %s %s"
+            % (self.inner_path, python_version, self.site_name),
+        ]
+        commands = b"$$".join([e.encode() for e in cmd_list])
+        commands = commands.replace(b"$$", b"\n")
+        # p = subprocess.call(commands, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        p = subprocess.Popen(
+            "/bin/bash",
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            env=os.environ.copy(),
+        )
+        if not self.opts.quiet:
+            print(commands)
+        out, err = p.communicate(input=commands)
+        if not self.opts.quiet:
+            print(out)
+            print(err)
+        # else:
+        #     # create virtual env
+        #     cmd_line = ["virtualenv", "-p", python_version, "python"]
+        #     p = subprocess.Popen(
+        #         cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        #     )
+        #     if self.opts.verbose:
+        #         print(os.getcwd())
+        #         print(cmd_line)
+        #         print(p.communicate())
+        #     else:
+        #         p.communicate()
         os.chdir(adir)

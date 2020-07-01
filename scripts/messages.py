@@ -24,15 +24,15 @@ cd %(project_path)s
 or by executing
 %(site_name)sw
 and then execute the following command:
-bin/build_%(erp_version)s
+bin/build_odoo.py
 
 when you later change the addon-path settings, you can execute:
-bin/dosetup_%(erp_version)s
+bin/dosetup_odoo.py
 
 to rebuild the addon-path.
 
 run:
-bin/build_%(erp_version)s -f
+bin/build_odoo.py -f
 
 to see all options
 ------------------------------------------------
