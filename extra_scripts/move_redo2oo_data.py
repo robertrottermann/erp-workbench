@@ -102,12 +102,13 @@ class OdooHandler(object):
             v = getattr(contact, col)
             if v:
                 data[col] = v
-        Contact_O.create(data)
+        new_id = Contact_O.create(data)
         return new_id
     
 
     def create_and_map_company(self, parent):
         new_id = self._create_contact(parent)
+        self.parent_map[parent.id] = new_id
 
     def move_parents(self):
         contact_ids = self.odoo.env['res.partner'].search([('parent_id','!=', False)])
