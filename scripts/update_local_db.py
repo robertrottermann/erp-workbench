@@ -198,7 +198,7 @@ class DBUpdater(object):
             sys.exit()
         # if we want to copy the dumped stuff to a remote site
         # do it now
-        if opts.use_ip_target or 'new_target_site' in list(opts.__dict__.keys()):
+        if opts.use_ip_target or ('new_target_site' in list(opts.__dict__.keys()) and opts.new_target_site):
             # we want to move the data to some remote server
             # so we have to look up what path we need remotely
             # this probably only works if we have root permission on the target
