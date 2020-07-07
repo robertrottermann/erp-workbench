@@ -117,16 +117,20 @@ class DockerHandler(InitHandler, DBUpdater):
                 except docker.errors.NotFound:
                     info = []
                 if info:
-                    if info['State']['Status'] != 'running':
-                        if start:
-                            existing_container.restart()
-                            existing_container = self.get_container(name)
-                            info = existing_container and existing_container.attrs
-                            if not info:
-                                raise ValueError('could not restart container %s', name)
-                        elif required:
-                            raise ValueError('container %s is stoped, no restart is requested', name)
-                    registry[name] = info
+                    # it looks as if an existing container is found, when a container exists that starts with the name
+                    # we are loking for: redo2oo13 is found when we look for reo2oo
+                    found_name = info.get('Name')[1:] # starts with '/'
+                    if found_name == name:
+                        if info['State']['Status'] != 'running':
+                            if start:
+                                existing_container.restart()
+                                existing_container = self.get_container(name)
+                                info = existing_container and existing_container.attrs
+                                if not info:
+                                    raise ValueError('could not restart container %s', name)
+                            elif required:
+                                raise ValueError('container %s is stoped, no restart is requested', name)
+                        registry[name] = info
                 else:
                     if required:
                         if name == 'db':
@@ -353,6 +357,14 @@ class DockerHandler(InitHandler, DBUpdater):
                 if not self.docker_registry.get(container_name):
                     self._create_container(docker_template, info_dic)
                     print('created container %s' % name)
+                elif self.opts.verbose:
+                    #print(self.docker_registry.get(container_name))
+                    print(bcolors.WARNING)
+                    print('*' * 80)
+                    print('container wit name:%s allredy existed' % container_name)
+                    print('*' * 80)
+                    print(bcolors.ENDC)
+                    
             else:
                 # we need a postgres version
                 pg_version = self.use_postgres_version
