@@ -320,7 +320,7 @@ class DBUpdater(object):
             db_user = opts.db_user
         if opts.db_password:
             dbpw = opts.db_password
-        
+
 
         conn_string = "dbname='%s' user=%s host='%s' password='%s'" % (
             "postgres",
@@ -364,6 +364,7 @@ class DBUpdater(object):
         """
         opts = self.opts
         dump_as_ascii = opts.dump_as_ascii
+        rotate = opts.rotate
         if not dump_as_ascii:
             dump_as_ascii = ''
         else:
@@ -484,6 +485,30 @@ class DBUpdater(object):
             #     if rc:
             #         raise Exception('Postgres subprocess %s error %s' % (args2, rc))
 
+            # rotator
+            # def __init__(self, dest_dir, hours, days, weeks, months, hard_link=False,
+            #         remove=False, verbose=False):
+            #     self.keep_count = {
+            #             'hourly': hours,
+            #             'daily': days,
+            #             'weekly': weeks,
+            #             'monthly': months,
+            #     }
+
+
+            if rotate:
+                if os.path.exists(dpath):
+                    from rotator import FileRotator
+                    dpath_dir = "%s/%s/dump/" % (self.data_path, use_site_name)
+                    rotator = FileRotator(
+                        dest_dir = dpath_dir,
+                        hours = 0,
+                        days = 7,
+                        weeks = 4,
+                        months = 0
+                    )
+                    rotator.add_files([dpath])
+                    rotator.rotate()
             os.system(
                 "%s/scripts/updatedb.sh %s %s %s %s %s %s %s %s"
                 % (
