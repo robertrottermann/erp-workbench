@@ -63,10 +63,10 @@ def add_options_parent(parser, result_dic={}):
     parent_parser.add_argument(
         "-rot",
         "--rotate",
-        action="store_true",
+        action="store_false",
         dest="rotate",
-        default=False,
-        help="rotate dumpfile, so we have more than one version at hand",
+        default=True,
+        help="Do not rotate dumpfile, so we have more than one version at hand",
     )
 
     parent_parser.add_argument(
