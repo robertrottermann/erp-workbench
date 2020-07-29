@@ -107,7 +107,7 @@ CONFIG_NAME = {
     "odoo": {
         "config": "openerp-server.conf",
         "val_dic": {
-            "server_wide_modules": "web,web_kanban",
+            "server_wide_modules": "",
             "xmlrpc_port": 8069,
             "longpolling_port": 8072,
             "logfile": "/var/log/odoo/odoo_log",

@@ -17,14 +17,12 @@ PREPARATION:
         sudo apt-get install postgresql postgresql-contrib
 
         install libraries:
-            apt install -y nodejs-dev node-gyp npm nodejs libssl1.0-dev
+            apt install -y  node-gyp npm nodejs
 
             apt -y install build-essential libfreetype6-dev libjpeg8-dev liblcms2-dev libldap2-dev libsasl2-dev libssl-dev libffi-dev \
-            libtiff5-dev libwebp-dev libxml2-dev libxslt1-dev node-less postgresql-server-dev* python-dev python3-dev \
-            python-tk tcl8.6-dev tk8.6-dev zlib1g-dev postgresql-client python-virtualenv git vim libmysqlclient-dev \
-            curl virtualenv python-pip libcurl4 wkhtmltox fontconfig
-
-
+            libtiff5-dev libwebp-dev libxml2-dev libxslt1-dev node-less python-dev python3-dev \
+            python-tk tcl8.6-dev tk8.6-dev zlib1g-dev postgresql-client git vim libmysqlclient-dev \
+            curl virtualenv libcurl4 fontconfig
 
     as normal user:
     ---------------
