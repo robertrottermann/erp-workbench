@@ -19,8 +19,28 @@ server {
   server_name   %(remote_http_url)s;
   access_log    /var/log/nginx/%(site_name)s.access.log combined;
   error_log     /var/log/nginx/%(site_name)s.error.log;
+  location ~ /.well-known {
+      root /usr/share/nginx/html;
+      allow all;
+  }
   location / {
     proxy_pass http://odoo_%(site_name)s;
+    if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+        #
+        # Custom headers and headers various browsers *should* be OK with but aren't
+        #
+        add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
+        #
+        # Tell client that this pre-flight info is valid for 20 days
+        #
+        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Content-Type' 'text/plain; charset=utf-8';
+        add_header 'Content-Length' 0;
+        return 204;
+    }
+    gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
+    gzip on;
   }
 }
-

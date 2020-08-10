@@ -180,13 +180,16 @@ class DBUpdater(object):
                             % (runnig_db, dbname)
                         )
                     )
-                    if opts.new_target_site:
-                        print(
-                            (
-                                "stop the the running odoo or use the option -F (force) if you just want to copy %s to %s"
-                                % (dbname, opts.new_target_site)
+                    try:
+                        if opts.new_target_site:
+                            print(
+                                (
+                                    "stop the the running odoo or use the option -F (force) if you just want to copy %s to %s"
+                                    % (dbname, opts.new_target_site)
+                                )
                             )
-                        )
+                    except:
+                        pass
                     print((bcolors.ENDC))
                     sys.exit()
                 print("odoo is not running, so NO! dump was created")
