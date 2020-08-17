@@ -1019,9 +1019,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                 # we to replace values that should be different when running remotely
                 # this should be done in a mor systematic way.when I use massmailing, a click to the send button
                 remote_info = self.site.get("remote_server", {})
-                if remote_info.get("redirect_emil_to"):
+                if remote_info.get("redirect_email_to"):
                     self._default_values["local_user_mail"] = remote_info.get(
-                        "redirect_emil_to"
+                        "redirect_email_to"
                     )
             for c_param in config_params:
                 # list of (search-key-name, value), {'field' : value, 'field' : value ..}

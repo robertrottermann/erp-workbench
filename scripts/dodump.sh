@@ -4,7 +4,7 @@
 # dodump creates a temporary docker container that dumps a servers database
 # it is called by updatedb.sh and executed on the remote computer
 # $1 : name of the server                     updatedb.$1
-# $2 : path to the location of odo_instances  updatedb.$3
+# $2 : path to the location of workbench     updatedb.$3
 #      on the remote server
 # $3 : verbose flag                           updatedb.$7
 # $4 : ascii flag                             updatedb.$8

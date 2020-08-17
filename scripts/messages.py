@@ -117,7 +117,7 @@ and add a remote block like
             'remote_data_path'   : '/root/erp_workbench',
             'remote_user'   : 'root',
             'remote_sites_home'    : '/home/robert/erp_workbench',
-            'redirect_emil_to' : '', # redirect all outgoing mail to this account
+            'redirect_email_to' : '', # redirect all outgoing mail to this account
                                      # needs red_override_email_recipients installed
         },
 --------------------------------------------------------
