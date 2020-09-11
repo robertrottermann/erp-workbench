@@ -334,17 +334,14 @@ class SiteDescHandlerMixin(PropertiesMixin):
         we collect them from the actual site, and all sites named with the option -sites
         """
         extra_libs = self.site.get("extra_libs", {})
-        if 0:
-            # this is not yet re-implemented
-            if self.opts.use_collect_sites:
-                erp_version = self.erp_version
-                more_sites = []
-                for k, v in list(self.sites.items()):
-                    if v.get("erp_version") == erp_version:
-                        more_sites.append(k)
-            else:
-                more_sites = (self.opts.use_sites or "").split(",")
-        more_sites = []
+        # collect all sites with the same version, so we add all libraries to the docker image
+        if self.opts.docker_build_image_use_sites:
+            erp_version = self.erp_version
+            more_sites = []
+            for k, v in list(self.sites.items()):
+                if v.get("erp_version") == erp_version:
+                    more_sites.append(k)
+        #more_sites = []
         # libraries we need to install using apt
         apt_list = extra_libs.get(self.apt_command, [])
         # libraries we need to install using pip

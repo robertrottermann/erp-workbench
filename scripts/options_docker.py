@@ -40,7 +40,7 @@ def add_options_docker(parser, result_dic):
         "-dbis",
         "--build_image_use_sites",
         action="store",
-        dest="use_sites",
+        dest="docker_build_image_use_sites",
         help="use sites to collect libraries to build image",
         need_name=True,
     )
