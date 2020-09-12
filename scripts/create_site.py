@@ -443,7 +443,7 @@ def main(opts, parsername, need_names_dic, return_handler=False):
         # build image
         # ----------
         # build docker image used by a site
-        if opts.docker_build_image or opts.docker_build_image_use_sites:
+        if opts.docker_build_image or opts.__dict__.get('docker_build_image_use_sites'):
             handler.build_image()
             did_run_a_command = True
             return

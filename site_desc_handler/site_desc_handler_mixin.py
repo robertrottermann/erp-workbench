@@ -335,13 +335,12 @@ class SiteDescHandlerMixin(PropertiesMixin):
         """
         extra_libs = self.site.get("extra_libs", {})
         # collect all sites with the same version, so we add all libraries to the docker image
-        if self.opts.docker_build_image_use_sites:
+        more_sites = []
+        if self.opts.__dict__.get('docker_build_image_use_sites'):
             erp_version = self.erp_version
-            more_sites = []
             for k, v in list(self.sites.items()):
                 if v.get("erp_version") == erp_version:
                     more_sites.append(k)
-        #more_sites = []
         # libraries we need to install using apt
         apt_list = extra_libs.get(self.apt_command, [])
         # libraries we need to install using pip
