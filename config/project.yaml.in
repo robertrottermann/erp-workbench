@@ -16,7 +16,7 @@ PROJECT_DEFAULTS:
     # erp_version:
     # what version of the erp system are we generating
     # must exist out there and must be downloadable from the internet
-    erp_version: '12'
+    erp_version: '13'
     # erp_minor:
     # what is the minor version number
     # this is important for unreleased odoo versions
@@ -28,9 +28,9 @@ PROJECT_DEFAULTS:
     erp_nightly: ''
 
 SITES_DEFAULTS:
-    hear we can define default values
-    per site
-    by default we have only local site, which is a site name never used
+    # here we can define default values
+    # per site
+    # by default we have only local site, which is a site name never used
     local_site:
         # db_user:
         # this is the default data base user, its value can be overruled in the

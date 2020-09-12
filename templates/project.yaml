@@ -16,7 +16,7 @@ PROJECT_DEFAULTS:
     # erp_version:
     # what version of the erp system are we generating
     # must exist out there and must be downloadable from the internet
-    erp_version: '12'
+    erp_version: '13'
     # erp_minor:
     # what is the minor version number
     # this is important for unreleased odoo versions
