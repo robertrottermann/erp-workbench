@@ -361,10 +361,10 @@ class DockerHandler(InitHandler, DBUpdater):
                     #print(self.docker_registry.get(container_name))
                     print(bcolors.WARNING)
                     print('*' * 80)
-                    print('container wit name:%s allredy existed' % container_name)
+                    print('container with name:%s allredy existed' % container_name)
                     print('*' * 80)
                     print(bcolors.ENDC)
-                    
+
             else:
                 # we need a postgres version
                 pg_version = self.use_postgres_version
