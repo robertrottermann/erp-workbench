@@ -167,9 +167,10 @@ class SupportHandler(InitHandler):
             erp_version, erp_minor = parts[:2]
             if erp_minor == "0":
                 erp_minor = ".0"
-            # self.default_values['erp_version'] = erp_version
-            # self.default_values['erp_minor'] = erp_minor
-            # self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
+            # 2.okt 2020 the next thre lines where commented out, why??
+            self.default_values['erp_version'] = erp_version
+            self.default_values['erp_minor'] = erp_minor
+            self.default_values['erp_nightly'] = '%s%s' % (erp_version, erp_minor)
 
         # if the site allready exist, we bail out
         if self.sites.get(self.site_name):
@@ -211,6 +212,9 @@ class SupportHandler(InitHandler):
                     sites_handler.site_name = self.opts.orig_name
                 sites_handler.reset_values()  # force to reread the values, they were read when no site_name was yet known
                 sites_handler.opts = opts
+                # copy values to sites_handler.default_values
+                for k,v in self.default_values.items():
+                    sites_handler.default_values[k] = v
                 result = sites_handler.add_site_global(
                     handler=sites_handler, template_name=template, sublist=sublist_name
                 )  # , preset_values=preset_values)

@@ -28,7 +28,7 @@
             'remote_user': 'root',
             # where is sites home on the remote server for non root users
             'remote_sites_home': '%(base_sites_home)s',
-            'redirect_emil_to': '',  # redirect all outgoing mail to this account
+            'redirect_email_to': '',  # redirect all outgoing mail to this account
             # needs red_override_email_recipients installed
         },
         'docker': {
@@ -36,7 +36,7 @@
             #'base_image': '%(docker_hub_name)s/%(site_name)s:%(erp_version)s-latest',
             'base_image'        : 'camptocamp/odoo-project:%(erp_version)s.0-latest',
             # when CREATING a container: what image do we use for it
-            'erp_image_version': '%(docker_hub_name)s/%(erp_image_version)s',
+            'erp_image_version': '%(docker_hub_name)s/%(erp_version)s.0',
             'container_name': '%(site_name)s',
             # 'db_container_name'    : 'db', # needs only to be set if it is not 'db'
             # trough what port can we access oddo (mapped to 8069)
