@@ -302,7 +302,8 @@ class SiteDescHandlerMixin(PropertiesMixin):
             # ------------------------------------
             base_url = apache.get('base_url', '')
             if not base_url:
-                print(NO_BASE_URL)
+                if running_site:
+                    print(NO_BASE_URL)
             self._base_url = base_url
 
             # ------------------------------------
