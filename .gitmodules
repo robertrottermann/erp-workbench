@@ -2,6 +2,10 @@
 	path = docker/odoo
 	url = https://github.com/odoo/docker.git
 
+[submodule "docker/camp_to_camp"]
+	path = docker/camp_to_camp
+	url = git@github.com:camptocamp/docker-odoo-project.git
+
 [submodule "helpers"]
 	path = helpers
 	url = ssh://git@gitlab.redcor.ch:10022/redcor-team/helpers.git
