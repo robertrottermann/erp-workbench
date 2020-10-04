@@ -1,0 +1,7 @@
+[submodule "docker/odoo"]
+	path = docker/odoo
+	url = https://github.com/odoo/docker.git
+
+[submodule "helpers"]
+	path = helpers
+	url = ssh://git@gitlab.redcor.ch:10022/redcor-team/helpers.git

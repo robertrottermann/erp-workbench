@@ -311,7 +311,14 @@ class PropertiesMixin(object):
 
     @property
     def base_url(self):
-        return self._base_url
+        self._cp
+        try:
+            return self._base_url
+        except:
+            print(bcolors.FAIL)
+            print('make sure the site description hase a base url defined')
+            print(bcolors.ENDC)
+            raise
 
     # -------------------------------------------------------------
     # database
@@ -499,8 +506,13 @@ class PropertiesMixin(object):
         if not self._cli:
             url = "unix://var/run/docker.sock"
             import docker
-
-            client = docker.from_env()
+            try:
+                client = docker.from_env()
+            except docker.errors.DockerException:
+                print(bcolors.FAIL)
+                print('docker seems not to be installed')
+                print(bcolors.ENDC)
+                exit()
             self._cli = client
         return self._cli
 

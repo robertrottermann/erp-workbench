@@ -19,6 +19,7 @@ if [ -f "$FILE" ]
 }
 else {
     echo 'kein rundumper'
+    echo $FILE ' not found. Please check if workbench path is correctly spelled'
     sudo docker run -v $2:/mnt/sites  --rm=true --link db:db  dbdumper -d $1
 }
 fi

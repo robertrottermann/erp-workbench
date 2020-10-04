@@ -233,7 +233,7 @@ class DockerHandler(InitHandler, DBUpdater):
         base_info = self.base_info
         base_info['docker_command'] = shutil.which('docker')
         # constructs a dictionary with values to patch the docker files with
-        info_dic = self.create_docker_composer_dict()
+        info_dic = self.create_docker_composer_dict(name)
         if name == 'db':
             #self.update_docker_info('db')
             container_name = 'db'
@@ -410,7 +410,7 @@ class DockerHandler(InitHandler, DBUpdater):
             status = f.write(template)
         return status
 
-    def create_docker_composer_dict(self):
+    def create_docker_composer_dict(self, container_name):
         """constructs a dictionary with values to patch the docker files with
 
         Returns:
@@ -435,7 +435,7 @@ class DockerHandler(InitHandler, DBUpdater):
             'list_db' : self.docker_list_db,
             # in the following line, the $ needs to be escaped with a second $
             'dbfilter': '^%s$$' % self.site_name,
-            'base_url': '%s' % self.base_url,
+            'base_url': '%s' % (container_name=='db' and '') or self.base_url,
             'admin_passwd' : shlex.quote(self.docker_rpc_user_pw),
             'db_maxconn' : self.docker_db_maxcon,
             'limit_memory_soft' : self.docker_limit_memory_soft,
