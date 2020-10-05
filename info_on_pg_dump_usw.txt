@@ -1,0 +1,16 @@
+/usr/bin/psql -U robert -d afbs13 < /home/robert/erp-workbench/afbs13/dump/afbs13.dmp
+
+
+
+def get_db_list(self, cr, user, ids, host='localhost', port='8069', context={}):
+        uri = 'http://' + host + ':' + port
+        conn = xmlrpclib.ServerProxy(uri + '/xmlrpc/db')
+        db_list = execute(conn, 'list')
+        return db_list
+
+
+/home/robert/projects/afbs13/afbs13/downloads/odoo-13.0.post20200519/odoo/tools/misc.py
+line 102 ..
+
+/home/robert/projects/afbs13/afbs13/downloads/odoo-13.0.post20200519/odoo/service/db.py
+line 193, 35
