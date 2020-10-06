@@ -11,8 +11,8 @@ HEADER1 = ['id', 'name', 'last_name', 'street', 'street2', 'zip', 'city', 'email
 # media addresses
 HEADER2 = ['LANG', 'ANREDE', 'FUNKTION', 'NAME', 'VORNAME', 'STREET', 'STREET2', 'PLZ', 'ORT', 'FUNKTION', 'MAILADRESSE']
 
-LINE = "%(ID)s,%(LANG)s,%(company_type)s,%(ANREDE)s,%(NAME)s,%(VORNAME)s,%(STREET)s,%(STREET2)s,%(PLZ)s,%(ORT)s,%(MAILADRESSE)s,Jahresbericht,Medien\n"
-FIRST_LINE = "id,Language,company_type,Title,Last name,Name,Street,Street2,Zip,City,email,tags,tags\n"
+LINE = "%(ID)s;%(LANG)s;%(company_type)s;%(ANREDE)s;%(NAME)s;%(VORNAME)s;%(STREET)s;%(STREET2)s;%(PLZ)s;%(ORT)s;%(MAILADRESSE)s;Jahresbericht,Medien\n"
+FIRST_LINE = "id;Language;company_type;Title;Last name;Name;Street;Street2;Zip;City;email;tags\n"
 LANGUAGES = {'d' : 'German / Deutsch', 'f' : 'French (CH) / Français (CH)'}
 START_AT  = 2 # where to start to read
 
@@ -34,7 +34,8 @@ def write_rec(out_file, rec, old_id):
     # if there is an Anrede, the record represents a person
     if rec['ANREDE']:
         rec['company_type'] = 'Individual'
-        rec['ANREDE'] = '' # got an error of duplicate title for record
+        if old_id:
+            rec['ANREDE'] = '' # got an error of duplicate title for record
     else:
         rec['company_type'] = 'Company'
     out_file.write(LINE % rec)
