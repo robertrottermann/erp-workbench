@@ -208,6 +208,10 @@ ODOO_VERSIONS = {
         'python_ver' : 'python3',
         'python_path' : '/usr/bin/python3',
     },
+    '14' : {
+        'python_ver' : 'python3',
+        'python_path' : '/usr/bin/python3',
+    },
 }
 
 
