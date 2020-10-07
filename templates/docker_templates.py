@@ -103,14 +103,31 @@ RUN set -x; \\
             node-less \\
             poppler-utils \\
             postgresql-client \\
-            python \\
+            dirmngr \\
+            fonts-noto-cjk \\
+            gnupg \\
+            npm \\
+            python3-setuptools \\
+            python3-num2words \\
+            python3-pdfminer \\
+            python3-pip \\
+            python3-dev \\
+            python3-phonenumbers \\
+            python3-pyldap \\
+            python3-qrcode \\
+            python3-renderpm \\
+            python3-setuptools \\
+            python3-slugify \\
+            python3-vobject \\
+            python3-watchdog \\
+            python3-xlrd \\
+            python3-xlwt \\
+            xz-utils \\
             python-libxslt1 \\
-            python-pip \\
             xfonts-75dpi \\
             xfonts-base \\
             # build packages to clean after the pip install
             build-essential \\
-            python-dev \\
             libfreetype6-dev \\
             libpq-dev \\
             libxml2-dev \\
@@ -120,11 +137,10 @@ RUN set -x; \\
             libssl-dev \\
             libjpeg-dev \\
             zlib1g-dev \\
-            libfreetype6-dev \\
-        && curl -o wkhtmltox.deb -SL http://nightly.odoo.com/extra/wkhtmltox-0.12.1.2_linux-jessie-amd64.deb \\
-        && dpkg --force-depends -i wkhtmltox.deb \\
-        && apt-get -y install -f --no-install-recommends \\
-        && pip install -U pip && pip install -r base_requirements.txt \\
+        && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \\
+        && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \\
+        && apt-get install -y --no-install-recommends ./wkhtmltox.deb \\
+        && pip3 install -U pip && pip3 install -r base_requirements.txt \\
         && apt-get remove -y build-essential python-dev libfreetype6-dev libpq-dev libxml2-dev libxslt1-dev \\
                              libsasl2-dev libldap2-dev libssl-dev libjpeg-dev zlib1g-dev libfreetype6-dev \\
         && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false -o APT::AutoRemove::SuggestsImportant=false npm \\
@@ -149,9 +165,9 @@ COPY ./MANIFEST.in ./
 VOLUME ["/data/odoo", "/var/log/odoo"]
 
 # Expose Odoo services
-EXPOSE 8069 8072
+EXPOSE 8069 8071 8072
 
-ENV ODOO_VERSION=9.0 \\
+ENV ODOO_VERSION=s(erp_version)s \\
     PATH=/opt/odoo/bin:$PATH \\
     LANG=C.UTF-8 \\
     LC_ALL=C.UTF-8 \\
@@ -192,6 +208,17 @@ ENV MIGRATE=False
 # Set the default config file
 ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
 %(env_vars)s
+"""
+
+src_requirements = """# Requirements for the project itself and for Odoo.
+# When we install Odoo with -e, odoo.py is available in the PATH and
+# 'openerp' in the PYTHONPATH
+# 
+# They are installed only after all the project's files have been copied
+# into the image (with ONBUILD)
+-e .
+-e src
+
 """
 
 XXXX = """
@@ -326,3 +353,297 @@ docker_common = """-e ADDONS_PATH=%(docker_site_addons_path)s\\
     -e RUNNING_ENV=%(running_env)s \\
     -e WITHOUT_DEMO=%(without_demo)s \\
     -e SERVER_WIDE_MODULES=%(server_wide_modules)s"""
+
+
+docker_base_requirements_9 = """
+arrow==0.4.2
+atomicwrites==1.4.0
+attrs==19.3.0
+Automat==20.2.0
+Babel==1.3
+backports.functools-lru-cache==1.6.1
+bcrypt==3.1.7
+beautifulsoup4==4.9.1
+certifi==2020.6.20
+cffi==1.14.2
+chardet==3.0.4
+configparser==4.0.2
+constantly==15.1.0
+contextlib2==0.6.0.post1
+cryptography==3.0
+cssselect==1.1.0
+decorator==3.4.0
+docutils==0.12
+enum34==1.1.10
+feedparser==5.1.3
+fs==0.5.4
+funcsigs==1.0.2
+functools32==3.2.3.post2
+gdata==2.0.18
+gevent==1.0.2
+greenlet==0.4.7
+html2text==2019.8.11
+htmllaundry==2.2
+hyperlink==20.0.1
+ics==0.4
+idna==2.10
+importlib-metadata==1.7.0
+incremental==17.5.0
+ipaddress==1.0.23
+jcconv==0.2.3
+Jinja2==2.8.1
+lxml==3.4.1
+Mako==1.0.1
+MarkupSafe==0.23
+mock==1.0.1
+more-itertools==5.0.0
+oauthlib==3.1.0
+# Editable install with no version control (odoo==9.0rc20190424)
+-e /home/robert/projects/afbschweiz/afbschweiz/downloads/odoo-9.0rc20190424
+OdooRPC==0.7.0
+ofxparse==0.14
+packaging==20.4
+paramiko==2.7.1
+parsel==1.6.0
+passlib==1.6.2
+pathlib==1.0.1
+pathlib2==2.3.5
+phonenumbers==8.12.8
+Pillow==3.3.2
+pluggy==0.13.1
+Protego==0.1.16
+psutil==2.2.0
+psycogreen==1.0
+psycopg2==2.8.5
+py==1.9.0
+pyasn1==0.4.8
+pyasn1-modules==0.2.8
+pycparser==2.20
+PyDispatcher==2.0.5
+pydot==1.0.2
+Pygments==2.5.2
+PyHamcrest==1.10.1
+PyNaCl==1.4.0
+pyOpenSSL==19.1.0
+pyparsing==2.0.3
+pyPdf==1.13
+pypng==0.0.20
+PyQRCode==1.2.1
+pyserial==2.7
+pysftp==0.2.9
+pytest==4.6.11
+pytest-odoo==0.5.0
+Python-Chart==1.39
+python-dateutil==2.4.0
+python-ldap==2.4.19
+python-openid==2.2.5
+python-stdnum==1.14
+pytz==2014.10
+pyusb==1.0.0b2
+PyYAML==3.11
+qrcode==5.1
+queuelib==1.5.0
+reportlab==3.1.44
+requests==2.6.0
+scandir==1.10.0
+Scrapy==1.8.0
+service-identity==18.1.0
+six==1.9.0
+soupsieve==1.9.6
+suds-jurko==0.6
+Twisted==20.3.0
+typing==3.7.4.3
+urllib3==1.25.10
+vatnumber==1.2
+vobject==0.6.6
+w3lib==1.22.0
+wcwidth==0.2.5
+Werkzeug==0.15.2
+xlrd==1.2.0
+xlwt==0.7.5
+zipp==1.2.0
+zope.event==4.4
+zope.interface==5.1.0
+"""
+docker_base_requirements_13 = """
+ansible==2.9.13
+appdirs==1.4.4
+arrow==0.14.7
+attrs==19.3.0
+Automat==20.2.0
+Babel==2.6.0
+bcrypt==3.1.7
+beautifulsoup4==4.9.1
+cached-property==1.5.1
+cachetools==4.1.1
+certifi==2020.6.20
+cffi==1.14.1
+chardet==3.0.4
+constantly==15.1.0
+cryptography==3.0
+cssselect==1.1.0
+decorator==4.3.0
+defusedxml==0.6.0
+docopt==0.6.2
+docutils==0.14
+ebaysdk==2.1.5
+feedparser==5.2.1
+fs==2.4.11
+gdata==2.0.18
+gevent==1.3.7
+greenlet==0.4.15
+html2text==2018.1.9
+htmllaundry==2.2
+hyperlink==20.0.1
+ics==0.7
+idna==2.8
+incremental==17.5.0
+iniconfig==1.0.1
+isodate==0.6.0
+itemadapter==0.1.0
+itemloaders==1.0.2
+Jinja2==2.10.1
+jmespath==0.10.0
+libsass==0.17.0
+lxml==4.3.2
+Mako==1.0.7
+MarkupSafe==1.1.0
+mock==2.0.0
+more-itertools==8.4.0
+mt940==0.5.0
+num2words==0.5.6
+oauthlib==3.1.0
+OdooRPC==0.7.0
+ofxparse==0.19
+packaging==20.4
+paramiko==2.7.1
+parsel==1.6.0
+passlib==1.7.1
+pathlib==1.0.1
+pbr==5.4.5
+phonenumbers==8.12.7
+Pillow==5.4.1
+pluggy==0.13.1
+polib==1.1.0
+Protego==0.1.16
+psutil==5.6.6
+psycopg2==2.8.3
+psycopg2-binary==2.8.5
+py==1.9.0
+pyasn1==0.4.8
+pyasn1-modules==0.2.8
+pycparser==2.20
+PyDispatcher==2.0.5
+pydot==1.4.1
+Pygments==2.6.1
+PyHamcrest==2.0.2
+PyNaCl==1.4.0
+pyOpenSSL==19.1.0
+pyparsing==2.2.0
+PyPDF2==1.26.0
+pypng==0.0.20
+PyQRCode==1.2.1
+pyserial==3.4
+pysftp==0.2.9
+pytest==6.0.1
+pytest-odoo==0.5.0
+python-dateutil==2.7.3
+python-ldap==3.1.0
+python-stdnum==1.14
+pytz==2019.1
+pyusb==1.0.2
+PyYAML==5.3.1
+qrcode==6.1
+queuelib==1.5.0
+reportlab==3.5.13
+requests==2.21.0
+requests-toolbelt==0.9.1
+Scrapy==2.3.0
+service-identity==18.1.0
+six==1.15.0
+soupsieve==2.0.1
+TatSu==5.5.0
+toml==0.10.1
+Twisted==20.3.0
+urllib3==1.24.3
+urlparse3==1.1
+vatnumber==1.2
+vobject==0.9.6.1
+w3lib==1.22.0
+Werkzeug==0.14.1
+xlrd==1.1.0
+XlsxWriter==1.1.2
+xlwt==1.3.0
+zeep==3.2.0
+zope.event==4.4
+zope.interface==5.1.0
+"""
+docker_base_requirements_14 = """
+appdirs==1.4.4
+attrs==20.2.0
+Babel==2.8.0
+bcrypt==3.1.7 #3.2
+beautifulsoup4==4.9.2
+cached-property==1.5.2
+certifi==2020.6.20
+cffi==1.14.3
+chardet==3.0.4
+cryptography==3.1.1
+decorator==4.4.2
+defusedxml==0.6.0
+docutils==0.16
+feedparser #==5.2.1 #6.0.1
+gdata==2.0.18
+gevent==20.9.0
+greenlet==0.4.17
+html2text #==2020.1.16
+idna==2.10
+iniconfig==1.0.1
+isodate==0.6.0
+Jinja2==2.11.2
+libsass==0.20.1
+lxml==4.5.2
+Mako==1.1.3
+MarkupSafe==1.1.1
+mock #==4.0.2
+OdooRPC==0.7.0
+ofxparse==0.20
+packaging==20.4
+paramiko==2.7.2
+passlib==1.7.2
+Pillow
+pluggy==0.13.1
+polib==1.1.0
+psutil==5.7.2
+psycopg2==2.8.6
+py==1.9.0
+pycparser==2.20
+pydot==1.4.1
+PyNaCl==1.4.0
+pyparsing==2.4.7
+PyPDF2==1.26.0
+pyserial==3.4
+pysftp==0.2.9
+pytest==6.1.0
+pytest-odoo==0.6.0
+python-dateutil==2.8.1
+python-stdnum==1.14
+pytz==2020.1
+pyusb==1.1.0
+qrcode==6.1
+reportlab==3.5.51
+requests==2.24.0
+requests-toolbelt==0.9.1
+sgmllib3k==1.0.0
+six==1.15.0
+soupsieve==2.0.1
+toml==0.10.1
+urllib3==1.25.10
+vobject==0.9.6.1
+Werkzeug==1.0.1
+XlsxWriter==1.3.6
+xlwt==1.3.0
+zeep==3.4.0
+zope.event==4.5.0
+zope.interface==5.1.0
+"""

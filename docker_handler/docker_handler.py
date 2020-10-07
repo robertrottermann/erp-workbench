@@ -677,7 +677,19 @@ class DockerHandler(InitHandler, DBUpdater):
         a docker image will only be built when the site description has a docker_hub block.
         """
         from templates.docker_templates import docker_base_file_template, docker_run_apt_template, docker_run_no_apt_template, \
-             docker_erp_setup_requirements, docker_erp_setup_version, docker_erp_setup_script
+             docker_erp_setup_requirements, docker_erp_setup_version, docker_erp_setup_script, src_requirements
+        # get version specifig base_requirements
+        base_requirements = ''
+        if self.erp_version == '9':
+            from templates.docker_templates import docker_base_requirements_9
+            base_requirements = docker_base_requirements_9
+        elif self.erp_version == '13':
+            from templates.docker_templates import docker_base_requirements_13
+            base_requirements = docker_base_requirements_13
+        elif self.erp_version == '14':
+            from templates.docker_templates import docker_base_requirements_14
+            base_requirements = docker_base_requirements_14
+            
         def apt_lines(block):
             if not block:
                 return []
@@ -730,6 +742,14 @@ class DockerHandler(InitHandler, DBUpdater):
         if extra_commands:
             for extra_command in extra_commands:
                 run_extra_run_block += 'RUN %s\n' % extra_command.strip()
+                
+        if base_requirements:
+            with open('%sbase_requirements.txt' % docker_target_path, 'w' ) as br:
+                 br.write(base_requirements)
+
+        if src_requirements:
+            with open('%ssrc_requirements.txt' % docker_target_path, 'w' ) as sr:
+                 sr.write(src_requirements)
 
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
             data_dic = {
@@ -752,6 +772,7 @@ class DockerHandler(InitHandler, DBUpdater):
             data_dic['env_vars'] = en_vars
             data_dic['run_extra_run_block'] = run_extra_run_block
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\')
+            docker_file = docker_file % self.default_values
             result.write(docker_file)
         # construct folder layout as expected by the base image
         # see https://github.com/camptocamp/docker-odoo-project/tree/master/example
