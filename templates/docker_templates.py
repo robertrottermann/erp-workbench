@@ -91,6 +91,52 @@ docker_run_no_apt_template = """# Project's specifics packages
 RUN set -x; \\
         %(pip_install)s %(pip_list)s \\
 """
+docker_base_file_template_odoo = """
+FROM odoo:s(erp_nightly)s%(latest)s
+MAINTAINER robert@redo2oo.ch
+
+# create the working directory
+RUN mkdir -p /opt/odoo
+
+WORKDIR "/opt/odoo"
+
+RUN set -x; \\
+    apt-get update && \\
+    apt-get install -y --no-install-recommends \\
+        xz-utils \\
+            python-libxslt1 \\
+            xfonts-75dpi \\
+            xfonts-base \\
+            # build packages to clean after the pip install
+            build-essential \\
+            libfreetype6-dev \\
+            libpq-dev \\
+            libxml2-dev \\
+            libxslt1-dev \\
+            libsasl2-dev \\
+            libldap2-dev \\
+            libssl-dev \\
+            libjpeg-dev \\
+            zlib1g-dev \\
+            procps \\
+            less \\
+%(more_apt_libs)%
+
+COPY ./extra_requirements.txt ./
+RUN pip3 install -r extra_requirements.txt
+
+## Expose Odoo services
+EXPOSE 8069 8071 8072
+
+# Set the default config file
+ENV ODOO_RC /etc/odoo/odoo.conf
+
+# Set default user when running the container
+USER odoo
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["odoo"]
+"""
 
 docker_base_file_template = """
 FROM debian:buster
@@ -142,6 +188,8 @@ RUN set -x; \\
             libssl-dev \\
             libjpeg-dev \\
             zlib1g-dev \\
+            procps \\
+            less \\
     && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \\
     && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \\
     && apt-get install -y --no-install-recommends ./wkhtmltox.deb \\
