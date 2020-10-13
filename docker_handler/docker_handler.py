@@ -743,13 +743,27 @@ class DockerHandler(InitHandler, DBUpdater):
             for extra_command in extra_commands:
                 run_extra_run_block += 'RUN %s\n' % extra_command.strip()
                 
-        if base_requirements:
-            with open('%sbase_requirements.txt' % docker_target_path, 'w' ) as br:
-                 br.write(base_requirements)
+        #if base_requirements:
+            #with open('%sbase_requirements.txt' % docker_target_path, 'w' ) as br:
+                 #br.write(base_requirements)
 
-        if src_requirements:
-            with open('%ssrc_requirements.txt' % docker_target_path, 'w' ) as sr:
-                 sr.write(src_requirements)
+        #if src_requirements:
+            #with open('%ssrc_requirements.txt' % docker_target_path, 'w' ) as sr:
+                 #sr.write(src_requirements)
+
+        # Copy entrypoint script and Odoo configuration file
+        #COPY ./entrypoint.sh /
+        #COPY ./odoo.conf /etc/odoo/
+        #COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
+        ifp = self.base_info['erp_server_data_path']
+        for fname in ['entrypoint.sh','odoo.conf','wait-for-psql.py']:
+            iname = '%s/docker/odoo/%s/%s' % (ifp, self.erp_nightly, fname)
+            with open(iname, 'r' ) as infile:
+                oname = '%s%s' % (docker_target_path, fname)
+                with open(oname, 'w' ) as outfile:
+                    outfile.write(infile.read())
+                    if os.access(iname, os.X_OK):
+                        os.chmod(oname, 0o777)
 
         with open('%sDockerfile' % docker_target_path, 'w' ) as result:
             data_dic = {
@@ -771,6 +785,7 @@ class DockerHandler(InitHandler, DBUpdater):
             data_dic['run_block'] = data_str
             data_dic['env_vars'] = en_vars
             data_dic['run_extra_run_block'] = run_extra_run_block
+            data_dic['erp_version'] = self.erp_nightly
             docker_file = (docker_base_file_template % data_dic).replace('\\ \\', '\\')
             docker_file = docker_file % self.default_values
             result.write(docker_file)
@@ -781,66 +796,68 @@ class DockerHandler(InitHandler, DBUpdater):
         print("Building folder structure exepected by the build process in %s" %
               docker_target_path)
         print(bcolors.ENDC)
-        for f in ['external-src', 'local-src', 'data', 'features', 'songs']:
+        if 0:
+            # the camp_to_camp way
+            for f in ['external-src', 'local-src', 'data', 'features', 'songs']:
+                try:
+                    td = '%s%s' % (docker_target_path, f)
+                    if not os.path.exists(td):
+                        os.mkdir(td )
+                except OSError:
+                    pass
+            for f in [
+                ('VERSION', docker_erp_setup_version % str(date.today())),
+                ('migration.yml', ''),
+                ('requirements.txt', docker_erp_setup_requirements),
+                ('setup.py', docker_erp_setup_script),]:
+                # do not overwrite anything ..
+                fp = '%s%s' % (docker_target_path, f[0])
+                if not os.path.exists(fp):
+                    open(fp, 'w').write(f[1])
+                else:
+                    print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
+            # check out odoo source
+            os.chdir(docker_target_path)
+            # construct a valid version
+            version = self.erp_version
+            minor = self.erp_minor
             try:
-                td = '%s%s' % (docker_target_path, f)
-                if not os.path.exists(td):
-                    os.mkdir(td )
-            except OSError:
-                pass
-        for f in [
-            ('VERSION', docker_erp_setup_version % str(date.today())),
-            ('migration.yml', ''),
-            ('requirements.txt', docker_erp_setup_requirements),
-            ('setup.py', docker_erp_setup_script),]:
-            # do not overwrite anything ..
-            fp = '%s%s' % (docker_target_path, f[0])
-            if not os.path.exists(fp):
-                open(fp, 'w').write(f[1])
+                version = str(int(float(version)))
+            except:
+                print(bcolors.FAIL)
+                print('*' * 80)
+                print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
+                print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (version, self.site))
+                print(bcolors.ENDC)
+            if minor:
+                version = ('%s.%s' % (version, minor)).replace('..', '.')
+    
+            if os.path.exists('src') and os.path.isdir('src'):
+                o_dir = os.getcwd()
+                os.chdir('src')
+                print(bcolors.WARNING)
+                print('*' * 80)
+                print("Git upgrading existing %s" % os.getcwd())
+                print(bcolors.ENDC)
+                cmd_lines = [
+                    'git pull',
+                ]
+                self.run_commands(cmd_lines=cmd_lines)
+                os.chdir(o_dir)
             else:
-                print('%s\n%s\n%s -> not overwitten %s' % (bcolors.WARNING, '-'*80, fp, bcolors.ENDC))
-        # check out odoo source
-        os.chdir(docker_target_path)
-        # construct a valid version
-        version = self.erp_version
-        minor = self.erp_minor
-        try:
-            version = str(int(float(version)))
-        except:
-            print(bcolors.FAIL)
-            print('*' * 80)
-            print(DOCKER_IMAGE_CREATE_MISING_HUB_USER % self.site_name)
-            print("%s is not a valid version. Please fix it in the sitedescription for site %s" % (version, self.site))
-            print(bcolors.ENDC)
-        if minor:
-            version = ('%s.%s' % (version, minor)).replace('..', '.')
-
-        if os.path.exists('src') and os.path.isdir('src'):
-            o_dir = os.getcwd()
-            os.chdir('src')
-            print(bcolors.WARNING)
-            print('*' * 80)
-            print("Git upgrading existing %s" % os.getcwd())
-            print(bcolors.ENDC)
-            cmd_lines = [
-                'git pull',
-            ]
-            self.run_commands(cmd_lines=cmd_lines)
-            os.chdir(o_dir)
-        else:
-            print(bcolors.WARNING)
-            print('*' * 80)
-            print("Git clonig odoo source V%s to be included in the image to %s/src" %
-                  (version, os.getcwd()))
-            print(bcolors.ENDC)
-            cmd_lines = [
-                'git init .',
-                'git submodule init',
-                'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
-
-            ]
-            self.run_commands(cmd_lines=cmd_lines)
-
+                print(bcolors.WARNING)
+                print('*' * 80)
+                print("Git clonig odoo source V%s to be included in the image to %s/src" %
+                      (version, os.getcwd()))
+                print(bcolors.ENDC)
+                cmd_lines = [
+                    'git init .',
+                    'git submodule init',
+                    'git submodule add -b %s https://github.com/odoo/odoo.git src' % version
+    
+                ]
+                self.run_commands(cmd_lines=cmd_lines)
+    
         print(DOCKER_IMAGE_CREATE_PLEASE_WAIT)
         tag = self.erp_image_version
         return_info = []

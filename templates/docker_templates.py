@@ -8,6 +8,21 @@ logout_template = """
 # --------------------------------------------------
 # -------------------- odoo ------------------------
 # --------------------------------------------------
+# docker run -p 8069:8069 --name odoo --link db:db -t odoo -- --db-filter=odoo_db_.*
+# docker run -v /path/to/addons:/mnt/extra-addons -p 8069:8069 --name odoo --link db:db -t odoo
+docker_template_odoo_base = """
+%(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \\
+    -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \\
+    -v %(erp_server_data_path)s/%(site_name)s/addons:/mnt/extra-addons \\
+    -v %(erp_server_data_path)s/%(site_name)s/dump:/mnt/dump \\
+    -v %(erp_server_data_path)s/%(site_name)s/filestore:/var/lib/odoo/filestore \\
+    -v %(erp_server_data_path)s/%(site_name)s/:/var/lib/odoo/ \\
+    -v %(erp_server_data_path)s/%(site_name)s/log:/var/log/odoo \\
+    -e ODOO_BASE_URL='%(base_url)s' \\
+    -e ODOO_REPORT_URL='%(base_url)s' \\
+    %(docker_common)s \\
+    --name %(container_name)s -d --link db:db -t %(erp_image_version)s
+"""
 docker_template = """
 %(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \\
     -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \\
@@ -76,8 +91,167 @@ docker_run_no_apt_template = """# Project's specifics packages
 RUN set -x; \\
         %(pip_install)s %(pip_list)s \\
 """
+docker_base_file_template_odoo = """
+FROM odoo:s(erp_nightly)s%(latest)s
+MAINTAINER robert@redo2oo.ch
+
+# create the working directory
+RUN mkdir -p /opt/odoo
+
+WORKDIR "/opt/odoo"
+
+RUN set -x; \\
+    apt-get update && \\
+    apt-get install -y --no-install-recommends \\
+        xz-utils \\
+            python-libxslt1 \\
+            xfonts-75dpi \\
+            xfonts-base \\
+            # build packages to clean after the pip install
+            build-essential \\
+            libfreetype6-dev \\
+            libpq-dev \\
+            libxml2-dev \\
+            libxslt1-dev \\
+            libsasl2-dev \\
+            libldap2-dev \\
+            libssl-dev \\
+            libjpeg-dev \\
+            zlib1g-dev \\
+            procps \\
+            less \\
+%(more_apt_libs)%
+
+COPY ./extra_requirements.txt ./
+RUN pip3 install -r extra_requirements.txt
+
+## Expose Odoo services
+EXPOSE 8069 8071 8072
+
+# Set the default config file
+ENV ODOO_RC /etc/odoo/odoo.conf
+
+# Set default user when running the container
+USER odoo
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["odoo"]
+"""
 
 docker_base_file_template = """
+FROM debian:buster
+#FROM debian:buster-slim
+MAINTAINER robert@redo2oo.ch
+
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+# Generate locale C.UTF-8 for postgres and general locale data
+ENV LANG C.UTF-8
+
+# Install some deps, lessc and less-plugin-clean-css, and wkhtmltopdf
+RUN set -x; \\
+    apt-get update && \\
+    apt-get install -y --no-install-recommends \\
+        ca-certificates \\
+        curl \\
+        dirmngr \\
+        fonts-noto-cjk \\
+        gnupg \\
+        libssl-dev \\
+        node-less \\
+        npm \\
+        python3-num2words \\
+        python3-pdfminer \\
+        python3-pip \\
+        python3-phonenumbers \\
+        python3-pyldap \\
+        python3-qrcode \\
+        python3-renderpm \\
+        python3-setuptools \\
+        python3-slugify \\
+        python3-vobject \\
+        python3-watchdog \\
+        python3-xlrd \\
+        python3-xlwt \\
+        xz-utils \\
+            python-libxslt1 \\
+            xfonts-75dpi \\
+            xfonts-base \\
+            # build packages to clean after the pip install
+            build-essential \\
+            libfreetype6-dev \\
+            libpq-dev \\
+            libxml2-dev \\
+            libxslt1-dev \\
+            libsasl2-dev \\
+            libldap2-dev \\
+            libssl-dev \\
+            libjpeg-dev \\
+            zlib1g-dev \\
+            procps \\
+            less \\
+    && curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb \\
+    && echo '7e35a63f9db14f93ec7feeb0fce76b30c08f2057 wkhtmltox.deb' | sha1sum -c - \\
+    && apt-get install -y --no-install-recommends ./wkhtmltox.deb \\
+    && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
+
+# install latest postgresql-client
+RUN echo 'deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main' > /etc/apt/sources.list.d/pgdg.list \\
+    && GNUPGHOME="$(mktemp -d)" \\
+    && export GNUPGHOME \\
+    && repokey='B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8' \\
+    && gpg --batch --keyserver keyserver.ubuntu.com --recv-keys "${repokey}" \\
+    && gpg --batch --armor --export "${repokey}" > /etc/apt/trusted.gpg.d/pgdg.gpg.asc \\
+    && gpgconf --kill all \\
+    && rm -rf "$GNUPGHOME" \\
+    && apt-get update  \\
+    && apt-get install --no-install-recommends -y postgresql-client \\
+    && rm -f /etc/apt/sources.list.d/pgdg.list \\
+    && rm -rf /var/lib/apt/lists/*
+
+# Install rtlcss (on Debian buster)
+RUN npm install -g rtlcss
+
+# Install Odoo
+ENV ODOO_VERSION=%(erp_version)s
+#ENV ODOO_VERSION 14.0
+#ARG ODOO_RELEASE=20201002
+ARG ODOO_SHA=70917e1db8d100c791f31afbfcd782dd026bd4c9
+#!!! we can not calculate the sha1sum since we do not really know the release ..
+# RUN curl -o odoo.deb -sSL http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/odoo_${ODOO_VERSION}.${ODOO_RELEASE}_all.deb \\
+#     && echo "${ODOO_SHA} odoo.deb" | sha1sum -c - \\
+RUN curl -o odoo.deb -sSL http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/odoo_${ODOO_VERSION}.latest_all.deb  \\
+    && apt-get update \\
+    && apt-get -y install --no-install-recommends ./odoo.deb \\
+    && rm -rf /var/lib/apt/lists/* odoo.deb
+
+# Copy entrypoint script and Odoo configuration file
+COPY ./entrypoint.sh /
+COPY ./odoo.conf /etc/odoo/
+
+# Set permissions and Mount /var/lib/odoo to allow restoring filestore and /mnt/extra-addons for users addons
+RUN chown odoo /etc/odoo/odoo.conf \\
+    && mkdir -p /mnt/extra-addons \\
+    && chown -R odoo /mnt/extra-addons
+VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
+
+# Expose Odoo services
+EXPOSE 8069 8071 8072
+
+# Set the default config file
+ENV ODOO_RC /etc/odoo/odoo.conf
+
+COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
+
+# Set default user when running the container
+USER odoo
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["odoo"]
+
+"""
+
+docker_base_file_templateX = """
 FROM %(erp_image_version)s
 MAINTAINER robert@redo2oo.ch
 
@@ -213,7 +387,7 @@ ENV OPENERP_SERVER /etc/odoo/openerp-server.conf
 src_requirements = """# Requirements for the project itself and for Odoo.
 # When we install Odoo with -e, odoo.py is available in the PATH and
 # 'openerp' in the PYTHONPATH
-# 
+#
 # They are installed only after all the project's files have been copied
 # into the image (with ONBUILD)
 -e .

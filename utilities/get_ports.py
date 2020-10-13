@@ -22,6 +22,8 @@ server_map = {
     "88.198.51.174": "lisa",
     "159.69.39.125": "ursula",
     "159.69.211.196": "elsbeth",
+    "116.203.96.119": "breitschträff13",
+    "159.69.45.101" : "singhcomm",
 }
 result = {}
 for k, v in list(SITES_G.items()):
