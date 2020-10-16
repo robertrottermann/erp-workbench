@@ -293,6 +293,9 @@ class DockerHandler(InitHandler, DBUpdater):
             from templates.docker_templates import docker_common as DC
             docker_common = DC % info_dic
             info_dic['docker_common'] = docker_common  # values for the docker config
+            
+            # create also a docker compose file ..
+            self.create_docker_composer_file(name)
 
             # if we are running as user root, we make sure that the
             # folders that are accessed from within odoo belong to the respective
@@ -398,13 +401,10 @@ class DockerHandler(InitHandler, DBUpdater):
                     pass # did exist allready ??
             if self.opts.verbose:
                 print(docker_template)
-        #else:
-            #if self.opts.verbose:
-                #print('container %s allready running' % name)
 
-    def create_docker_composer_file(self):
+    def create_docker_composer_file(self, container_name):
         from templates.docker_compose import composer_template
-        template = composer_template % self.create_docker_composer_dict()
+        template = composer_template % self.create_docker_composer_dict(container_name)
         docker_target_path = '%s/%s/docker' % (self.erp_server_data_path, self.site_name)
         with open('%s/docker-compose.yml' % docker_target_path, 'w') as f:
             status = f.write(template)

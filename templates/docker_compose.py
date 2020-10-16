@@ -1,4 +1,4 @@
-composer_template = """
+composer_template= """
 version: '3'
 services:
   odoo:
@@ -22,9 +22,8 @@ services:
         - DB_NAME=%(site_name)s
         - PYTHONIOENCODING=utf-8
         # from the camptocamp template
-        - DB_HOST = %(db_host)s
-        - DB_NAME = %(db_name)s
-        - DB_USER = %(db_user)s
+        - DB_HOST= %(db_host)s
+        - DB_USER= %(db_user)s
         - DB_PASSWORD=%(db_password)s
         - DB_SSLMODE=%(db_sslmode)s
         - DBFILTER=%(dbfilter)s
@@ -52,8 +51,8 @@ services:
   %(docker_db_container_name)s:
         image: postgres:10
         environment:
-            - POSTGRES_PASSWORD = %(db_password)s
-            - POSTGRES_USER = %(db_user)s
-            - POSTGRES_DB = postgres
+            - POSTGRES_PASSWORD= %(db_password)s
+            - POSTGRES_USER= %(db_user)s
+            - POSTGRES_DB= postgres
 
 """
