@@ -295,7 +295,9 @@ class DockerHandler(InitHandler, DBUpdater):
             info_dic['docker_common'] = docker_common  # values for the docker config
             
             # create also a docker compose file ..
-            self.create_docker_composer_file(name)
+            if self.opts.create_compose_file:
+                self.create_docker_composer_file(name)
+                print('created docker compose file for %s' % name)                
 
             # if we are running as user root, we make sure that the
             # folders that are accessed from within odoo belong to the respective
@@ -358,8 +360,10 @@ class DockerHandler(InitHandler, DBUpdater):
                     docker_template = flectra_docker_template
                 # robert june 19, do not recreate if container allready exists
                 if not self.docker_registry.get(container_name):
-                    self._create_container(docker_template, info_dic)
-                    print('created container %s' % name)
+                    # if we only want to create a compose file we do not create the "physical" container
+                    if not self.opts.create_compose_file:
+                        self._create_container(docker_template, info_dic)
+                        print('created container %s' % name)
                 elif self.opts.verbose:
                     #print(self.docker_registry.get(container_name))
                     print(bcolors.WARNING)
@@ -406,6 +410,9 @@ class DockerHandler(InitHandler, DBUpdater):
         from templates.docker_compose import composer_template
         template = composer_template % self.create_docker_composer_dict(container_name)
         docker_target_path = '%s/%s/docker' % (self.erp_server_data_path, self.site_name)
+        # make sure the target path exists
+        if not os.path.exists(docker_target_path):
+            os.makedirs(docker_target_path, exist_ok=True)
         with open('%s/docker-compose.yml' % docker_target_path, 'w') as f:
             status = f.write(template)
         return status

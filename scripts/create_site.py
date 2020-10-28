@@ -377,6 +377,7 @@ def main(opts, parsername, need_names_dic, return_handler=False):
         # docker_create_container
         # -----------------------
         # it creates and starts a docker container
+        # or a docker compose file
         # the created container collects info from sites.py for $SITENAME
         # it uses the data found with the key "docker"
         # it collects these data:
@@ -386,7 +387,7 @@ def main(opts, parsername, need_names_dic, return_handler=False):
         #   the container
         # - odoo_port: port on which to the running odoo server within the
         #   container can be reached. must be unique for each remote server
-        if opts.docker_create_container:
+        if opts.docker_create_container or opts.create_compose_file:
             # "docker -dc", "--create_container",
             if opts.docker_use_bitnami:
                 handler.create_binami_container()

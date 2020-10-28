@@ -640,7 +640,7 @@ zope.event==4.4
 zope.interface==5.1.0
 """
 docker_base_requirements_13 = """
-ansible==2.9.13
+ansible==2.10.1
 appdirs==1.4.4
 arrow==0.14.7
 attrs==19.3.0

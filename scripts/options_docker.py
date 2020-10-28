@@ -8,7 +8,7 @@ from scripts.parser_handler import ParserHandler
 
 def add_options_docker(parser, result_dic):
     """add options to the create parser
-    
+
     Arguments:
         parser {argparse instance} -- instance to which arguments should be added
     """
@@ -80,6 +80,16 @@ def add_options_docker(parser, result_dic):
         name_valid=True,
     )
     parser_docker.add_argument(
+        "-dcc",
+        "--create_compose_file",
+        action="store_true",
+        dest="create_compose_file",
+        default=False,
+        help="create a docker compose yaml file. Name must be provided",
+        need_name=True,
+        name_valid=True,
+    )
+    parser_docker.add_argument(
         "-dr",
         "--recreate-container",
         action="store_true",
@@ -96,9 +106,9 @@ def add_options_docker(parser, result_dic):
         camptocamp/odoo-project:robertrottermann/odoo-test
         this will produce something like:
             camptocamp/odoo-project:9.0-latest-batteries-onbuild -> robertrottermann/odoo-test:9.0-latest-batteries-onbuild
-            camptocamp/odoo-project:9.0-latest-batteries         -> robertrottermann/odoo-test:9.0-latest-batteries        
-            camptocamp/odoo-project:9.0-latest-onbuild           -> robertrottermann/odoo-test:9.0-latest-onbuild          
-            camptocamp/odoo-project:9.0-latest                   -> robertrottermann/odoo-test:9.0-latest                  
+            camptocamp/odoo-project:9.0-latest-batteries         -> robertrottermann/odoo-test:9.0-latest-batteries
+            camptocamp/odoo-project:9.0-latest-onbuild           -> robertrottermann/odoo-test:9.0-latest-onbuild
+            camptocamp/odoo-project:9.0-latest                   -> robertrottermann/odoo-test:9.0-latest
         """,
     )
     parser_docker.add_argument(
