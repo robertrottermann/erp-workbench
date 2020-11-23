@@ -19,39 +19,71 @@ class OdooHandler(object):
     _contact_id_map = {}
     _contact_category_map = {}
     _processed = {}
+    _odoo = None
+    _odoo_2 = None
+    
     def __init__(self, opts):
         self.opts = opts
+        
+        # open and log in to source odoo
         print("host: %s, port: %s" % (opts.host, opts.port))
-        odoo = ODOO(host=opts.host, port=opts.port)
+        try:
+            odoo = ODOO(host=opts.host, port=opts.port)
+        except Exception as e:
+            print("odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port))
+            return
         print(
             "dbname: %s, user: %s, password : %s"
             % (opts.dbname, opts.user, opts.password)
         )
-        odoo.login(db=opts.dbname, login=opts.user, password=opts.password)
-        self.odoo = odoo
+        try:
+            odoo.login(db=opts.dbname, login=opts.user, password=opts.password)
+        except Exception as e:
+            print(
+                "could not login to source: dbname: %s, user: %s, password : %s"
+                % (opts.dbname, opts.user, opts.password)
+            )
+            return
+        self._odoo = odoo
 
+        # open and log in to target odoo
         print("host: %s, port: %s" % (opts.host, opts.port_2))
-        odoo_2 = ODOO(host=opts.host, port=opts.port_2)
+        try:            
+            odoo_2 = ODOO(host=opts.host, port=opts.port_2)
+        except Exception as e:
+            print("target odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port_2))
+            return
+            
         print(
             "dbname: %s, user: %s, password : %s"
             % (opts.dbname_2, opts.user, opts.password)
         )
-        odoo_2.login(db=opts.dbname_2, login=opts.user, password=opts.password)
-        self.odoo_2 = odoo_2
+        try:
+            odoo_2.login(db=opts.dbname_2, login=opts.user, password=opts.password)
+        except Exception as e:
+            print(
+                "could not login to target odoo: dbname: %s, user: %s, password : %s"
+                % (opts.dbname_2, opts.user, opts.password)
+            )
+            return
+            
+        self._odoo_2 = odoo_2
         #self.ail = odoo.env["account.invoice.line"]
         #self.pt = odoo.env["product.template"]
         #self.mprods = self.pt.browse(self.pt.search([("id", "in", (5, 6, 7))]))
         #self.ai = odoo.env["account.invoice"]
 
     def create_and_map_contact_category(self):
-        contact_category_ids = self.odoo.env['res.partner.category'].search([])
-        contact_categories = self.odoo.env['res.partner.category'].browse(contact_category_ids)
+        if not self._odoo:
+            return
+        contact_category_ids = self._odoo.env['res.partner.category'].search([])
+        contact_categories = self._odoo.env['res.partner.category'].browse(contact_category_ids)
         for contact_category in contact_categories:
-            exist_new_ids = self.odoo_2.env['res.partner.category'].search([('name', '=', contact_category.name)])
+            exist_new_ids = self._odoo_2.env['res.partner.category'].search([('name', '=', contact_category.name)])
             if exist_new_ids:
                 self._contact_category_map[contact_category.id] = exist_new_ids[0]
             else:
-                new_id = self.odoo_2.env['res.partner.category'].create({'name' : contact_category.name})
+                new_id = self._odoo_2.env['res.partner.category'].create({'name' : contact_category.name})
                 self._contact_category_map[contact_category.id] = new_id
 
     def _create_contact(self, contact):
@@ -100,7 +132,7 @@ class OdooHandler(object):
             'image',
             #'image_small',
         ]
-        Contact_O = self.odoo_2.env['res.partner']
+        Contact_O = self._odoo_2.env['res.partner']
         if contact.email:
             found = Contact_O.search([('email', '=', contact.email), ('is_company', '=', contact.is_company)])
             if found:
@@ -155,10 +187,12 @@ class OdooHandler(object):
     def create_contacts_on_target(self):
         """copy contacts from v9 source to v13 target
         """
-        contact_ids = self.odoo.env['res.partner'].search([])
+        if not self._odoo:
+            return
+        contact_ids = self._odoo.env['res.partner'].search([])
 
         for contact_id in contact_ids:
-            partner = self.odoo.env['res.partner'].browse([contact_id])
+            partner = self._odoo.env['res.partner'].browse([contact_id])
             parent = partner.parent_id
             if parent:
                 print(parent.name, partner.name)
@@ -197,8 +231,10 @@ class OdooHandler(object):
         )
         If we find such ids, we find the new category id, and link mapped partner ids to it
         """
-        old_Cat = self.odoo.env['res.partner.category']
-        new_Cat = self.odoo_2.env['res.partner.category']
+        if not self._odoo:
+            return
+        old_Cat = self._odoo.env['res.partner.category']
+        new_Cat = self._odoo_2.env['res.partner.category']
         for old_cat_id, new_cat_id in self._contact_category_map.items():
             old_cat = old_Cat.browse([old_cat_id])
             partner_ids = old_cat.partner_ids
@@ -206,22 +242,23 @@ class OdooHandler(object):
                 mapped = []
                 for partner_id in partner_ids:
                     mapped.append(self._contact_id_map[partner_id.id]) # die it it is not there
-                self._link_tag(self.odoo_2, mapped, new_cat_id)
+                self._link_tag(self._odoo_2, mapped, new_cat_id)
 
 
 
 def main(opts):
     handler = OdooHandler(opts)
-    handler.create_and_map_contact_category()
-    # make sure we have all parents before we create a contact, so we can link them
-    # would we better do that recursively when we create a contact??
-    #handler.create_contacts_on_target(get_parents=True)
-    handler.create_contacts_on_target()
-    handler.link_contact_to_contacts_types()
+    if handler and handler._odoo and handler._odoo_2:
+        handler.create_and_map_contact_category()
+        # make sure we have all parents before we create a contact, so we can link them
+        # would we better do that recursively when we create a contact??
+        #handler.create_contacts_on_target(get_parents=True)
+        handler.create_contacts_on_target()
+        handler.link_contact_to_contacts_types()
 
 
 if __name__ == "__main__":
-    usage = "create_memberhip_invoices.py -h for help on usage"
+    usage = "move_data_to_new_odoo.py -h for help on usage"
     parser = ArgumentParser(usage=usage)
 
     parser.add_argument(

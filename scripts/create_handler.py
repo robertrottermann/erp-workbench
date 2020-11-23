@@ -215,7 +215,12 @@ class RPC_Mixin(object):
                     print(bcolors.ENDC)
                     return
                 # rpchost und rpcort sind nicht von docker!!!!!
-                odoo = odoorpc.ODOO(rpchost, port=rpcport, timeout=1200)
+                try:
+                    odoo = odoorpc.ODOO(rpchost, port=rpcport, timeout=1200)
+                except Exception as e:
+                    print(e)
+                    print("could not access odoo using: host:%s, port:%s, timeout: %s" % (rpchost, rpcport, 1200))
+                    return
                 if not no_db:  # used when creating db
                     if verbose:
                         print("about to login:")
@@ -1309,6 +1314,9 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
         if (is_docker and opts.dinstall_erp_modules) or (
             is_create and opts.install_erp_modules
         ):
+            data = self.get_erp_modules()
+            if not data:
+                return
             erp_apps_info, erp_modules_info = self.get_erp_modules()
 
             erp_apps = list(erp_apps_info.keys())

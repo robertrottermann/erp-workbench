@@ -455,9 +455,17 @@ class PropertiesMixin(object):
         self._cp
         # the ip address to access the db container
         if self.docker_db_container:
-            return self.docker_db_container.attrs["NetworkSettings"]["Networks"][
-                "bridge"
-            ]["IPAddress"]
+            # we loock for a network. Hopefully there is only on network adapter
+            # if not ????
+            try:
+                for name, nw_data in self.docker_db_container.attrs["NetworkSettings"]["Networks"].items():
+                    return nw_data["IPAddress"]
+                #return self.docker_db_container.attrs["NetworkSettings"]["Networks"][
+                    #"bridge"
+                #]["IPAddress"]
+            except Exception as e:
+                #print(e)
+                pass
         return ""
 
     # docker_rpc_host

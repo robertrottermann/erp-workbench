@@ -5,9 +5,9 @@ import os
 import base64
 
 url = "http://localhost:8069"
-db = "redo2oo13"
-username = 'admin'
-password = 'admin'
+db = "singh_commerce_14"
+username = 'sudego'
+password = 'sudego'
 
 
 def read_image(path=''):
