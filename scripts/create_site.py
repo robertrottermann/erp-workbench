@@ -46,7 +46,10 @@ from config.handlers import SiteCreator
 from config.handlers import DockerHandler
 
 # from config.handlers import KuberHandlerHelm
-from kuber_handler.kuber_handler import KuberHandlerHelm
+try:
+    from kuber_handler.kuber_handler import KuberHandlerHelm
+except:
+    pass
 from config.handlers import SupportHandler
 from config.handlers import RemoteHandler
 from config.handlers import MigrationHandler

@@ -43,7 +43,14 @@ class OHandler(object):
     
     def __init__(self, opts, be_loud=False):
         self.opts = opts
-        self.cursor, self.conn = self.get_cursor()
+        self.rpc_host = opts.host
+        self.rpc_port = opts.port
+        self.rpc_user = opts.user
+        self.rpc_user_pw = opts.password
+
+        c_info = self.get_cursor()
+        if c_info:
+            self.cursor, self.conn = c_info
         
     def execute(self, sql):
         try:
@@ -240,7 +247,7 @@ if __name__ == '__main__':
         default="fsch_test"
     )
     parser.add_argument(
-        "-h",
+        "-H",
         "--host",
         action="store",
         dest="host",
@@ -267,7 +274,7 @@ if __name__ == '__main__':
         "-pw",
         "--password",
         action="store",
-        dest="pw",
+        dest="password",
         help="What odoo pw to use",
         default="admin"
     )
