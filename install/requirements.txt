@@ -11,7 +11,7 @@ Babel==2.8.0
 backcall==0.2.0
 beautifulsoup4==4.9.0
 black==19.10b0
-bleach==3.1.5
+bleach==3.3.0
 boto3==1.12.11
 botocore==1.15.11
 cached-property==1.5.1
