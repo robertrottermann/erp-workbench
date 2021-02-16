@@ -88,7 +88,11 @@ class DockerHandler(InitHandler, DBUpdater):
         cli = self.docker_client
         containers = cli.containers.list(filters={'name': name}, all=True)
         if containers:
-            return containers[0]
+            # seems that filter does a kind of like '%nme%' search
+            for c in containers:
+                if c.name == name:
+                    return c
+            #return containers[0]
 
 
     def update_docker_info(self, name='', required=False, start=True):

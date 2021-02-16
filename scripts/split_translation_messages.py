@@ -132,6 +132,7 @@ class OHandler(object):
                             "dbname:%s, rpcuser:%s, rpcpw: %s"
                             % (db_name, rpcuser, rpcpw)
                         )
+                    odoo.login(db_name,rpcuser, rpcpw)
                 print("*" * 80)
             except Exception as e:
                 if verbose:
@@ -180,8 +181,9 @@ class OHandler(object):
         module_obj = self.get_module_obj()
         if not m_list:
             m_list = (self.opts.modules and self.opts.modules.split(',')) or []
-        modules = module_obj.browse(m_list)
+        modules = module_obj.browse(module_obj.search([('name','in',m_list)]))
         print(modules)
+        modules[0].button_immediate_upgrade()
 
 
 def set_uninstalled_modules(cr):
