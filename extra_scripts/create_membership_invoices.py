@@ -87,6 +87,7 @@ class OdooHandler(object):
     def list_invoices(self):
         invoices = {}
         old_invoices = []
+        counter = 0
         for il in self.ail.browse(self.ail.search([])):
             # products with id's in (5,6,7) are the membership types I am interested in
             # they have been looked up manually
@@ -95,6 +96,9 @@ class OdooHandler(object):
                 ilist.update([il.partner_id])
                 invoices[il.name] = ilist
                 old_invoices.append(il)
+            counter += 1
+            #if counter > 10:                
+                #break
         counter = 0
         for k, partners in invoices.items():
             for p in partners:
@@ -120,7 +124,12 @@ class OdooHandler(object):
             invoice_line["product_id"] = il.product_id.id
             invoice_line["price_unit"] = il.price_unit
             v["invoice_line_ids"] = [[_x, _y, invoice_line]]
-            print("--->", self.ai.create(v))
+            try:
+                new_id = self.ai.create(v)
+                print("--->", new_id)
+            except:
+                pass
+                
 
 
 def main(opts):
