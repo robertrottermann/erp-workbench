@@ -26,6 +26,10 @@ V14 = """
 [versions]
 reportlab = 3.4
 """
+V15 = """
+[versions]
+reportlab = 3.4
+"""
 VERSIONS = {
     "9.0": V9_0,
     "10.0": V10_0,
@@ -36,5 +40,6 @@ VERSIONS = {
     "12": V12,
     "13": V13,
     "14": V14,
+    "15": V15,
 }
 VERSIONS_FLECTRA = {"1.1": V11_0, "1.1.0": V11_0, "1.2.0": V11_0}

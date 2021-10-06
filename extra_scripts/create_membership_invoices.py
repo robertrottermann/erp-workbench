@@ -155,7 +155,7 @@ if __name__ == "__main__":
         "--port",
         action="store",
         dest="port",
-        default=8069,
+        default=8100, #8069,
         help="define port default 8069",
     )
 
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         "--password",
         action="store",
         dest="password",
-        default="admin",
+        default="BreitschTraeffOnFrieda", #admin",
         help="define password default 'admin'",
     )
 
