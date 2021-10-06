@@ -1,5 +1,5 @@
 alabaster==0.7.12
-ansible==2.10.1
+ansible==2.10.7
 appdirs==1.4.3
 argcomplete==1.11.1
 argh==0.26.2
@@ -11,7 +11,7 @@ Babel==2.8.0
 backcall==0.2.0
 beautifulsoup4==4.9.0
 black==19.10b0
-bleach==3.1.5
+bleach==3.3.0
 boto3==1.12.11
 botocore==1.15.11
 cached-property==1.5.1
@@ -22,7 +22,7 @@ chardet==3.0.4
 Click==7.0
 colored==1.4.2
 configparser==4.0.2
-cryptography==2.9.2
+cryptography==3.3.2
 date-range==0.0.1
 decorator==4.4.2
 defusedxml==0.6.0
@@ -53,7 +53,7 @@ ipywidgets==7.5.1
 isodate==0.6.0
 isort==4.3.4
 jedi==0.17.2
-Jinja2==2.11.1
+Jinja2==2.11.3
 jmespath==0.9.5
 jsonschema==3.2.0
 jupyter==1.0.0
@@ -64,7 +64,7 @@ kubernetes==10.0.1
 lazy-object-proxy==1.4.3
 libsass==0.19.4
 livereload==2.6.1
-lxml==4.5.0
+lxml==4.6.3
 Mako==1.1.2
 MarkupSafe==1.1.1
 mccabe==0.6.1
@@ -73,7 +73,7 @@ mock==4.0.2
 nbconvert==5.6.1
 nbformat==5.0.7
 nose==1.3.7
-notebook==6.1.3
+notebook==6.4.1
 oauthlib==3.1.0
 #odoo==13.0
 odoo-sphinx-autodoc==0.3.2
@@ -87,7 +87,7 @@ pathspec==0.8.0
 pathtools==0.1.2
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==7.1.1
+Pillow==8.2.0
 #Pint==0.11
 #pkg-resources==0.0.0
 pockets==0.9.1
@@ -107,7 +107,7 @@ pycparser==2.20
 pycrypto==2.6.1
 pydot==1.4.1
 pyflakes==2.1.1
-Pygments==2.2.0
+Pygments==2.7.4
 pylint==2.3.0
 pylint-odoo==3.1.0
 pylint-plugin-utils==0.5
@@ -119,7 +119,7 @@ python-dateutil==2.8.1
 python-stdnum==1.13
 pytz==2019.3
 pyusb==1.0.2
-PyYAML==5.3
+PyYAML==5.4
 pyzmq==19.0.2
 qrcode==6.1
 qtconsole==4.7.7
@@ -132,7 +132,7 @@ requests-oauthlib==1.3.0
 requests-toolbelt==0.9.1
 restructuredtext-lint==1.1.3
 rfc3986==1.3.2
-rsa==4.0
+rsa==4.7
 ruamel.std.argparse==0.8.1
 s3transfer==0.3.3
 Send2Trash==1.5.0
@@ -160,7 +160,7 @@ tornado==6.0.3
 traitlets==5.0.3
 typed-ast==1.4.1
 typing==3.7.4.1
-urllib3==1.25.8
+urllib3==1.26.5
 vatnumber==1.2
 virtualenv==20.0.7
 vobject==0.9.6.1
