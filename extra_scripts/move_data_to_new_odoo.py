@@ -49,21 +49,21 @@ class OdooHandler(object):
         # open and log in to target odoo
         print("host: %s, port: %s" % (opts.host, opts.port_2))
         try:            
-            odoo_2 = ODOO(host=opts.host, port=opts.port_2)
+            odoo_2 = ODOO(host=opts.host_2, port=opts.port_2)
         except Exception as e:
             print("target odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port_2))
             return
             
         print(
             "dbname: %s, user: %s, password : %s"
-            % (opts.dbname_2, opts.user, opts.password)
+            % (opts.dbname_2, opts.user_2, opts.password_2)
         )
         try:
-            odoo_2.login(db=opts.dbname_2, login=opts.user, password=opts.password)
+            odoo_2.login(db=opts.dbname_2, login=opts.user_2, password=opts.password_2)
         except Exception as e:
             print(
                 "could not login to target odoo: dbname: %s, user: %s, password : %s"
-                % (opts.dbname_2, opts.user, opts.password)
+                % (opts.dbname_2, opts.user_2, opts.password_2)
             )
             return
             
@@ -126,13 +126,16 @@ class OdooHandler(object):
             'tz',
             'tz_offset',
             'website',
-            'website_url',
+            #'website_url',
             'zip',
             #'image_medium',
             'image',
             #'image_small',
         ]
         Contact_O = self._odoo_2.env['res.partner']
+        # we do not deal with partner ids < 4
+        if contact.id < 4:
+            return
         if contact.email:
             found = Contact_O.search([('email', '=', contact.email), ('is_company', '=', contact.is_company)])
             if found:
@@ -145,7 +148,7 @@ class OdooHandler(object):
                 ('city', '=', contact.city),
                 ('zip', '=', contact.zip),
             ]
-            found = Contact_O.search([('email', '=', domain)])
+            found = Contact_O.search(domain)
             if found:
                 ret_val = found[0]
         if not found:
@@ -179,6 +182,9 @@ class OdooHandler(object):
         Args:
             contact (v9 contact object): v9 contact object
         """
+        # we do not deal with partner ids < 4
+        if contact.id < 4:
+            return
         if not contact:
             return
         new_id = self._create_contact(contact)
@@ -243,18 +249,31 @@ class OdooHandler(object):
                 for partner_id in partner_ids:
                     mapped.append(self._contact_id_map[partner_id.id]) # die it it is not there
                 self._link_tag(self._odoo_2, mapped, new_cat_id)
+                
+    def list_bank_accounts(self):
+        banks_o = self._odoo_2.env['res.bank']
+        b_ids = banks_o.search([])
+        banks = banks_o.browse(b_ids)
+        bankaccounts = self._odoo_2.env['res.partner.bank']
+        bacc_ids = bankaccounts.search([])
+        b_accs = bankaccounts.browse(bacc_ids)
+        a=1
+        
 
 
 
 def main(opts):
     handler = OdooHandler(opts)
     if handler and handler._odoo and handler._odoo_2:
-        handler.create_and_map_contact_category()
-        # make sure we have all parents before we create a contact, so we can link them
-        # would we better do that recursively when we create a contact??
-        #handler.create_contacts_on_target(get_parents=True)
-        handler.create_contacts_on_target()
-        handler.link_contact_to_contacts_types()
+        if opts.listbanks:
+            handler.list_bank_accounts()
+        else:
+            handler.create_and_map_contact_category()
+            # make sure we have all parents before we create a contact, so we can link them
+            # would we better do that recursively when we create a contact??
+            #handler.create_contacts_on_target(get_parents=True)
+            handler.create_contacts_on_target()
+            handler.link_contact_to_contacts_types()
 
 
 if __name__ == "__main__":
@@ -271,6 +290,15 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
+        "-H2",
+        "--host2",
+        action="store",
+        dest="host_2",
+        default="159.69.211.196",
+        help="define host default red14",
+    )
+
+    parser.add_argument(
         "-p",
         "--port",
         action="store",
@@ -284,8 +312,8 @@ if __name__ == "__main__":
         "--port_2",
         action="store",
         dest="port_2",
-        default=8070,
-        help="define port default 8070",
+        default=9060,
+        help="define port default 9060",
     )
 
     parser.add_argument(
@@ -293,8 +321,8 @@ if __name__ == "__main__":
         "--dbname",
         action="store",
         dest="dbname",
-        default="redo2oo",
-        help="define dbname default 'redo2oo'",
+        default="redo2oo13",
+        help="define dbname default 'redo2oo13'",
     )
 
     parser.add_argument(
@@ -302,8 +330,8 @@ if __name__ == "__main__":
         "--dbname2",
         action="store",
         dest="dbname_2",
-        default="redo2oo13",
-        help="define dbname default 'redo2oo13'",
+        default="redo2oo",
+        help="define dbname default 'redo2oo'",
     )
 
     parser.add_argument(
@@ -321,6 +349,31 @@ if __name__ == "__main__":
         dest="password",
         default="admin",
         help="define password default 'admin'",
+    )
+    parser.add_argument(
+        "-u2",
+        "--user2",
+        action="store",
+        dest="user_2",
+        default="admin",
+        help="define user default 'admin'",
+    )
+    parser.add_argument(
+        "-pw2",
+        "--password2",
+        action="store",
+        dest="password_2",
+        default="admin",
+        help="define password default 'admin'",
+    )
+
+    parser.add_argument(
+        "-lb",
+        "--list-banks",
+        action="store_true",
+        dest="listbanks",
+        default="False",
+        help="list bank accounts",
     )
 
     opts = parser.parse_args()
