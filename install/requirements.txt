@@ -1,5 +1,5 @@
 alabaster==0.7.12
-ansible==3.4
+ansible>=4.2.0
 appdirs==1.4.3
 argcomplete==1.11.1
 argh==0.26.2
@@ -104,7 +104,7 @@ pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycodestyle==2.5.0
 pycparser==2.20
-pycrypto==2.6.1
+pycryptodome-3.11.0
 pydot==1.4.1
 pyflakes==2.1.1
 Pygments==2.7.4
