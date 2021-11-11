@@ -1,5 +1,5 @@
 alabaster==0.7.12
-ansible==2.10.7
+ansible==3.4
 appdirs==1.4.3
 argcomplete==1.11.1
 argh==0.26.2
@@ -7,7 +7,7 @@ argon2-cffi==20.1.0
 astroid==2.2.0
 attrs==19.3.0
 autopep8==1.5
-Babel==2.8.0
+Babel==2.9.1
 backcall==0.2.0
 beautifulsoup4==4.9.0
 black==19.10b0
@@ -87,7 +87,7 @@ pathspec==0.8.0
 pathtools==0.1.2
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==8.2.0
+Pillow==8.4.0
 #Pint==0.11
 #pkg-resources==0.0.0
 pockets==0.9.1
