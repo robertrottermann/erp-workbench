@@ -13,6 +13,19 @@ Problems:
   create companies
   create users
   contact-types hierarchy ..
+  
+  
+preparation:
+switch to odoo14:
+    redo2oo14w
+    bin/odoo
+
+switch to odoo15
+    redodoo15w
+    bin/odoo -p 8070
+    
+python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redodoo15 {-lb}
+
 """
 
 class OdooHandler(object):
@@ -251,13 +264,58 @@ class OdooHandler(object):
                 self._link_tag(self._odoo_2, mapped, new_cat_id)
                 
     def list_bank_accounts(self):
-        banks_o = self._odoo_2.env['res.bank']
-        b_ids = banks_o.search([])
-        banks = banks_o.browse(b_ids)
-        bankaccounts = self._odoo_2.env['res.partner.bank']
-        bacc_ids = bankaccounts.search([])
-        b_accs = bankaccounts.browse(bacc_ids)
-        a=1
+        #bank mapper dic maps source bank_ids to target bank_ids
+        bank_mapper_dic = {}
+        #bankaccounts mapper dic maps source bankaccount_ids to target bankaccount_ids
+        bankaccount_mapper_dic = {}
+        
+        #banks on source odoo
+        banks_os = self._odoo.env['res.bank']
+        b_ids_s = banks_os.search([])
+        banks_s = banks_os.browse(b_ids_s)
+        bankaccounts_os = self._odoo.env['res.partner.bank']
+        bankacc_ids_s = bankaccounts_os.search([])
+        bank_accs_s = bankaccounts_os.browse(bankacc_ids_s)
+
+        #banks on target odoo
+        banks_ot = self._odoo_2.env['res.bank']
+        b_ids_t = banks_ot.search([])
+        banks_t = banks_ot.browse(b_ids_t)
+        bankaccounts_ot = self._odoo_2.env['res.partner.bank']
+        bankacc_ids_t = bankaccounts_ot.search([])
+        bank_accs_t = bankaccounts_ot.browse(bankacc_ids_t)
+        
+        # loop trough the source banks, make sure they are in the target, and map id
+        # we assume that bic and zip is a unique key
+        bank_values = {
+            'name': {},
+            'street': {},
+            'street2': {},
+            'zip': {},
+            'city': {},
+            'state': {},
+            'country': {},
+            'email': {},
+            'phone': {},
+            'active': {},
+            'bic': {},
+            'display_name': {},
+            'create_uid': {},
+            'create_date': {},
+            'write_uid': {},
+            'write_date': {},
+        }
+        
+        for bank in banks_s:
+            b_id = bank.id
+            b_name = bank.name
+            b_bic = bank.bic
+            b_zip = bank.zip
+            # do we have the target bank?
+            if not b_zip:
+                found_t_b = banks_ot.search([('name', '=', b_name), ('bic', '=', b_bic)])
+            else:
+                found_t_b = banks_ot.search([('zip', '=', b_zip), ('bic', '=', b_bic)])
         
 
 
