@@ -25,6 +25,9 @@ switch to odoo15
     bin/odoo -p 8070
     
 python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redodoo15 {-lb}
+-H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8069 -d2 redo2oo14 -pw2 admin -lb 
+
+-H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8070 -d2 redodoo15 -pw2 admin -lb 
 
 """
 
@@ -60,7 +63,7 @@ class OdooHandler(object):
         self._odoo = odoo
 
         # open and log in to target odoo
-        print("host: %s, port: %s" % (opts.host, opts.port_2))
+        print("host: %s, port: %s" % (opts.host_2, opts.port_2))
         try:            
             odoo_2 = ODOO(host=opts.host_2, port=opts.port_2)
         except Exception as e:
@@ -287,25 +290,50 @@ class OdooHandler(object):
         
         # loop trough the source banks, make sure they are in the target, and map id
         # we assume that bic and zip is a unique key
-        bank_values = {
-            'name': {},
-            'street': {},
-            'street2': {},
-            'zip': {},
-            'city': {},
-            'state': {},
-            'country': {},
-            'email': {},
-            'phone': {},
-            'active': {},
-            'bic': {},
-            'display_name': {},
-            'create_uid': {},
-            'create_date': {},
-            'write_uid': {},
-            'write_date': {},
-        }
-        
+        bank_values = [
+            'name',
+            'street',
+            'street2',
+            'zip',
+            'city',
+            'state',
+            'country',
+            'email',
+            'phone',
+            'active',
+            'bic',
+            'display_name',
+            #'create_uid',
+            #'create_date',
+            #'write_uid',
+            #'write_date',
+        ]
+        account_values = [
+            'active',
+            'acc_type',
+            'acc_number',
+            'sanitized_acc_number',
+            'acc_holder_name',
+            #'partner_id',
+            'bank_id',
+            'bank_name',
+            'bank_bic',
+            'sequence',
+            #'currency_id',
+            #'company_id',
+            #'journal_id',
+            'l10n_ch_postal',
+            'l10n_ch_isr_subscription_chf',
+            'l10n_ch_isr_subscription_eur',
+            'l10n_ch_show_subscription',
+            'l10n_ch_qr_iban',
+            #'display_name',
+            #'create_uid',
+            #'create_date',
+            #'write_uid',
+            #'write_date',
+        ]
+        # make sure we have all the banks
         for bank in banks_s:
             b_id = bank.id
             b_name = bank.name
@@ -316,6 +344,43 @@ class OdooHandler(object):
                 found_t_b = banks_ot.search([('name', '=', b_name), ('bic', '=', b_bic)])
             else:
                 found_t_b = banks_ot.search([('zip', '=', b_zip), ('bic', '=', b_bic)])
+            if not found_t_b:
+                # sourc bank does not exist on target
+                vals = {}
+                for k in bank_values:
+                    v = bank[k]
+                    if v:
+                        vals[k] = str(v)
+                new_id = banks_ot.create(vals)
+                bank_mapper_dic[b_id] = (new_id, b_name)
+            else:
+                bank_mapper_dic[b_id] = (found_t_b[0], b_name)
+                
+        # now make sure we have all the accounts
+        for account in bank_accs_s:
+            acc_id = account.id
+            b_id = account.bank_id.id
+            b_name = account.bank_name
+            b_bic = account.bank_bic
+            qr_iban = account.l10n_ch_qr_iban
+            # do we have the target bank?
+            found_t_acc = bankaccounts_ot.search([('l10n_ch_qr_iban', '=', qr_iban)])
+            if not found_t_acc:
+                # sourc bank does not exist on target
+                vals = {}
+                for k in account_values:
+                    v = account[k]
+                    if v:
+                        vals[k] = str(v)
+                # map the acount bank to the correct bank
+                vals['bank_id'] = bank_mapper_dic[b_id][0]
+                vals['partner_id'] = 1
+                new_id = bankaccounts_ot.create(vals)
+                bankaccount_mapper_dic[acc_id] = (new_id, b_name)
+            else:
+                bankaccount_mapper_dic[acc_id] = (found_t_acc[0], b_name)
+                        
+                
         
 
 
