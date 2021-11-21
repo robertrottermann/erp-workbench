@@ -89,6 +89,59 @@ class OdooHandler(object):
         #self.mprods = self.pt.browse(self.pt.search([("id", "in", (5, 6, 7))]))
         #self.ai = odoo.env["account.invoice"]
 
+    def handle_companies(self):
+        if not self._odoo:
+            return
+        COMPANY_FIELDS = [
+            'name',
+            #'parent_id',
+            #'child_ids',
+            #'partner_id',
+            'logo',
+            'logo_web',
+            #'currency_id',
+            #'user_ids',
+            'street',
+            'street2',
+            'zip',
+            'city',
+            #'state_id',
+            #'bank_ids',
+            'email',
+            'phone',
+            'website',
+            'favicon',
+            'primary_color',
+            'secondary_color',
+            'qr_code',
+        ]
+        #companies on source odoo
+        companys_os = self._odoo.env['res.company']
+        company_ids = companys_os.search([])
+        company_s = companys_os.browse(company_ids)
+        
+        #companies on source odoo
+        companys_ot = self._odoo_2.env['res.company']
+        company_idt = companys_ot.search([])
+        company_t = companys_ot.browse(company_idt)
+        # now we copy / create companies
+        for company in company_s:
+            cp_id = company.id
+            cp_values = {}
+            for k in COMPANY_FIELDS:
+                v = company[k]
+                if v:
+                    cp_values[k] = v
+            # does company exist on the target
+            target_company = companys_ot.search([('id', '=', cp_id)])
+            if target_company:
+                res = companys_ot.browse(target_company).write(cp_values)
+            else:
+                res = target_company.create(cp_values)
+                
+                    
+        
+    
     def create_and_map_contact_category(self):
         if not self._odoo:
             return
@@ -268,9 +321,9 @@ class OdooHandler(object):
                 
     def list_bank_accounts(self):
         #bank mapper dic maps source bank_ids to target bank_ids
-        bank_mapper_dic = {}
+        self.bank_mapper_dic = {}
         #bankaccounts mapper dic maps source bankaccount_ids to target bankaccount_ids
-        bankaccount_mapper_dic = {}
+        self.bankaccount_mapper_dic = {}
         
         #banks on source odoo
         banks_os = self._odoo.env['res.bank']
@@ -352,9 +405,9 @@ class OdooHandler(object):
                     if v:
                         vals[k] = str(v)
                 new_id = banks_ot.create(vals)
-                bank_mapper_dic[b_id] = (new_id, b_name)
+                self.bank_mapper_dic[b_id] = (new_id, b_name)
             else:
-                bank_mapper_dic[b_id] = (found_t_b[0], b_name)
+                self.bank_mapper_dic[b_id] = (found_t_b[0], b_name)
                 
         # now make sure we have all the accounts
         for account in bank_accs_s:
@@ -363,8 +416,10 @@ class OdooHandler(object):
             b_name = account.bank_name
             b_bic = account.bank_bic
             qr_iban = account.l10n_ch_qr_iban
+            acc_number = account.acc_number
             # do we have the target bank?
-            found_t_acc = bankaccounts_ot.search([('l10n_ch_qr_iban', '=', qr_iban)])
+            #found_t_acc = bankaccounts_ot.search([('l10n_ch_qr_iban', '=', qr_iban)])
+            found_t_acc = bankaccounts_ot.search([('acc_number', '=', acc_number)])
             if not found_t_acc:
                 # sourc bank does not exist on target
                 vals = {}
@@ -373,12 +428,12 @@ class OdooHandler(object):
                     if v:
                         vals[k] = str(v)
                 # map the acount bank to the correct bank
-                vals['bank_id'] = bank_mapper_dic[b_id][0]
+                vals['bank_id'] = self.bank_mapper_dic[b_id][0]
                 vals['partner_id'] = 1
                 new_id = bankaccounts_ot.create(vals)
-                bankaccount_mapper_dic[acc_id] = (new_id, b_name)
+                self.bankaccount_mapper_dic[acc_id] = (new_id, b_name)
             else:
-                bankaccount_mapper_dic[acc_id] = (found_t_acc[0], b_name)
+                self.bankaccount_mapper_dic[acc_id] = (found_t_acc[0], b_name)
                         
                 
         
@@ -391,6 +446,9 @@ def main(opts):
         if opts.listbanks:
             handler.list_bank_accounts()
         else:
+            handler.handle_companies()
+            # we need the bank-accounts to map them to the customers
+            handler.list_bank_accounts()
             handler.create_and_map_contact_category()
             # make sure we have all parents before we create a contact, so we can link them
             # would we better do that recursively when we create a contact??
@@ -495,7 +553,7 @@ if __name__ == "__main__":
         "--list-banks",
         action="store_true",
         dest="listbanks",
-        default="False",
+        default=False,
         help="list bank accounts",
     )
 
