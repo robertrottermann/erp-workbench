@@ -29,6 +29,23 @@ python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redod
 
 -H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8070 -d2 redodoo15 -pw2 admin -lb 
 
+1. install partner-firstname
+2. install de_CH
+3. install swiss book keeping
+
+sale_management
+account
+crm
+website
+project
+hr
+base_accounting_kit
+mail
+contacts
+calendar
+website_blog
+
+
 """
 
 class OdooHandler(object):
@@ -140,6 +157,8 @@ class OdooHandler(object):
                 res = target_company.create(cp_values)
                 
                     
+    def install_odoo_modules(self):
+        module_obj = self.get_module_obj()
         
     
     def create_and_map_contact_category(self):
