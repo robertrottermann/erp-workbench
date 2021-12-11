@@ -192,7 +192,7 @@ class SitesHandler(SiteDescHandlerMixin):
                 # switch to the siteslist and try to import from there
                 sys.path.insert(0, sites_list_path)
                 from sites_list import SITELIST_VERSION
-            except ImportError:
+            except ImportError as e:
                 print(bcolors.FAIL)
                 print("*" * 80)
                 print(

@@ -44,8 +44,6 @@ mail
 contacts
 calendar
 website_blog
-
-
 """
 
 class OdooHandler(object):
@@ -54,6 +52,15 @@ class OdooHandler(object):
     _processed = {}
     _odoo = None
     _odoo_2 = None
+
+    def _get_tunnel(self, url, username, pw, url_r, port_r=8069):
+        server = SSHTunnelForwarder(
+            'testmachines',
+            ssh_username="root",
+        #    ssh_password="secret",
+            remote_bind_address=('172.18.0.2', 8069)
+        )
+        return server
     
     def __init__(self, opts):
         self.opts = opts
@@ -458,8 +465,18 @@ class OdooHandler(object):
         
 
 
+hlp_msg = """
+    could not import sshtunnel
+    please pip install sshtunnel
+"""
 
 def main(opts):
+    if opts.sshtunnel:
+        try:
+            from sshtunnel import SSHTunnelForwarder
+        except ImportError:
+            print(hlp_msg)
+
     handler = OdooHandler(opts)
     if handler and handler._odoo and handler._odoo_2:
         if opts.listbanks:
@@ -474,7 +491,6 @@ def main(opts):
             #handler.create_contacts_on_target(get_parents=True)
             handler.create_contacts_on_target()
             handler.link_contact_to_contacts_types()
-
 
 if __name__ == "__main__":
     usage = "move_data_to_new_odoo.py -h for help on usage"
@@ -566,7 +582,6 @@ if __name__ == "__main__":
         default="admin",
         help="define password default 'admin'",
     )
-
     parser.add_argument(
         "-lb",
         "--list-banks",
@@ -574,6 +589,14 @@ if __name__ == "__main__":
         dest="listbanks",
         default=False,
         help="list bank accounts",
+    )
+    parser.add_argument(
+        "-st",
+        "--ssh-tunnel",
+        action="store_true",
+        dest="sshtunnel",
+        default=False,
+        help="use ssh-tunnel to access remote servers",
     )
 
     opts = parser.parse_args()
