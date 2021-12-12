@@ -11,6 +11,8 @@ data = {
     'docker_command' : 'docker',
 }
 docker_template = """
+%(docker_command)s  stop %(container_name)s
+%(docker_command)s  rm %(container_name)s
 %(docker_command)s run -p 127.0.0.1:%(erp_port)s:8069 -p 127.0.0.1:%(erp_longpoll)s:8072 --restart always \\
     -v %(erp_server_data_path)s/%(site_name)s/etc:/etc/odoo \\
     -v %(erp_server_data_path)s/%(site_name)s/start-entrypoint.d:/opt/odoo/start-entrypoint.d \\

@@ -13,8 +13,8 @@ Problems:
   create companies
   create users
   contact-types hierarchy ..
-  
-  
+
+
 preparation:
 switch to odoo14:
     redo2oo14w
@@ -23,11 +23,13 @@ switch to odoo14:
 switch to odoo15
     redodoo15w
     bin/odoo -p 8070
-    
-python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redodoo15 {-lb}
--H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8069 -d2 redo2oo14 -pw2 admin -lb 
 
--H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8070 -d2 redodoo15 -pw2 admin -lb 
+python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redodoo15 {-lb}
+-H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8069 -d2 redo2oo14 -pw2 admin -lb
+
+-H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8070 -d2 redodoo15 -pw2 admin -lb
+
+-H alice2 -p 8100 -d breitschtraeff10 -pw BreitschTraeffOnFrieda -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -lb
 
 1. install partner-firstname
 2. install de_CH
@@ -61,10 +63,10 @@ class OdooHandler(object):
             remote_bind_address=('172.18.0.2', 8069)
         )
         return server
-    
+
     def __init__(self, opts):
         self.opts = opts
-        
+
         # open and log in to source odoo
         print("host: %s, port: %s" % (opts.host, opts.port))
         try:
@@ -88,12 +90,12 @@ class OdooHandler(object):
 
         # open and log in to target odoo
         print("host: %s, port: %s" % (opts.host_2, opts.port_2))
-        try:            
+        try:
             odoo_2 = ODOO(host=opts.host_2, port=opts.port_2)
         except Exception as e:
             print("target odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port_2))
             return
-            
+
         print(
             "dbname: %s, user: %s, password : %s"
             % (opts.dbname_2, opts.user_2, opts.password_2)
@@ -106,7 +108,7 @@ class OdooHandler(object):
                 % (opts.dbname_2, opts.user_2, opts.password_2)
             )
             return
-            
+
         self._odoo_2 = odoo_2
         #self.ail = odoo.env["account.invoice.line"]
         #self.pt = odoo.env["product.template"]
@@ -143,7 +145,7 @@ class OdooHandler(object):
         companys_os = self._odoo.env['res.company']
         company_ids = companys_os.search([])
         company_s = companys_os.browse(company_ids)
-        
+
         #companies on source odoo
         companys_ot = self._odoo_2.env['res.company']
         company_idt = companys_ot.search([])
@@ -162,12 +164,12 @@ class OdooHandler(object):
                 res = companys_ot.browse(target_company).write(cp_values)
             else:
                 res = target_company.create(cp_values)
-                
-                    
+
+
     def install_odoo_modules(self):
         module_obj = self.get_module_obj()
-        
-    
+
+
     def create_and_map_contact_category(self):
         if not self._odoo:
             return
@@ -344,13 +346,13 @@ class OdooHandler(object):
                 for partner_id in partner_ids:
                     mapped.append(self._contact_id_map[partner_id.id]) # die it it is not there
                 self._link_tag(self._odoo_2, mapped, new_cat_id)
-                
+
     def list_bank_accounts(self):
         #bank mapper dic maps source bank_ids to target bank_ids
         self.bank_mapper_dic = {}
         #bankaccounts mapper dic maps source bankaccount_ids to target bankaccount_ids
         self.bankaccount_mapper_dic = {}
-        
+
         #banks on source odoo
         banks_os = self._odoo.env['res.bank']
         b_ids_s = banks_os.search([])
@@ -366,7 +368,7 @@ class OdooHandler(object):
         bankaccounts_ot = self._odoo_2.env['res.partner.bank']
         bankacc_ids_t = bankaccounts_ot.search([])
         bank_accs_t = bankaccounts_ot.browse(bankacc_ids_t)
-        
+
         # loop trough the source banks, make sure they are in the target, and map id
         # we assume that bic and zip is a unique key
         bank_values = [
@@ -434,7 +436,7 @@ class OdooHandler(object):
                 self.bank_mapper_dic[b_id] = (new_id, b_name)
             else:
                 self.bank_mapper_dic[b_id] = (found_t_b[0], b_name)
-                
+
         # now make sure we have all the accounts
         for account in bank_accs_s:
             acc_id = account.id
@@ -460,9 +462,9 @@ class OdooHandler(object):
                 self.bankaccount_mapper_dic[acc_id] = (new_id, b_name)
             else:
                 self.bankaccount_mapper_dic[acc_id] = (found_t_acc[0], b_name)
-                        
-                
-        
+
+
+
 
 
 hlp_msg = """

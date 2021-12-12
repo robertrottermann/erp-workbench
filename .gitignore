@@ -18,7 +18,7 @@ bin/python
 robert_priv/**
 Downloads/**
 helpers/**
-
+*.code-workspace
 
 
 # Byte-compiled / optimized / DLL files
