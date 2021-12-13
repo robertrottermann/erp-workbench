@@ -7,6 +7,31 @@ from bs4 import BeautifulSoup
 import re
 
 """
+from sshtunnel import SSHTunnelForwarder
+import odoorpc
+
+server = SSHTunnelForwarder(
+     'testmachines',
+     ssh_username="root",
+#    ssh_password="secret",
+    remote_bind_address=('172.18.0.2', 8069)
+)
+
+
+server.start()
+odoo = odoorpc.ODOO('localhost', port=server.local_bind_port, timeout=1200)
+odoo.login('december_03', 'admin', 'admin')
+module_obj = odoo.env["ir.module.module"]
+mlist = module_obj.search([("application", "=", True)])
+for m in mlist:
+    print(m)
+print(server.local_bind_port)  # show assigned local port
+# work with `SECRET SERVICE` through `server.local_bind_port`.
+
+server.stop()
+"""
+
+"""
 Problems:
   how to write images
   we have to create non stadard groups beforehand
@@ -30,6 +55,8 @@ python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redod
 -H red14 -p 9060 -d redo2oo -pw XHYadKJA9ZGzZH3t -H2 localhost -p2 8070 -d2 redodoo15 -pw2 admin -lb
 
 -H alice2 -p 8100 -d breitschtraeff10 -pw BreitschTraeffOnFrieda -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -lb
+
+-H localhost -p 8100 -d breitschtraeff10 -pw BreitschTraeffOnFrieda -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -st
 
 1. install partner-firstname
 2. install de_CH
@@ -55,22 +82,43 @@ class OdooHandler(object):
     _odoo = None
     _odoo_2 = None
 
-    def _get_tunnel(self, url, username, pw, url_r, port_r=8069):
+    def _get_tunnel(self, url, username, pw, ipaddr, port=8069,):
+        #'testmachines', # url
+        #ssh_username="root", # username
+    ##    ssh_password="secret", # pw
+        #remote_bind_address=(
+            #'172.18.0.2', # ipaddr
+            #8069 # port
+        #)
+        try:
+            from sshtunnel import SSHTunnelForwarder
+        except ImportError:
+            print(hlp_msg)            
         server = SSHTunnelForwarder(
-            'testmachines',
-            ssh_username="root",
-        #    ssh_password="secret",
-            remote_bind_address=('172.18.0.2', 8069)
+            url,
+            ssh_username = username,
+        #    ssh_password="secret", # pw
+            remote_bind_address=(
+                ipaddr,
+                port
+            )
         )
+        server.start()
         return server
 
     def __init__(self, opts):
         self.opts = opts
 
         # open and log in to source odoo
+        port = opts.port
+        server = None
+        if opts.sshtunnel:
+            server = self._get_tunnel(opts.host, opts.user, opts.password, opts.ip_address)
+            #server = self._get_tunnel(opts.host, 'root', opts.password, opts.ip_address)
+            port = server.local_bind_port
         print("host: %s, port: %s" % (opts.host, opts.port))
         try:
-            odoo = ODOO(host=opts.host, port=opts.port)
+            odoo = ODOO(host=opts.host, port=port)
         except Exception as e:
             print("odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port))
             return
@@ -505,6 +553,15 @@ if __name__ == "__main__":
         dest="host",
         default="localhost",
         help="define host default localhost",
+    )
+
+    parser.add_argument(
+        "-IP",
+        "--ip_address",
+        action="store",
+        dest="ip_address",
+        default="172.24.0.3",
+        help="define source docker IP-Address default 172.24.0.3",
     )
 
     parser.add_argument(
