@@ -13,21 +13,6 @@ import psycopg2
 import psycopg2.extras
 import datetime
 import copy
-BANK_ACOUNT = """
-vals_list
-[{'sequence': 10,
-  'l10n_ch_show_subscription': True,
-  'company_id': 1,
-  'active': True,
-  'acc_number': 'CH36 0630 0504 1158 1450 0',
-  'bank_id': 4,
-  'l10n_ch_isr_subscription_chf': False,
-  'l10n_ch_postal': False,
-  'l10n_ch_qr_iban': False,
-  'partner_id': 1}]
-"""
-
-
 
 class bcolors:
     """
@@ -107,137 +92,120 @@ class OdoobuildInstaller(object):
             what parts should be done. List of a=all,l=languages,m=own-modules,M=odoo-modules,u=users.
             When empty Mmu is assumed.
         """
-        opts = self.opts
+        self.opts = args
         # start wit importing file that declares data for this site
         # it is defined in the imp parameter
         import_file_name = args.import_file_name
-        site_opts = __import__(import_file_name)
+        self.site_opts = __import__(import_file_name)
         param = args.what
-        for k,v in args.__dict__.items():
-            if k != 'what':
-                setattr(opts, k, v)
-        # by default we install all modules and users
-        if ('a' in param) or ('l' in param):
-            setattr(opts, 'languages', True)
-        if ('a' in param) or ('m' in param) or (param == ''):
-            setattr(opts, 'own_modules', True)
-        if ('a' in param) or ('M' in param) or (param == ''):
-            setattr(opts, 'odoo_modules', True)
-        if ('a' in param) or ('u' in param) or (param == ''):
-            setattr(opts, 'users', True)
-        if ('a' in param):
-            setattr(opts, 'install_objects', True)
+        #for k,v in args.__dict__.items():
+            #if k != 'what':
+                #setattr(opts, k, v)
+        ## by default we install all modules and users
+        #if ('a' in param) or ('l' in param):
+            #setattr(opts, 'languages', True)
+        #if ('a' in param) or ('m' in param) or (param == ''):
+            #setattr(opts, 'own_modules', True)
+        #if ('a' in param) or ('M' in param) or (param == ''):
+            #setattr(opts, 'odoo_modules', True)
+        #if ('a' in param) or ('u' in param) or (param == ''):
+            #setattr(opts, 'users', True)
+        #if ('a' in param):
+            #setattr(opts, 'install_objects', True)
 
-    # site_addons is the list of addons provided by odoo
-    _site_addons_list = [
-        "crm",
-        "stock",
-        "account",
-        # "hr_payroll",
-        "hr",
-        # "hr_expense",
-        # "board",
-        # "contacts",
-        # "hr_holidays",
-        # "mail",
-        # "survey",
-        "calendar",
-    ]
+    @property
+    def my_dbname(self):
+        try:
+            return self.site_opts.MY_DBNAME
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no MY_DBNAME defined")
+            print(bcolors.ENDC)
+            return
 
-    _users = {
-        # "student": "Student",
-        # "student_re": "Student Reinscription",
-        # "tutor": "Mentor / Tutor",
-        # "dozent": "Assist / Dozent",
-        # "dekan": "Dekan",
-        # "mitarbeiter": "Mitarbeiter",
-        # "sekratariat": "Sekretariat Studieng.",
-        # "sk": "SK",
-        # "stzleiter": "STZ-Leiter",
-        # "manager": "Manager",
-        # "kstleiter": "KST-Leiter",
-        # "director": "Director",
-        # "facultymanager": "Faculty Manager",
-        # "group_fsch_kasse": "Barkasse",
-    }
+    @property
+    def my_port(self):
+        try:
+            return site_opts.MY_PORT
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no MY_PORT defined")
+            print(bcolors.ENDC)
+            return
+
+    @property
+    def my_host(self):
+        try:
+            return self.site_opts.MY_HOST
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no MY_HOST defined")
+            print(bcolors.ENDC)
+            return
 
     @property
     def users(self):
-        return self._users
+        try:
+            return self.site_opts.USERS
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no USERS defined")
+            print(bcolors.ENDC)
+            return
 
     # "group_odoobuild_administrator"
     # "group_odoobuild_contract_manager"
     # "group_odoobuild_location_manager"
 
-    _staff = {
-        "alain-boss": {
-            "login": "alain",
-            "name": "Alain the Boss",
-            "groups": [
-                # "odoobuild.group_odoobuild_administrator",
-                "odoobuild.group_odoobuild_contract_manager",
-                "odoobuild.group_odoobuild_location_manager",
-                "base.group_system"
-            ],
-        },
-        "hugo-contract-manager": {
-            "login": "contract-manager",
-            "name": "Hugo ContractManager",
-            "groups": [
-                "odoobuild.group_odoobuild_contract_manager"
-            ],
-        },
-        "barbara-location-manager": {
-            "login": "location-manager",
-            "name": "Barbara LocationManager",
-            "groups": [
-                "odoobuild.group_odoobuild_location_manager"
-            ],
-        },
-        "susanne-the-worker": {
-            "login": "susanne",
-            "name": "Susanne The Worker",
-            "groups": [
-            ],
-        },
-        "bob-the-worker": {
-            "login": "bob",
-            "name": "Bob The Worker",
-            "groups": [
-            ],
-        },
-    }
 
     @property
     def staff(self):
-        return self._staff
-
-    _groups = {
-        "Location Manager": "odoobuild.group_odoobuild_location_manager",
-        "Contract Manager": "odoobuild.group_odoobuild_contract_manager",
-        "Administrator": "odoobuild.group_odoobuild_administrator",
-    }
+        try:
+            return self.site_opts.STAFF
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no USERS defined")
+            print(bcolors.ENDC)
+            return
 
     @property
     def groups(self):
-        return self._groups
-
-    # own_addons is the list of addons provided by fernuni or OCA
-    _own_addons_list = [ #["fsch_customer"]
-                         'odoobuild',
-                         'odoobuild_dashboard',
-                         'base_accounting_kit',
-                         'odoobuild_offertstudio'
-                    ]
+        try:
+            return self.site_opts.GROUPS
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no GROUPS defined")
+            print(bcolors.ENDC)
+            return
 
     @property
     def site_addons(self):
-        return self._site_addons_list
+        try:
+            return self.site_opts.SITE_ADDONS
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no SITE_ADDONS defined")
+            print(bcolors.ENDC)
+            return
 
     # _own_addons is the list of addons_entries in the odoo config
     @property
     def own_addons(self):
-        return self._own_addons_list
+        try:
+            return self.site_opts.SITE_ADDONS
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no OWN_ADDONS defined")
+            print(bcolors.ENDC)
+            return
 
     # ----------------------------------
     #  collects info on what modules are installed
@@ -318,7 +286,7 @@ class OdoobuildInstaller(object):
 
             """
             verbose = verbose or self.opts.verbose
-            db_name = self.opts.db_name
+            db_name = self.my_dbname
             rpchost = self.rpc_host
             rpcport = self.rpc_port
             rpcuser = self.rpc_user
@@ -481,7 +449,7 @@ class OdoobuildInstaller(object):
                     bcolors.OKGREEN + "installing: " + bcolors.ENDC + ",".join(n_list)
                 )
                 load_demo = True
-                if self.opts.single_step or 1:
+                if 0: #self.opts.single_step or 1:
                     for mname in i_list:
                         module = module_obj.browse([mname])
                         if load_demo:
@@ -493,9 +461,9 @@ class OdoobuildInstaller(object):
                         module.button_immediate_install()
                 else:
                     modules = module_obj.browse(i_list)
-                    if load_demo:
-                        for m in modules:
-                            m.demo = True
+                    #if load_demo:
+                        #for m in modules:
+                            #m.demo = True
                     modules.button_immediate_install()
                 print(
                     bcolors.OKGREEN
@@ -651,78 +619,96 @@ class OdoobuildInstaller(object):
                 for group_id in u_groups:
                     group = odoo.env.ref(group_id)
                     group.write({"users": [(4, user_ids[0])]})
+                    
+    def create_accounts(self, accounts):
+        odoo = self.get_odoo()
+        if not odoo:
+            return
+        acounts_o = odoo.env["account.account"]
+        for acc in accounts:
+            acounts_ex = acounts_o.search([('name', '=', acc['name'])]) # existing accounts
+            if not acounts_ex:
+                acounts_o.create(acc)
+        
 
     def install_objects(self):
         odoo = self.get_odoo()
         if not odoo:
             return
+        # create accounts
+        try:
+            accounts = self.site_opts.ACCOUNT_ACCOUNT
+        except:
+            pass
+        if accounts:
+            self.create_accounts(accounts)
         # make sure admin can create contracts
-        users_o = odoo.env["res.users"]
-        groups = [
-            # "odoobuild.group_odoobuild_administrator",
-            "odoobuild.group_odoobuild_contract_manager",
-            "odoobuild.group_odoobuild_location_manager",
-        ]
-        for group_id in groups:
-            group = odoo.env.ref(group_id)
-            group.write({"users": [(4, 2)]}) # admin is userr 2 ??
+        #users_o = odoo.env["res.users"]
+        #groups = [
+            ## "odoobuild.group_odoobuild_administrator",
+            #"odoobuild.group_odoobuild_contract_manager",
+            #"odoobuild.group_odoobuild_location_manager",
+        #]
+        #for group_id in groups:
+            #group = odoo.env.ref(group_id)
+            #group.write({"users": [(4, 2)]}) # admin is userr 2 ??
 
-        ctypes = odoo.env['contract.type']
-        for ct in CONTRACT_TYPES:
-            if not ctypes.search([('name', '=', ct)]):
-                vals = {'name' : ct, 'hierarchy' : True}
-                if 'simple' in ct:
-                    vals['hierarchy'] = False
-                ctypes.create(vals)
+        #ctypes = odoo.env['contract.type']
+        #for ct in CONTRACT_TYPES:
+            #if not ctypes.search([('name', '=', ct)]):
+                #vals = {'name' : ct, 'hierarchy' : True}
+                #if 'simple' in ct:
+                    #vals['hierarchy'] = False
+                #ctypes.create(vals)
 
-        projects = odoo.env['project.project']
-        contracts = odoo.env['contract.contract']
-        for cont in CONTRACTS:
-            if not contracts.search([('name', '=', cont['name'])]):
-                # check if contract_name (which is the contract type) should be looked up
-                ct = cont['contract_name']
-                if not isinstance(ct, int):
-                    found = ctypes.search([('name', '=', ct)])
-                    cont['contract_name'] = found[0]
-                contracts.create(cont)
-        locations = odoo.env['contract.location']
-        for loc in LOCATIONS:
-            if not locations.search([('name', '=', loc['name'])]):
-                # check if 'related_contract_id' is a string
-                cn = loc['related_contract_id']
-                if not isinstance(cn, int):
-                    found = contracts.search([('name', '=', cn)])
-                    loc['related_contract_id'] = found[0]
-                locations.create(loc)
-        project_id = projects.search([('name', '=', 'Kitchenrenovation')])[0]
-        tasks = odoo.env['project.task']
-        for task,subtasks in TASKS.items():
-            """
-            If a task has a parent_id, it is a subtask
-            if a task has any of
-              'location_id': 2,
-              'sub_location_id': False,
-              'sub_sub_location_id': False,
-            it is assigned to such a location
+        #projects = odoo.env['project.project']
+        #contracts = odoo.env['contract.contract']
+        #for cont in CONTRACTS:
+            #if not contracts.search([('name', '=', cont['name'])]):
+                ## check if contract_name (which is the contract type) should be looked up
+                #ct = cont['contract_name']
+                #if not isinstance(ct, int):
+                    #found = ctypes.search([('name', '=', ct)])
+                    #cont['contract_name'] = found[0]
+                #contracts.create(cont)
+        #locations = odoo.env['contract.location']
+        #for loc in LOCATIONS:
+            #if not locations.search([('name', '=', loc['name'])]):
+                ## check if 'related_contract_id' is a string
+                #cn = loc['related_contract_id']
+                #if not isinstance(cn, int):
+                    #found = contracts.search([('name', '=', cn)])
+                    #loc['related_contract_id'] = found[0]
+                #locations.create(loc)
+        #project_id = projects.search([('name', '=', 'Kitchenrenovation')])[0]
+        #tasks = odoo.env['project.task']
+        #for task,subtasks in TASKS.items():
+            #"""
+            #If a task has a parent_id, it is a subtask
+            #if a task has any of
+              #'location_id': 2,
+              #'sub_location_id': False,
+              #'sub_sub_location_id': False,
+            #it is assigned to such a location
 
-            """
-            # get contractid of Kitchenrenovation
-            contract_id = contracts.search([('name', '=', 'Kitchenrenovation')])[0]
-            location_id = locations.search([('name', '=', 'Kitchen')])[0]
-            if not tasks.search([('name', '=', task)]):
-                # check if 'related_contract_id' is a string
-                task_dic = copy.deepcopy(TASK_TEMPLATE)
-                task_dic['name'] = task
-                task_dic['project_id'] = project_id
-                task_dic['contract_id'] = contract_id
-                task_dic['location_id'] = location_id
-                task_dic['date_deadline'] = str(datetime.datetime.now() + datetime.timedelta(days=30))
-                task_dic['date_assign'] = str(datetime.datetime.now())
-                result = tasks.create(task_dic)
-                task_dic['parent_id'] = result
-                for stask in subtasks:
-                    task_dic['name'] = stask
-                    result = tasks.create(task_dic)
+            #"""
+            ## get contractid of Kitchenrenovation
+            #contract_id = contracts.search([('name', '=', 'Kitchenrenovation')])[0]
+            #location_id = locations.search([('name', '=', 'Kitchen')])[0]
+            #if not tasks.search([('name', '=', task)]):
+                ## check if 'related_contract_id' is a string
+                #task_dic = copy.deepcopy(TASK_TEMPLATE)
+                #task_dic['name'] = task
+                #task_dic['project_id'] = project_id
+                #task_dic['contract_id'] = contract_id
+                #task_dic['location_id'] = location_id
+                #task_dic['date_deadline'] = str(datetime.datetime.now() + datetime.timedelta(days=30))
+                #task_dic['date_assign'] = str(datetime.datetime.now())
+                #result = tasks.create(task_dic)
+                #task_dic['parent_id'] = result
+                #for stask in subtasks:
+                    #task_dic['name'] = stask
+                    #result = tasks.create(task_dic)
 
 
 parser = argparse.ArgumentParser(description='Setup a odoobuild site.')
@@ -771,23 +757,21 @@ parser.add_argument(
 
 if __name__ == "__main__":
     opts = parser.parse_args()
-    print(opts)
-    print(parser)
     installer = OdoobuildInstaller(opts)
     installer.get_odoo(verbose=True)
-    if installer.opts.odoo_modules:
+    if 1: #installer.opts.odoo_modules:
         installer.install_own_modules()
-    if installer.opts.own_modules:
+    if 1: #installer.opts.own_modules:
         installer.install_own_modules(what="own_addons")
         #installer.install_mail_handler()
-    if installer.opts.users:
+    if 1: #installer.opts.users:
         installer.create_users()
-    if installer.opts.languages:
+    if 0: #installer.opts.languages:
         try:
             installer.install_languages(["de_CH", "de_DE", "fr_CH"])
         except:
             print(bcolors.red)
             print("could not install languages")
             print(bcolors.ENDC)
-    if installer.opts.install_objects:
+    if 1: #installer.opts.install_objects:
         installer.install_objects()

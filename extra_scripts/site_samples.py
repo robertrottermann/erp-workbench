@@ -1,3 +1,10 @@
+# db into which to install site data
+MY_DBNAME = "odoo13"
+# port to open
+MY_PORT = "8069"
+# host where to find odoo running
+MY_HOST = "localhost"
+
 # SITE_ADDONS are the modules that we get from odoo core
 SITE_ADDONS = [
     "account_accountant",
@@ -7,9 +14,6 @@ SITE_ADDONS = [
     "calendar    ",
     "contacts",
     "crm",
-    "funid_evaluation",
-    "funid_student",
-    "funid_teacher",
     "hr_attendance",
     "hr_expense",
     "hr_holidays",
@@ -51,6 +55,70 @@ OWN_ADDONS = [
     "funid_ticketing",
     "funid_website",
 ]
+
+USERS = {}
+#     # "student": "Student",
+#     # "student_re": "Student Reinscription",
+#     # "tutor": "Mentor / Tutor",
+#     # "dozent": "Assist / Dozent",
+#     # "dekan": "Dekan",
+#     # "mitarbeiter": "Mitarbeiter",
+#     # "sekratariat": "Sekretariat Studieng.",
+#     # "sk": "SK",
+#     # "stzleiter": "STZ-Leiter",
+#     # "manager": "Manager",
+#     # "kstleiter": "KST-Leiter",
+#     # "director": "Director",
+#     # "facultymanager": "Faculty Manager",
+#     # "group_fsch_kasse": "Barkasse",
+# }
+
+STAFF = {}
+#     "alain-boss": {
+#         "login": "alain",
+#         "name": "Alain the Boss",
+#         "groups": [
+#             # "odoobuild.group_odoobuild_administrator",
+#             "odoobuild.group_odoobuild_contract_manager",
+#             "odoobuild.group_odoobuild_location_manager",
+#             "base.group_system"
+#         ],
+#     },
+#     "hugo-contract-manager": {
+#         "login": "contract-manager",
+#         "name": "Hugo ContractManager",
+#         "groups": [
+#             "odoobuild.group_odoobuild_contract_manager"
+#         ],
+#     },
+#     "barbara-location-manager": {
+#         "login": "location-manager",
+#         "name": "Barbara LocationManager",
+#         "groups": [
+#             "odoobuild.group_odoobuild_location_manager"
+#         ],
+#     },
+#     "susanne-the-worker": {
+#         "login": "susanne",
+#         "name": "Susanne The Worker",
+#         "groups": [
+#         ],
+#     },
+#     "bob-the-worker": {
+#         "login": "bob",
+#         "name": "Bob The Worker",
+#         "groups": [
+#         ],
+#     },
+# }
+
+GROUPS = {}
+#     "Location Manager": "odoobuild.group_odoobuild_location_manager",
+#     "Contract Manager": "odoobuild.group_odoobuild_contract_manager",
+#     "Administrator": "odoobuild.group_odoobuild_administrator",
+# }
+
+
 CONTRACT_TYPE = """
 ct = self.env['contract.type']
 ct.search([])
@@ -163,7 +231,7 @@ TASK_TEMPLATE =  {
     'sale_line_id': False,
     'description': '<p>Das Muss gemacht werden</p>',
     'planned_hours': 0,
-    'date_assign': datetime.datetime(2021, 11, 3, 11, 14, 38)
+    # 'date_assign': datetime.datetime(2021, 11, 3, 11, 14, 38)
 }
 # TASKS
 # a list of tasks an substask added to location Kitchen
@@ -261,6 +329,38 @@ SUB_TASKS = [
       'message_follower_ids': [],
       'activity_ids': [],
       'message_ids': [],
-      'date_assign': datetime.datetime(2021, 11, 3, 11, 23, 28)}
+    #   'date_assign': datetime.datetime(2021, 11, 3, 11, 23, 28)
+    }
+]
 
+BANK_ACOUNT = """
+vals_list
+[{'sequence': 10,
+  'l10n_ch_show_subscription': True,
+  'company_id': 1,
+  'active': True,
+  'acc_number': 'CH36 0630 0504 1158 1450 0',
+  'bank_id': 4,
+  'l10n_ch_isr_subscription_chf': False,
+  'l10n_ch_postal': False,
+  'l10n_ch_qr_iban': False,
+  'partner_id': 1}]
+"""
+#account.account(170,)
+ACCOUNT_ACCOUNT = [
+    {
+        'code': '1011',
+        'name': 'Cash X (copy)',
+        'currency_id': False,
+        'deprecated': False,
+        'user_type_id': 3,
+        'reconcile': False,
+        'tax_ids': [(6, 0, [])],
+        'note': False,
+        'company_id': 1,
+        'tag_ids': [(6, 0, [])],
+        'group_id': False,
+        'asset_model': False,
+        'create_asset': 'no'
+    }
 ]

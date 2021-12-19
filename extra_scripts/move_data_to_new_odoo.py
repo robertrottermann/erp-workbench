@@ -57,6 +57,24 @@ python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redod
 -H alice2 -p 8100 -d breitschtraeff10 -pw BreitschTraeffOnFrieda -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -lb
 
 -H localhost -p 8100 -d breitschtraeff10 -pw BreitschTraeffOnFrieda -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -st
+-H localhost -p 8100 -d  red_backup -pw admin -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -st -IP 172.24.0.2
+-H localhost -p 9060 -d red_backup -u admin -pw admin -H2 localhost -p2 9005 -d2 breitsch15test -pw2 admin -IP 172.24.0.2 -IP_2 172.21.0.3 -ussh root -st
+python move_data_to_new_odoo.py \
+    -H localhost \       # source host
+    -p 9060 \            # source port ?? what for
+    -d red_backup \      # source database
+    -u admin \           # source user
+    -pw admin \          # source password
+    -H2 localhost \      # target host
+    -p2 9005 \           # target port ?? what for
+    -d2 breitsch15test \ # target db
+    -pw2 admin \         # target user
+    -IP 172.24.0.2 \     # IP to use on source docker
+    -IP_2 172.21.0.3 \   # IP to use on target docker
+    -ussh root \         # what ssh user to use to login on both source and target server
+    -st                  # use ssh tunnel
+
+
 
 1. install partner-firstname
 2. install de_CH
@@ -93,7 +111,7 @@ class OdooHandler(object):
         try:
             from sshtunnel import SSHTunnelForwarder
         except ImportError:
-            print(hlp_msg)            
+            print(hlp_msg)
         server = SSHTunnelForwarder(
             url,
             ssh_username = username,
@@ -110,50 +128,66 @@ class OdooHandler(object):
         self.opts = opts
 
         # open and log in to source odoo
+        host = opts.host
         port = opts.port
+        dbname = opts.dbname
+        user = opts.user
+        password = opts.password
         server = None
         if opts.sshtunnel:
-            server = self._get_tunnel(opts.host, opts.user, opts.password, opts.ip_address)
+            server = self._get_tunnel(host, opts.ssh_user, password, opts.ip_address)
             #server = self._get_tunnel(opts.host, 'root', opts.password, opts.ip_address)
             port = server.local_bind_port
-        print("host: %s, port: %s" % (opts.host, opts.port))
+            print("host: %s, port: %s" % (host, port))
+        else:
+            print("host: %s, port: %s" % (host, port))
         try:
             odoo = ODOO(host=opts.host, port=port)
         except Exception as e:
-            print("odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port))
+            print("odoo seems not to run:host: %s, port: %s" % (host, port))
             return
         print(
             "dbname: %s, user: %s, password : %s"
-            % (opts.dbname, opts.user, opts.password)
+            % (dbname, user, password)
         )
         try:
-            odoo.login(db=opts.dbname, login=opts.user, password=opts.password)
+            odoo.login(db=dbname, login=user, password=password)
         except Exception as e:
             print(
                 "could not login to source: dbname: %s, user: %s, password : %s"
-                % (opts.dbname, opts.user, opts.password)
+                % (dbname, user, password)
             )
             return
         self._odoo = odoo
 
         # open and log in to target odoo
-        print("host: %s, port: %s" % (opts.host_2, opts.port_2))
+        host_2 = opts.host_2
+        port_2 = opts.port_2
+        dbname_2 = opts.dbname_2
+        user_2 = opts.user_2
+        password_2 = opts.password_2
+        server = None
+        if opts.sshtunnel:
+            server = self._get_tunnel(host_2, opts.ssh_user, password_2, opts.ip_address_2)
+            #server = self._get_tunnel(opts.host, 'root', opts.password, opts.ip_address)
+            port_2 = server.local_bind_port
+        print("host: %s, port: %s" % (host_2, port_2))
         try:
-            odoo_2 = ODOO(host=opts.host_2, port=opts.port_2)
+            odoo_2 = ODOO(host=host_2, port=port_2)
         except Exception as e:
-            print("target odoo seems not to run:host: %s, port: %s" % (opts.host, opts.port_2))
+            print("target odoo seems not to run:host: %s, port: %s" % (host_2, port_2))
             return
 
         print(
             "dbname: %s, user: %s, password : %s"
-            % (opts.dbname_2, opts.user_2, opts.password_2)
+            % (dbname_2, user_2, password_2)
         )
         try:
-            odoo_2.login(db=opts.dbname_2, login=opts.user_2, password=opts.password_2)
+            odoo_2.login(db=dbname_2, login=user_2, password=password_2)
         except Exception as e:
             print(
                 "could not login to target odoo: dbname: %s, user: %s, password : %s"
-                % (opts.dbname_2, opts.user_2, opts.password_2)
+                % (dbname_2, user_2, password_2)
             )
             return
 
@@ -560,8 +594,17 @@ if __name__ == "__main__":
         "--ip_address",
         action="store",
         dest="ip_address",
-        default="172.24.0.3",
-        help="define source docker IP-Address default 172.24.0.3",
+        default="172.24.0.2",
+        help="define source docker IP-Address default 172.24.0.2",
+    )
+
+    parser.add_argument(
+        "-IP_2",
+        "--ip_address_2",
+        action="store",
+        dest="ip_address_2",
+        default="172.24.0.2",
+        help="define target docker IP-Address default 172.24.0.2",
     )
 
     parser.add_argument(
@@ -616,6 +659,14 @@ if __name__ == "__main__":
         dest="user",
         default="admin",
         help="define user default 'admin'",
+    )
+    parser.add_argument(
+        "-ussh",
+        "--ssh_user",
+        action="store",
+        dest="ssh_user",
+        default="root",
+        help="define sshuser (for both connections) default 'root'",
     )
     parser.add_argument(
         "-pw",
