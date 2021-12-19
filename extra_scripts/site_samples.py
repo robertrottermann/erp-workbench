@@ -347,6 +347,17 @@ vals_list
   'partner_id': 1}]
 """
 #account.account(170,)
+A_LIST = [
+1000,
+2200,
+2271,
+2277,
+3000,
+5000,
+5700,
+5889,
+9980 ,
+]
 ACCOUNT_ACCOUNT = [
     {
         'code': '1011',
