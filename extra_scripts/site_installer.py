@@ -480,7 +480,6 @@ class OdoobuildInstaller(object):
         u"smtp_debug": False,
         u"smtp_encryption": u"starttls",
         u"smtp_host": u"mail.redcor.ch",
-        u"smtp_pass": u"Mailhandler$99",
         u"smtp_port": 25,
         u"smtp_user": u"mailhandler@o2oo.ch",
     }
@@ -491,7 +490,6 @@ class OdoobuildInstaller(object):
         u"name": u"mailhandler@afbs.ch",
         u"object_id": False,
         u"original": False,
-        u"password": u"Mailhandler$99",
         u"port": 993,
         u"priority": 5,
         # u'script': u'/mail/static/scripts/openerp_mailgate.py',
