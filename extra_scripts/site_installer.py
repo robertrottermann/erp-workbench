@@ -42,6 +42,9 @@ if not os.environ.get("VIRTUAL_ENV") and not os.environ.get("WINGDB_ACTIVE"):
     print("not running in a virtualenv")
     print("activate the worbench environment executing:")
     print("workon workbench or somthing similar")
+    print("it has to have installed at least the foollowing libs:")
+    print("OdooRPC")
+    print("psycopg2")
     print(bcolors.ENDC)
     sys.exit()
 
@@ -617,7 +620,7 @@ class OdoobuildInstaller(object):
                 for group_id in u_groups:
                     group = odoo.env.ref(group_id)
                     group.write({"users": [(4, user_ids[0])]})
-                    
+
     def create_accounts(self, accounts):
         odoo = self.get_odoo()
         if not odoo:
@@ -630,10 +633,10 @@ class OdoobuildInstaller(object):
                 if acounts_ex_code:
                     print(bcolors.OKBLUE)
                     print("account name for account %s differs" % acc['code'])
-                    print(bcolors.ENDC) 
+                    print(bcolors.ENDC)
                 else:
                     acounts_o.create(acc)
-        
+
 
     def install_objects(self):
         odoo = self.get_odoo()
