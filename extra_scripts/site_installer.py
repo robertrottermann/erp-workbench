@@ -625,8 +625,14 @@ class OdoobuildInstaller(object):
         acounts_o = odoo.env["account.account"]
         for acc in accounts:
             acounts_ex = acounts_o.search([('name', '=', acc['name'])]) # existing accounts
+            acounts_ex_code = acounts_o.search([('code', '=', acc['code'])]) # existing accounts
             if not acounts_ex:
-                acounts_o.create(acc)
+                if acounts_ex_code:
+                    print(bcolors.OKBLUE)
+                    print("account name for account %s differs" % acc['code'])
+                    print(bcolors.ENDC) 
+                else:
+                    acounts_o.create(acc)
         
 
     def install_objects(self):
