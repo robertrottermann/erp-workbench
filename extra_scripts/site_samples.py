@@ -495,3 +495,104 @@ ACCOUNT_ACCOUNT = [
         'create_asset': 'no'
     }
 ]
+LANGUAGES = [] # like ["de_CH", "de_DE", "fr_CH"]
+MAILHANDLERS = {
+    mail_outgoing : {
+        u"active": True,
+        u"name": u"mailhandler@afbs.ch",
+        u"sequence": 10,
+        u"smtp_debug": False,
+        u"smtp_encryption": u"starttls",
+        u"smtp_host": u"mail.redcor.ch",
+        u"smtp_port": 25,
+        u"smtp_user": u"mailhandler@o2oo.ch",
+    },
+    mail_incomming : {
+        u"active": True,
+        u"attach": True,
+        u"is_ssl": True,
+        u"name": u"mailhandler@afbs.ch",
+        u"object_id": False,
+        u"original": False,
+        u"port": 993,
+        u"priority": 5,
+        # u'script': u'/mail/static/scripts/openerp_mailgate.py',
+        u"server": u"mail.redcor.ch",
+        u"state": "draft",
+        u"server_type": u"imap",
+        u"user": u"mailhandler@o2oo.ch",
+    }
+}
+LOCATIONS = []
+
+"""
+        # make sure admin can create contracts
+        #users_o = odoo.env["res.users"]
+        #groups = [
+            ## "odoobuild.group_odoobuild_administrator",
+            #"odoobuild.group_odoobuild_contract_manager",
+            #"odoobuild.group_odoobuild_location_manager",
+        #]
+        #for group_id in groups:
+            #group = odoo.env.ref(group_id)
+            #group.write({"users": [(4, 2)]}) # admin is userr 2 ??
+
+        #ctypes = odoo.env['contract.type']
+        #for ct in CONTRACT_TYPES:
+            #if not ctypes.search([('name', '=', ct)]):
+                #vals = {'name' : ct, 'hierarchy' : True}
+                #if 'simple' in ct:
+                    #vals['hierarchy'] = False
+                #ctypes.create(vals)
+
+        #projects = odoo.env['project.project']
+        #contracts = odoo.env['contract.contract']
+        #for cont in CONTRACTS:
+            #if not contracts.search([('name', '=', cont['name'])]):
+                ## check if contract_name (which is the contract type) should be looked up
+                #ct = cont['contract_name']
+                #if not isinstance(ct, int):
+                    #found = ctypes.search([('name', '=', ct)])
+                    #cont['contract_name'] = found[0]
+                #contracts.create(cont)
+        #locations = odoo.env['contract.location']
+        #for loc in LOCATIONS:
+            #if not locations.search([('name', '=', loc['name'])]):
+                ## check if 'related_contract_id' is a string
+                #cn = loc['related_contract_id']
+                #if not isinstance(cn, int):
+                    #found = contracts.search([('name', '=', cn)])
+                    #loc['related_contract_id'] = found[0]
+                #locations.create(loc)
+        #project_id = projects.search([('name', '=', 'Kitchenrenovation')])[0]
+        #tasks = odoo.env['project.task']
+        #for task,subtasks in TASKS.items():
+            ##
+            ## If a task has a parent_id, it is a subtask
+            ## if a task has any of
+            ##   'location_id': 2,
+            ##   'sub_location_id': False,
+            ##   'sub_sub_location_id': False,
+            ## it is assigned to such a location
+
+            #
+            ## get contractid of Kitchenrenovation
+            #contract_id = contracts.search([('name', '=', 'Kitchenrenovation')])[0]
+            #location_id = locations.search([('name', '=', 'Kitchen')])[0]
+            #if not tasks.search([('name', '=', task)]):
+                ## check if 'related_contract_id' is a string
+                #task_dic = copy.deepcopy(TASK_TEMPLATE)
+                #task_dic['name'] = task
+                #task_dic['project_id'] = project_id
+                #task_dic['contract_id'] = contract_id
+                #task_dic['location_id'] = location_id
+                #task_dic['date_deadline'] = str(datetime.datetime.now() + datetime.timedelta(days=30))
+                #task_dic['date_assign'] = str(datetime.datetime.now())
+                #result = tasks.create(task_dic)
+                #task_dic['parent_id'] = result
+                #for stask in subtasks:
+                    #task_dic['name'] = stask
+                    #result = tasks.create(task_dic)
+
+
+"""

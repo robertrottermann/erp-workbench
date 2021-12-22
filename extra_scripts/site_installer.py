@@ -101,20 +101,28 @@ class OdoobuildInstaller(object):
         import_file_name = args.import_file_name
         self.site_opts = __import__(import_file_name)
         param = args.what
-        #for k,v in args.__dict__.items():
-            #if k != 'what':
-                #setattr(opts, k, v)
-        ## by default we install all modules and users
-        #if ('a' in param) or ('l' in param):
-            #setattr(opts, 'languages', True)
-        #if ('a' in param) or ('m' in param) or (param == ''):
-            #setattr(opts, 'own_modules', True)
-        #if ('a' in param) or ('M' in param) or (param == ''):
-            #setattr(opts, 'odoo_modules', True)
-        #if ('a' in param) or ('u' in param) or (param == ''):
-            #setattr(opts, 'users', True)
-        #if ('a' in param):
-            #setattr(opts, 'install_objects', True)
+
+    @property
+    def groups(self):
+        try:
+            return self.site_opts.GROUPS
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no GROUPS defined")
+            print(bcolors.ENDC)
+            return
+
+    @property
+    def mailhandlers(self):
+        try:
+            return self.site_opts.MAILHANDLERS
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no MAILHANDLERS defined")
+            print(bcolors.ENDC)
+            return
 
     @property
     def my_dbname(self):
@@ -160,11 +168,6 @@ class OdoobuildInstaller(object):
             print(bcolors.ENDC)
             return
 
-    # "group_odoobuild_administrator"
-    # "group_odoobuild_contract_manager"
-    # "group_odoobuild_location_manager"
-
-
     @property
     def staff(self):
         try:
@@ -173,17 +176,6 @@ class OdoobuildInstaller(object):
             print(bcolors.WARNING)
             print("*" * 80)
             print("no USERS defined")
-            print(bcolors.ENDC)
-            return
-
-    @property
-    def groups(self):
-        try:
-            return self.site_opts.GROUPS
-        except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no GROUPS defined")
             print(bcolors.ENDC)
             return
 
@@ -207,6 +199,17 @@ class OdoobuildInstaller(object):
             print(bcolors.WARNING)
             print("*" * 80)
             print("no OWN_ADDONS defined")
+            print(bcolors.ENDC)
+            return
+
+    @property
+    def _languages(self):
+        try:
+            return self.site_opts.LANGUAGES
+        except:
+            print(bcolors.WARNING)
+            print("*" * 80)
+            print("no SITE_ADDONS defined")
             print(bcolors.ENDC)
             return
 
@@ -248,7 +251,8 @@ class OdoobuildInstaller(object):
                         print(n, s, i)
 
     # ----------------------------------
-    # get_connection opens a connection to a database
+    # get_cursor opens a connection to a database
+    # on which we can execute sql statements
     def get_cursor(self, db_name=None, return_connection=None):
         """
         """
@@ -280,6 +284,8 @@ class OdoobuildInstaller(object):
             return cursor_d, conn
         return cursor_d
 
+    # ----------------------------------
+    # get_odoo returns an "live" odoo object
     def get_odoo(self, no_db=False, verbose=False):
         if not self._odoo:
             """
@@ -360,18 +366,21 @@ class OdoobuildInstaller(object):
                 print("make sure odoo is running at the given address" + bcolors.ENDC)
         return self._odoo
 
-    def install_languages(self, languages):
+    def install_languages(self):
         """
         install all languages in the target
-        args:
-            languages: list of language codes like ['de_CH, 'fr_CH']
+        languages: list of language codes like ['de_CH, 'fr_CH']
 
         return:
             dictonary {code : id, ..}
+
+        like ["de_CH", "de_DE", "fr_CH"]
         """
         # what fields do we want to handle?
         # we get the source and target model
-        languages = set(languages)
+        languages = set(self._languages())
+        if not languages:
+            return {}
         odoo = self.get_odoo()
         if not odoo:
             print("oddo is not running")
@@ -390,6 +399,9 @@ class OdoobuildInstaller(object):
             result[code] = langs.search([("lang", "=", code)])
         return result
 
+    # ----------------------------------
+    # get_module_obj returns the module.module object
+    # on which we can install, uninstall and update modules
     def get_module_obj(self):
         """
             get the ir.module.module
@@ -402,7 +414,7 @@ class OdoobuildInstaller(object):
 
     # ----------------------------------
     # install odoo modules
-    # or install own modules
+    # or install own modules depending on the parameter what
     def install_own_modules(self, what="site_addons", quiet=False):
         """
         Install either the odoo apps from site_addons
@@ -476,34 +488,15 @@ class OdoobuildInstaller(object):
                 )
                 print("*" * 80)
 
-    mail_outgoing = {
-        u"active": True,
-        u"name": u"mailhandler@afbs.ch",
-        u"sequence": 10,
-        u"smtp_debug": False,
-        u"smtp_encryption": u"starttls",
-        u"smtp_host": u"mail.redcor.ch",
-        u"smtp_port": 25,
-        u"smtp_user": u"mailhandler@o2oo.ch",
-    }
-    mail_incomming = {
-        u"active": True,
-        u"attach": True,
-        u"is_ssl": True,
-        u"name": u"mailhandler@afbs.ch",
-        u"object_id": False,
-        u"original": False,
-        u"port": 993,
-        u"priority": 5,
-        # u'script': u'/mail/static/scripts/openerp_mailgate.py',
-        u"server": u"mail.redcor.ch",
-        u"state": "draft",
-        u"server_type": u"imap",
-        u"user": u"mailhandler@o2oo.ch",
-    }
 
+    # ----------------------------------
+    # install mail handlers
+    # depending on the parameter do_incomming install both or only outgoing
     def install_mail_handler(self, do_incoming=True):
         # odoo 13, flags when external mailservers are used
+        mailhandlers = self.mailhandlers()
+        if not mailhandlers:
+            return
         odoo = self.get_odoo()
         res_config_settings = odoo.env["res.config.settings"]
         try:
@@ -532,7 +525,12 @@ class OdoobuildInstaller(object):
             print("incomming email")
             i_ids = i_server.search([])
             i_id = 0
-            i_data = self.mail_incomming
+            i_data = mailhandlers.get('mail_incomming')
+            if i_data:
+                i_id = i_ids.create(i_data)
+            else:
+                print("no incomming mail handler found")
+            print("*" * 80)
             if i_ids:
                 i_id = i_ids[0]
             if i_id:
@@ -544,7 +542,11 @@ class OdoobuildInstaller(object):
         print("-" * 80)
         print("outgoing email")
         # now do the same for the outgoing server
-        o_data = self.mail_outgoing
+        o_data = mailhandlers.get('mail_outgoing')
+        if not o_data:
+            print("no outgoing mail handler found")
+            print("*" * 80, bcolors.ENDC)
+            return
         o_server = odoo.env["ir.mail_server"]
         # get the first server
         o_ids = o_server.search([])
@@ -559,6 +561,11 @@ class OdoobuildInstaller(object):
         print(o_data)
         print("*" * 80, bcolors.ENDC)
 
+    # ----------------------------------
+    # create users
+    # we do this in several steps
+    # 1. we create the users, assigning them a name, login and password
+    # 2. for the staff members, we create employees, check what groups they belong and add the user to the groups
     def create_users(self, force=False):
         odoo = self.get_odoo()
         if not odoo:
@@ -621,7 +628,9 @@ class OdoobuildInstaller(object):
                     group = odoo.env.ref(group_id)
                     group.write({"users": [(4, user_ids[0])]})
 
-    def create_accounts(self, accounts):
+    # ----------------------------------
+    # _create_accounts auxiliary function that does the real creation of G/L accounts
+    def _create_accounts(self, accounts):
         odoo = self.get_odoo()
         if not odoo:
             return
@@ -637,85 +646,29 @@ class OdoobuildInstaller(object):
                 else:
                     acounts_o.create(acc)
 
-
-    def install_objects(self):
-        odoo = self.get_odoo()
-        if not odoo:
-            return
-        # create accounts
+    # ----------------------------------
+    # create_accounts creates G/L accounts
+    def create_accounts(self):
         try:
             accounts = self.site_opts.ACCOUNT_ACCOUNT
         except:
             pass
         if accounts:
-            self.create_accounts(accounts)
-        # make sure admin can create contracts
-        #users_o = odoo.env["res.users"]
-        #groups = [
-            ## "odoobuild.group_odoobuild_administrator",
-            #"odoobuild.group_odoobuild_contract_manager",
-            #"odoobuild.group_odoobuild_location_manager",
-        #]
-        #for group_id in groups:
-            #group = odoo.env.ref(group_id)
-            #group.write({"users": [(4, 2)]}) # admin is userr 2 ??
+            self._create_accounts(accounts)
 
-        #ctypes = odoo.env['contract.type']
-        #for ct in CONTRACT_TYPES:
-            #if not ctypes.search([('name', '=', ct)]):
-                #vals = {'name' : ct, 'hierarchy' : True}
-                #if 'simple' in ct:
-                    #vals['hierarchy'] = False
-                #ctypes.create(vals)
+    # ----------------------------------
+    # install_objects creates objects in the database like users, contacts, etc
+    # to do so we need to add a call to the respective method that creates the objects
+    # only objects, that are listed in the imported "site_samples" file, are created
+    def install_objects(self):
+        odoo = self.get_odoo()
+        if not odoo:
+            return
+        # create G/L accounts
+        self.create_accounts()
 
-        #projects = odoo.env['project.project']
-        #contracts = odoo.env['contract.contract']
-        #for cont in CONTRACTS:
-            #if not contracts.search([('name', '=', cont['name'])]):
-                ## check if contract_name (which is the contract type) should be looked up
-                #ct = cont['contract_name']
-                #if not isinstance(ct, int):
-                    #found = ctypes.search([('name', '=', ct)])
-                    #cont['contract_name'] = found[0]
-                #contracts.create(cont)
-        #locations = odoo.env['contract.location']
-        #for loc in LOCATIONS:
-            #if not locations.search([('name', '=', loc['name'])]):
-                ## check if 'related_contract_id' is a string
-                #cn = loc['related_contract_id']
-                #if not isinstance(cn, int):
-                    #found = contracts.search([('name', '=', cn)])
-                    #loc['related_contract_id'] = found[0]
-                #locations.create(loc)
-        #project_id = projects.search([('name', '=', 'Kitchenrenovation')])[0]
-        #tasks = odoo.env['project.task']
-        #for task,subtasks in TASKS.items():
-            #"""
-            #If a task has a parent_id, it is a subtask
-            #if a task has any of
-              #'location_id': 2,
-              #'sub_location_id': False,
-              #'sub_sub_location_id': False,
-            #it is assigned to such a location
-
-            #"""
-            ## get contractid of Kitchenrenovation
-            #contract_id = contracts.search([('name', '=', 'Kitchenrenovation')])[0]
-            #location_id = locations.search([('name', '=', 'Kitchen')])[0]
-            #if not tasks.search([('name', '=', task)]):
-                ## check if 'related_contract_id' is a string
-                #task_dic = copy.deepcopy(TASK_TEMPLATE)
-                #task_dic['name'] = task
-                #task_dic['project_id'] = project_id
-                #task_dic['contract_id'] = contract_id
-                #task_dic['location_id'] = location_id
-                #task_dic['date_deadline'] = str(datetime.datetime.now() + datetime.timedelta(days=30))
-                #task_dic['date_assign'] = str(datetime.datetime.now())
-                #result = tasks.create(task_dic)
-                #task_dic['parent_id'] = result
-                #for stask in subtasks:
-                    #task_dic['name'] = stask
-                    #result = tasks.create(task_dic)
+        # install laguages
+        self.install_languages()
 
 
 parser = argparse.ArgumentParser(description='Setup a odoobuild site.')
@@ -766,16 +719,13 @@ if __name__ == "__main__":
     opts = parser.parse_args()
     installer = OdoobuildInstaller(opts)
     installer.get_odoo(verbose=True)
-    if 1: #installer.opts.odoo_modules:
-        installer.install_own_modules()
-    if 1: #installer.opts.own_modules:
-        installer.install_own_modules(what="own_addons")
-        #installer.install_mail_handler()
-    if 1: #installer.opts.users:
-        installer.create_users()
+    installer.install_own_modules()
+    installer.install_own_modules(what="own_addons")
+    installer.install_mail_handler()
+    installer.install_languages()
+    installer.create_users()
     if 0: #installer.opts.languages:
         try:
-            installer.install_languages(["de_CH", "de_DE", "fr_CH"])
         except:
             print(bcolors.red)
             print("could not install languages")
