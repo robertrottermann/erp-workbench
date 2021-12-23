@@ -102,116 +102,90 @@ class OdoobuildInstaller(object):
         self.site_opts = __import__(import_file_name)
         param = args.what
 
+    def _missing_o_message(self, what):
+        print(bcolors.WARNING)
+        print("*" * 80)
+        print("no %s defined" % what)
+        print(bcolors.ENDC)
+        return
+ 
     @property
-    def groups(self):
+    def _contract_types(self):
+        try:
+            return self.site_opts.CONTRACT_TYPES
+        except:
+            return self._missing_o_message('CONTRACT_TYPES')
+            
+    @property
+    def _groups(self):
         try:
             return self.site_opts.GROUPS
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no GROUPS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('GROUPS')
 
     @property
-    def mailhandlers(self):
+    def _mailhandlers(self):
         try:
             return self.site_opts.MAILHANDLERS
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no MAILHANDLERS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('MAILHANDLERS')
 
     @property
-    def my_dbname(self):
+    def _my_dbname(self):
         try:
             return self.site_opts.MY_DBNAME
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no MY_DBNAME defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('MY_DBNAME')
 
     @property
-    def my_port(self):
+    def _my_port(self):
         try:
             return site_opts.MY_PORT
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no MY_PORT defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('MY_PORT')
 
     @property
-    def my_host(self):
+    def _my_host(self):
         try:
             return self.site_opts.MY_HOST
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no MY_HOST defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('MY_HOST')
 
     @property
-    def users(self):
+    def _users(self):
         try:
             return self.site_opts.USERS
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no USERS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('USERS')
 
     @property
-    def staff(self):
+    def _staff(self):
         try:
             return self.site_opts.STAFF
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no USERS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('STAFF')
 
     @property
-    def site_addons(self):
+    def _site_addons(self):
         try:
             return self.site_opts.SITE_ADDONS
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no SITE_ADDONS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('SITE_ADDONS')
 
     # _own_addons is the list of addons_entries in the odoo config
     @property
-    def own_addons(self):
+    def _own_addons(self):
         try:
             return self.site_opts.SITE_ADDONS
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no OWN_ADDONS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('OWN_ADDONS')
 
     @property
     def _languages(self):
         try:
             return self.site_opts.LANGUAGES
         except:
-            print(bcolors.WARNING)
-            print("*" * 80)
-            print("no SITE_ADDONS defined")
-            print(bcolors.ENDC)
-            return
+            return self._missing_o_message('LANGUAGES')
 
     # ----------------------------------
     #  collects info on what modules are installed
@@ -295,7 +269,7 @@ class OdoobuildInstaller(object):
 
             """
             verbose = verbose or self.opts.verbose
-            db_name = self.my_dbname
+            db_name = self._my_dbname
             rpchost = self.rpc_host
             rpcport = self.rpc_port
             rpcuser = self.rpc_user
@@ -424,11 +398,11 @@ class OdoobuildInstaller(object):
         req = []
         if what == "site_addons":
             # addons decalared in addons are the ones not available from odoo directly
-            site_addons = self.site_addons
+            site_addons = self._site_addons
             req = site_addons
         elif what == "own_addons":
             # addons declared in the own_addons are from fernuni or OCA
-            req = self.own_addons
+            req = self._own_addons
 
         if req:
             installed = []
@@ -494,7 +468,7 @@ class OdoobuildInstaller(object):
     # depending on the parameter do_incomming install both or only outgoing
     def install_mail_handler(self, do_incoming=True):
         # odoo 13, flags when external mailservers are used
-        mailhandlers = self.mailhandlers()
+        mailhandlers = self._mailhandlers
         if not mailhandlers:
             return
         odoo = self.get_odoo()
@@ -572,8 +546,8 @@ class OdoobuildInstaller(object):
             return
         users_o = odoo.env["res.users"]
         users_ox = users_o.with_user(odoo.env.context, 1)
-        users = self.users
-        groups = self.groups
+        users = self._users
+        groups = self._groups
         # groups_o = odoo.env['res.groups']
         if users:
             for login, user_info in list(users.items()):
@@ -602,7 +576,7 @@ class OdoobuildInstaller(object):
                 group_id = groups[user_info]
                 group = odoo.env.ref(group_id)
                 group.write({"users": [(4, user_ids[0])]})
-        staff = self.staff
+        staff = self._staff
         if staff:
             for login, user_info in list(staff.items()):
                 u_groups = user_info.pop("groups")
