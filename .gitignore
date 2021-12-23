@@ -20,6 +20,9 @@ Downloads/**
 helpers/**
 *.code-workspace
 
+# moved from extrascripts to own repo
+test-site-installer
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
