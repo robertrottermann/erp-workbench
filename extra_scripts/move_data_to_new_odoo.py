@@ -5,6 +5,7 @@ import copy
 from datetime import date, timedelta
 from bs4 import BeautifulSoup
 import re
+import sys
 
 """
 from sshtunnel import SSHTunnelForwarder
@@ -59,6 +60,8 @@ python move_data_to_new_odoo.py    -H2 localhost -p2 8070 -d redo2oo14 -d2 redod
 -H localhost -p 8100 -d breitschtraeff10 -pw BreitschTraeffOnFrieda -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -st
 -H localhost -p 8100 -d  red_backup -pw admin -H2 breit15 -p2 9005 -d2 breitsch15test -pw2 admin -st -IP 172.24.0.2
 -H localhost -p 9060 -d red_backup -u admin -pw admin -H2 localhost -p2 9005 -d2 breitsch15test -pw2 admin -IP 172.24.0.2 -IP_2 172.21.0.3 -ussh root -st
+-H localhost -p 8069 -DIP 172.20.0.3 -d breitsch15test -u admin -pw admin -H2 alice2 -p2 8069 -d2 breitschtraeff10 -pw2 BreitschTraeffOnFrieda  -DIP_2 172.17.0.6 -ussh robert -st
+
 python move_data_to_new_odoo.py \
     -H localhost \       # source host
     -p 9060 \            # source port ?? what for
@@ -100,7 +103,7 @@ class OdooHandler(object):
     _odoo = None
     _odoo_2 = None
 
-    def _get_tunnel(self, url, username, pw, ipaddr, port=8069,):
+    def _get_tunnel(self, url, username, pw, ipaddr, port=8069):
         #'testmachines', # url
         #ssh_username="root", # username
     ##    ssh_password="secret", # pw
@@ -121,8 +124,14 @@ class OdooHandler(object):
                 port
             )
         )
-        server.start()
-        return server
+        try:
+            server.start()
+            return server
+        except Exception as e:
+            print('error:', e)
+            print('could not establish ssh connection to: %s user:%s docker_ip:%s port:%s' % (url, username, ipaddr, port))
+            sys.exit()
+
 
     def __init__(self, opts):
         self.opts = opts
@@ -130,13 +139,16 @@ class OdooHandler(object):
         # open and log in to source odoo
         host = opts.host
         port = opts.port
+        try:
+            port = int(port)
+        except:            
+            pass
         dbname = opts.dbname
         user = opts.user
         password = opts.password
         server = None
         if opts.sshtunnel:
-            server = self._get_tunnel(host, opts.ssh_user, password, opts.ip_address)
-            #server = self._get_tunnel(opts.host, 'root', opts.password, opts.ip_address)
+            server = self._get_tunnel(host, opts.ssh_user, password, opts.docker_ip_address, port)
             port = server.local_bind_port
             print("host: %s, port: %s" % (host, port))
         else:
@@ -168,8 +180,7 @@ class OdooHandler(object):
         password_2 = opts.password_2
         server = None
         if opts.sshtunnel:
-            server = self._get_tunnel(host_2, opts.ssh_user, password_2, opts.ip_address_2)
-            #server = self._get_tunnel(opts.host, 'root', opts.password, opts.ip_address)
+            server = self._get_tunnel(host_2, opts.ssh_user_2, password_2, opts.docker_ip_address_2)
             port_2 = server.local_bind_port
         print("host: %s, port: %s" % (host_2, port_2))
         try:
@@ -590,21 +601,21 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "-IP",
-        "--ip_address",
+        "-DIP",
+        "--dip_address",
         action="store",
-        dest="ip_address",
+        dest="docker_ip_address",
         default="172.24.0.2",
-        help="define source docker IP-Address default 172.24.0.2",
+        help="define source docker IP-Address default 172.24.0.2. Get it with: docker inspect  CONTAINER | grep IPAdd",
     )
 
     parser.add_argument(
-        "-IP_2",
-        "--ip_address_2",
+        "-DIP_2",
+        "--dip_address_2",
         action="store",
-        dest="ip_address_2",
+        dest="docker_ip_address_2",
         default="172.24.0.2",
-        help="define target docker IP-Address default 172.24.0.2",
+        help="define target docker IP-Address default 172.24.0.2. Get it with: docker inspect  CONTAINER | grep IPAdd",
     )
 
     parser.add_argument(
@@ -666,7 +677,15 @@ if __name__ == "__main__":
         action="store",
         dest="ssh_user",
         default="root",
-        help="define sshuser (for both connections) default 'root'",
+        help="define sshuser default 'root'",
+    )
+    parser.add_argument(
+        "-ussh2",
+        "--ssh_user_2",
+        action="store",
+        dest="ssh_user_2",
+        default="root",
+        help="define sshuser default 'root'",
     )
     parser.add_argument(
         "-pw",
