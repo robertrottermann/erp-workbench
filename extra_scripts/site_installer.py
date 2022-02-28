@@ -597,6 +597,9 @@ class OdoobuildInstaller(object):
                     user_id = users_o.create(user_data)
                     if user_id or isinstance(user_id, int):
                         user_ids = [user_id]
+                        # make emp
+                        user = users_o.browse(user_ids)
+                        user.action_create_employee()
                 for group_id in u_groups:
                     group = odoo.env.ref(group_id)
                     group.write({"users": [(4, user_ids[0])]})
@@ -849,7 +852,7 @@ if __name__ == "__main__":
     installer.get_odoo(verbose=True)
     installer.install_own_modules()
     installer.install_own_modules(what="own_addons")
-    installer.install_mail_handler()
+    #installer.install_mail_handler()
     installer.install_languages()
     installer.create_users()
     installer.install_objects()
