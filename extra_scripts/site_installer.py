@@ -88,6 +88,7 @@ class OdoobuildInstaller(object):
 
 
     _odoo = None
+    _processed = {}
     opts = MyNamespace()
 
     def __init__(self, args):
@@ -108,14 +109,28 @@ class OdoobuildInstaller(object):
         print("no %s defined" % what)
         print(bcolors.ENDC)
         return
- 
+
+    @property
+    def _companies(self):
+        try:
+            return self.site_opts.COMPANIES
+        except:
+            return self._missing_o_message('COMPANIES')
+
+    @property
+    def _contacts(self):
+        try:
+            return self.site_opts.CONTACTS
+        except:
+            return self._missing_o_message('CONTACTS')
+
     @property
     def _contract_types(self):
         try:
             return self.site_opts.CONTRACT_TYPES
         except:
             return self._missing_o_message('CONTRACT_TYPES')
-            
+
     @property
     def _groups(self):
         try:
@@ -235,8 +250,8 @@ class OdoobuildInstaller(object):
         dbpw = self.db_user_pw
         postgres_port = self.postgres_port
         if not db_name:
-            db_name = self.opts.db_name
-
+            #db_name = self.opts.db_name
+            db_name = self._my_dbname
         if dbpw:
             conn_string = "dbname='%s' user='%s' host='%s' password='%s'" % (
                 db_name,
@@ -352,7 +367,7 @@ class OdoobuildInstaller(object):
         """
         # what fields do we want to handle?
         # we get the source and target model
-        languages = set(self._languages())
+        languages = set(self._languages)
         if not languages:
             return {}
         odoo = self.get_odoo()
@@ -469,11 +484,15 @@ class OdoobuildInstaller(object):
     def install_mail_handler(self, do_incoming=True):
         # odoo 13, flags when external mailservers are used
         mailhandlers = self._mailhandlers
-        if not mailhandlers:
-            return
         odoo = self.get_odoo()
+        if (not mailhandlers) or (not odoo):
+            return
         res_config_settings = odoo.env["res.config.settings"]
         try:
+            """
+            getattr(res_config_settings, 'external_email_server_default')
+              <function MetaModel.__getattr__.<locals>.rpc_method at 0x7f31a4554310>
+            """
             try:
                 email_setting = res_config_settings.search(
                     [("external_email_server_default", "=", True)]
@@ -489,48 +508,29 @@ class OdoobuildInstaller(object):
                         {"external_email_server_default": True}
                     )  # .execute()
                     res_config_settings.external_email_server_default = True
-        except:
+        except Exception as e:
+            #print(e)
             pass
         print(bcolors.OKGREEN, "*" * 80)
         if do_incoming:
             # write the incomming email server
+            i_data = mailhandlers.get('mail_incomming')
             i_server = odoo.env["fetchmail.server"]
             # get the first server
             print("incomming email")
-            i_ids = i_server.search([])
-            i_id = 0
-            i_data = mailhandlers.get('mail_incomming')
-            if i_data:
-                i_id = i_ids.create(i_data)
-            else:
-                print("no incomming mail handler found")
-            print("*" * 80)
-            if i_ids:
-                i_id = i_ids[0]
-            if i_id:
-                incomming = i_server.browse([i_id])
-                incomming.write(i_data)
-            else:
-                incomming = i_server.create(i_data)
+            i_ids = i_server.search([('name', '=', i_data['name'])])
+            if not i_ids:
+                i_id = i_server.create(i_data)
             print(i_data)
         print("-" * 80)
         print("outgoing email")
         # now do the same for the outgoing server
         o_data = mailhandlers.get('mail_outgoing')
-        if not o_data:
-            print("no outgoing mail handler found")
-            print("*" * 80, bcolors.ENDC)
-            return
         o_server = odoo.env["ir.mail_server"]
         # get the first server
-        o_ids = o_server.search([])
+        o_ids = o_server.search([('name', '=', o_data['name'])])
         o_id = 0
-        if o_ids:
-            o_id = o_ids[0]
-        if o_id:
-            outgoing = o_server.browse([o_id])
-            outgoing.write(o_data)
-        else:
+        if not o_ids:
             o_server.create(o_data)
         print(o_data)
         print("*" * 80, bcolors.ENDC)
@@ -545,7 +545,6 @@ class OdoobuildInstaller(object):
         if not odoo:
             return
         users_o = odoo.env["res.users"]
-        users_ox = users_o.with_user(odoo.env.context, 1)
         users = self._users
         groups = self._groups
         # groups_o = odoo.env['res.groups']
@@ -579,7 +578,7 @@ class OdoobuildInstaller(object):
         staff = self._staff
         if staff:
             for login, user_info in list(staff.items()):
-                u_groups = user_info.pop("groups")
+                u_groups = user_info.pop("groups", [])
                 user_data = user_info
                 user_data["email"] = "%s@test.ch" % login
                 user_data["tz"] = "Europe/Zurich"
@@ -644,8 +643,163 @@ class OdoobuildInstaller(object):
         # install laguages
         self.install_languages()
 
+        # setup contacts
+        self.create_contacts()
+
+        # setup companies
+        self.handle_companies()
+
+    def _create_contact(self, contact):
+        """ either create new contact on parent or return its id when allready processed
+
+        Args:
+            contact (v9 contact item): v9 contact item
+
+        Returns:
+            int: id of the v13 contact item
+        """
+        # if that contact has already been process, take short cut
+        #if self._processed.get(contact.id):
+            #return self._processed.get(contact.id)
+        # first look up if it exists
+        cp_fields = [
+            'city',
+            'commercial_company_name',
+            'company_type',
+            'contact_address',
+            'create_date',
+            'date',
+            'write_date',
+            'is_customer',
+            'display_name',
+            'email',
+            #'fax',
+            'invoice_warn',
+            'is_company',
+            'lang',
+            'firstname',
+            'lastname',
+            'name',
+            #'notify_email',
+            #'partner_share',
+            'phone',
+            'parent_id',
+            'street',
+            'type',
+            'tz',
+            'tz_offset',
+            'website',
+            #'website_url',
+            'zip',
+            #'image_medium',
+            'image',
+            #'image_small',
+        ]
+        Contact_O = self._odoo.env['res.partner']
+        # we do not deal with partner ids < 4
+        if contact.get('id') and contact.get('id') < 4:
+            return
+        email = contact.get('email')
+        is_company = contact.get('is_company')
+        if email:
+            found = Contact_O.search([('email', '=', email), ('is_company', '=', is_company)])
+            if found:
+                ret_val = found[0]
+        else:
+            # we look for lastname, firstname, city, zip
+            domain = [
+                ('lastname', '=', contact.get('lastname')),
+                ('firstname', '=', contact.get('firstname')),
+                ('city', '=', contact.get('city')),
+                ('zip', '=', contact.get('zip')),
+            ]
+            found = Contact_O.search(domain)
+            if found:
+                ret_val = found[0]
+        if not found:
+            # not found, we construct entry
+            #data = {}
+            #for col in contact._columns:
+                #if col not in cp_fields:
+                    #continue
+                #v = getattr(contact, col)
+                #if v: # dont bother for empty fields
+                    #new_col = col
+                    #if col in ['date', 'write_date', 'create_date']:
+                        #v = str(v) # should probably be a bit more elaborate
+                    #if col in ['parent_id', 'category_id', 'write_uid']:
+                        ## check if parent was already processed, if not call create_and_map_contact recursively
+                        #if not self._contact_id_map.get(v.id):
+                            #create_and_map_contact(v)
+                        ## now it must exist
+                        #v = self._contact_id_map[v.id]
+                    #if col in ['image']:
+                        #new_col = 'image_1920'
+                    #data[new_col] = v
+            ret_val = Contact_O.create(contact) # create new_id
+        # remember that we processed this entry, so we do not process it again
+        self._processed[ret_val] = contact
+        return ret_val
+
+    def create_contacts(self):
+        contacts = self._contacts
+        for contact in contacts:
+            self._create_contact(contact)
+
+    def handle_companies(self):
+        if not self._odoo:
+            return
+        COMPANY_FIELDS = [
+            'name',
+            #'parent_id',
+            #'child_ids',
+            #'partner_id',
+            'logo',
+            'logo_web',
+            #'currency_id',
+            #'user_ids',
+            'street',
+            'street2',
+            'zip',
+            'city',
+            #'state_id',
+            #'bank_ids',
+            'email',
+            'phone',
+            'website',
+            'favicon',
+            'primary_color',
+            'secondary_color',
+            'qr_code',
+        ]
+        #companies on source odoo
+        companysO = self._odoo.env['res.company']
+
+        #companies on source odoo
+        companysO = self._odoo.env['res.company']
+        # now we copy / create companies
+        company_s = self._companies
+        for cp_id, cp_values in company_s:
+            company = companysO.browse([cp_id])
+            data = {}
+            for k in COMPANY_FIELDS:
+                try:
+                    data[k] = cp_values[k]
+                except:
+                    pass
+            res = company.write(data)
 
 parser = argparse.ArgumentParser(description='Setup a odoobuild site.')
+parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        dest="verbose",
+        default=False,
+        help="""
+            be less verbose.
+        """,
+    )
 parser.add_argument(
         "-w",
         "--what",
@@ -698,11 +852,4 @@ if __name__ == "__main__":
     installer.install_mail_handler()
     installer.install_languages()
     installer.create_users()
-    if 0: #installer.opts.languages:
-        try:
-        except:
-            print(bcolors.red)
-            print("could not install languages")
-            print(bcolors.ENDC)
-    if 1: #installer.opts.install_objects:
-        installer.install_objects()
+    installer.install_objects()

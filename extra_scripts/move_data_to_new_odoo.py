@@ -141,7 +141,7 @@ class OdooHandler(object):
         port = opts.port
         try:
             port = int(port)
-        except:            
+        except:
             pass
         dbname = opts.dbname
         user = opts.user

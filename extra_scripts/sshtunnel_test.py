@@ -5,12 +5,16 @@ server = SSHTunnelForwarder(
      MACHINE, # 'testmachines',
      ssh_username="robert",
 #    ssh_password="secret",
-    remote_bind_address=('172.17.0.6', 8100),
-    local_bind_address = ('192.168.0.43', 8069)
+    remote_bind_address=('172.17.0.2', 8400),
+    local_bind_address = ('192.168.0.200', 8069)
 )
 
 
-server.start()
+try:
+    server.start()
+except Exception as e:
+    print(e)
+    # raise
 print('------------->', server.local_bind_address, server.local_bind_port)
 odoo = odoorpc.ODOO(server.local_bind_address[0], port=server.local_bind_port, timeout=1200)
 print(odoo.db.list())
