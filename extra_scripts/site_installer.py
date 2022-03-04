@@ -630,7 +630,11 @@ class OdoobuildInstaller(object):
         except:
             pass
         if accounts:
-            self._create_accounts(accounts)
+            try:
+                self._create_accounts(accounts)
+            except Exception as e:
+                print(e)
+                pass
 
     # ----------------------------------
     # install_objects creates objects in the database like users, contacts, etc
