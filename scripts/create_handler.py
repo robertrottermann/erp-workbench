@@ -1420,7 +1420,10 @@ class InitHandler(RPC_Mixin, SiteDescHandlerMixin, DockerHandlerMixin, Propertie
                             "installing:%s%s%s"
                             % (bcolors.OKGREEN, module.name, bcolors.ENDC)
                         )
-                        module.button_immediate_install()
+                        try:
+                            module.button_immediate_install()
+                        except Exception as e:
+                            print(e)
                 else:
                     modules.button_immediate_install()
                 print(
