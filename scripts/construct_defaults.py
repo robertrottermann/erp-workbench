@@ -1,4 +1,6 @@
 import yaml
+from yaml import Loader, Dumper
+
 from io import StringIO
 from pprint import pformat
 from scripts.bcolors import bcolors
@@ -39,7 +41,7 @@ def read_yaml_file(path, vals={}):
             raise
     raw_yaml_data = "\n".join(raw_yaml_data_stripped) % vals
     try:
-        result = yaml.load(StringIO(raw_yaml_data))
+        result = yaml.load(StringIO(raw_yaml_data),  Loader=Loader)
         return result
     except yaml.parser.ParserError as e:
         print(bcolors.FAIL)
